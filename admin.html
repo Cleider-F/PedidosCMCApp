@@ -108,7 +108,7 @@ th { background:#f3f4f6; }
         <th>GO</th>
         <th>Peças</th>
         <th>Criado em</th>
-        <th>Aprovado em</th>
+        <th>Aprovado em / Por</th>
         <th>Status</th>
         <th>Ações</th>
       </tr>
@@ -142,6 +142,17 @@ const db = getFirestore(app);
 const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
 const TELEGRAM_CHAT_ID = "-1003646317990";
 
+/* USUÁRIOS (senha → nome) */
+const USUARIOS = {
+  "otto2026": "Leonardo Otto",
+  "salles2026": "Douglas Salles",
+  "robson2026": "Robson de Jesus",
+  "gleyson2026": "Gleyson Murça",
+  "kleiton2026": "Kleiton Castro",
+  "junior2026": "Geraldo Junior",
+  "cleider": "Cleider"
+};
+
 /* ELEMENTOS */
 const senhaInput = document.getElementById("senha");
 const loginBox = document.getElementById("loginBox");
@@ -149,14 +160,17 @@ const painel = document.getElementById("painel");
 const btnLogin = document.getElementById("btnLogin");
 
 /* LOGIN */
-const SENHAS_VALIDAS = ["otto2026","salles2026","robson2026","gleyson2026","kleiton2026","junior2026","cleider"];
-
 btnLogin.addEventListener("click", () => {
-  if (!SENHAS_VALIDAS.includes(senhaInput.value)) {
+  const nome = USUARIOS[senhaInput.value];
+
+  if (!nome) {
     alert("Senha incorreta");
     return;
   }
-  localStorage.setItem("adminLogado","true");
+
+  localStorage.setItem("adminLogado", "true");
+  localStorage.setItem("adminNome", nome);
+
   loginBox.style.display = "none";
   painel.style.display = "block";
   carregarPedidos();
@@ -165,6 +179,7 @@ btnLogin.addEventListener("click", () => {
 /* LOGOUT */
 window.logout = () => {
   localStorage.removeItem("adminLogado");
+  localStorage.removeItem("adminNome");
   location.reload();
 };
 
@@ -179,6 +194,8 @@ GO: ${p.go || "-"}
 
 Peças:
 ${p.pecas.map(x => `- ${x.descricao} (${x.quantidade})`).join("\n")}
+
+Aprovado por: ${localStorage.getItem("adminNome")}
 `;
 
   fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
@@ -205,8 +222,15 @@ async function carregarPedidos(){
   });
 
   [...pendentes,...outros].forEach(p=>{
-    const criado = p.criadoEm ? new Date(p.criadoEm.seconds?p.criadoEm.seconds*1000:p.criadoEm).toLocaleString("pt-BR") : "-";
-    const aprovado = p.aprovadoEm ? new Date(p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm).toLocaleString("pt-BR") : "-";
+    const criado = p.criadoEm
+      ? new Date(p.criadoEm.seconds?p.criadoEm.seconds*1000:p.criadoEm).toLocaleString("pt-BR")
+      : "-";
+
+    const aprovado = p.aprovadoEm
+      ? `${new Date(
+          p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm
+        ).toLocaleString("pt-BR")}<br><small>${p.aprovadoPor || ""}</small>`
+      : "-";
 
     lista.innerHTML += `
     <tr>
@@ -237,7 +261,8 @@ window.mudarStatus = async (id,status)=>{
 
   await updateDoc(ref,{
     status,
-    aprovadoEm: new Date()
+    aprovadoEm: new Date(),
+    aprovadoPor: localStorage.getItem("adminNome")
   });
 
   if (status === "Aprovado") {
@@ -269,7 +294,11 @@ window.gerarRelatorioPeriodo = async (somenteHoje=false)=>{
       p.nome,p.manutencao,p.go||"-",
       p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
       criado.toLocaleString("pt-BR"),
-      p.aprovadoEm?new Date(p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm).toLocaleString("pt-BR"):"-",
+      p.aprovadoEm
+        ? `${new Date(
+            p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm
+          ).toLocaleString("pt-BR")} - ${p.aprovadoPor||""}`
+        : "-",
       p.status
     ]);
   });
