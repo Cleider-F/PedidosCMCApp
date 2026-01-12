@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Área de Pedidos – Almoxarifado CMC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background:#f2f2f2;
+  padding:15px;
+}
+.logo { text-align:center; margin-bottom:15px; }
+.logo img { max-width:160px; width:100%; }
+.login, .painel {
+  max-width:1100px;
+  margin:auto;
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,.1);
+}
+h2 { text-align:center; }
+input { width:100%; padding:10px; margin-top:8px; }
+button {
+  padding:6px 10px;
+  margin:2px;
+  cursor:pointer;
+  border:none;
+  border-radius:6px;
+}
+.aprovar { background:#16a34a; color:#fff; }
+.reprovar { background:#dc2626; color:#fff; }
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+}
+th, td {
+  border:1px solid #ccc;
+  padding:6px;
+  font-size:13px;
+  vertical-align:top;
+}
+th { background:#f3f4f6; }
+.status-pendente { color:#ca8a04; font-weight:bold; }
+.status-aprovado { color:#16a34a; font-weight:bold; }
+.status-reprovado { color:#dc2626; font-weight:bold; }
+
+@media (max-width: 768px) {
+  table, thead, tbody, th, td, tr { display:block; }
+  thead { display:none; }
+  tr {
+    border:1px solid #ddd;
+    margin-bottom:10px;
+    padding:10px;
+    border-radius:8px;
+    background:#fafafa;
+  }
+  td { border:none; padding:4px 0; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="logo">
+  <a href="index.html">
+    <img src="suzano-logo.png" alt="Suzano">
+  </a>
+</div>
+
+<div class="login" id="loginBox">
+  <h2>🔐 Área de Técnicos</h2>
+  <input type="password" id="senha" placeholder="Senha">
+  <button id="btnLogin">Entrar</button>
+</div>
+
+<div class="painel" id="painel" style="display:none">
+  <h2>📦 Pedidos Recebidos</h2>
+
+  <button onclick="logout()" style="background:#111827;color:#fff;margin-bottom:10px">
+    🚪 Sair
+  </button>
+
+  <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+    <button onclick="gerarRelatorio()">📄 Relatório do dia (PDF)</button>
+  </div>
+
+  <div>
+    <label>Data inicial</label><br>
+    <input type="date" id="dataInicio">
+  </div>
+  <div>
+    <label>Data final</label><br>
+    <input type="date" id="dataFim">
+  </div>
+  <div style="align-self:end">
+    <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período (PDF)</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Solicitante</th>
+        <th>Manutenção</th>
+        <th>GO</th>
+        <th>Peças</th>
+        <th>Criado em</th>
+        <th>Aprovado em</th>
+        <th>Status</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="lista"></tbody>
+  </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, getDoc, updateDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 FIREBASE */
+const firebaseConfig = {
+  apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
+  authDomain: "pedidos-almoxarifado.firebaseapp.com",
+  projectId: "pedidos-almoxarifado",
+  storageBucket: "pedidos-almoxarifado.appspot.com",
+  messagingSenderId: "443882865992",
+  appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* TELEGRAM */
+const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
+const TELEGRAM_CHAT_ID = "-1003646317990";
+
+/* ELEMENTOS */
+const senhaInput = document.getElementById("senha");
+const loginBox = document.getElementById("loginBox");
+const painel = document.getElementById("painel");
+const btnLogin = document.getElementById("btnLogin");
+
+/* LOGIN */
+const SENHAS_VALIDAS = ["otto2026","salles2026","robson2026","gleyson2026","kleiton2026","junior2026","cleider"];
+
+btnLogin.addEventListener("click", () => {
+  if (!SENHAS_VALIDAS.includes(senhaInput.value)) {
+    alert("Senha incorreta");
+    return;
+  }
+  localStorage.setItem("adminLogado","true");
+  loginBox.style.display = "none";
+  painel.style.display = "block";
+  carregarPedidos();
+});
+
+/* LOGOUT */
+window.logout = () => {
+  localStorage.removeItem("adminLogado");
+  location.reload();
+};
+
+/* TELEGRAM */
+function notificarAprovacao(p) {
+  const texto = `
+✅ PEDIDO APROVADO
+
+Solicitante: ${p.nome}
+Manutenção: ${p.manutencao}
+GO: ${p.go || "-"}
+
+Peças:
+${p.pecas.map(x => `- ${x.descricao} (${x.quantidade})`).join("\n")}
+`;
+
+  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: texto
+    })
+  });
+}
+
+/* LISTAR PEDIDOS */
+async function carregarPedidos(){
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  const snap = await getDocs(collection(db,"pedidos"));
+  const pendentes=[], outros=[];
+
+  snap.forEach(d=>{
+    const p=d.data();
+    (p.status==="Pendente"?pendentes:outros).push({id:d.id,...p});
+  });
+
+  [...pendentes,...outros].forEach(p=>{
+    const criado = p.criadoEm ? new Date(p.criadoEm.seconds?p.criadoEm.seconds*1000:p.criadoEm).toLocaleString("pt-BR") : "-";
+    const aprovado = p.aprovadoEm ? new Date(p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm).toLocaleString("pt-BR") : "-";
+
+    lista.innerHTML += `
+    <tr>
+      <td>${p.nome}</td>
+      <td>${p.manutencao}</td>
+      <td>${p.go||"-"}</td>
+      <td>${p.pecas.map(x=>`• ${x.descricao} (${x.quantidade})`).join("<br>")}</td>
+      <td>${criado}</td>
+      <td>${aprovado}</td>
+      <td class="status-${p.status.toLowerCase()}">${p.status}</td>
+      <td>
+        ${p.status==="Pendente"
+          ? `<button class="aprovar" onclick="mudarStatus('${p.id}','Aprovado')">✅</button>
+             <button class="reprovar" onclick="mudarStatus('${p.id}','Reprovado')">❌</button>`
+          : "—"}
+      </td>
+    </tr>`;
+  });
+}
+
+/* STATUS */
+window.mudarStatus = async (id,status)=>{
+  const ref = doc(db,"pedidos",id);
+  const snap = await getDoc(ref);
+  const p = snap.data();
+
+  if (p.status !== "Pendente") return;
+
+  await updateDoc(ref,{
+    status,
+    aprovadoEm: new Date()
+  });
+
+  if (status === "Aprovado") {
+    notificarAprovacao(p);
+  }
+
+  carregarPedidos();
+};
+
+/* RELATÓRIOS */
+window.gerarRelatorio = () => gerarRelatorioPeriodo(true);
+window.gerarRelatorioPeriodo = async (somenteHoje=false)=>{
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("landscape");
+
+  const hoje=new Date();
+  const inicio = somenteHoje ? new Date(hoje.setHours(0,0,0,0)) : new Date(dataInicio.value+"T00:00:00");
+  const fim = somenteHoje ? new Date(hoje.setHours(23,59,59,999)) : new Date(dataFim.value+"T23:59:59");
+
+  const snap=await getDocs(collection(db,"pedidos"));
+  const linhas=[];
+
+  snap.forEach(d=>{
+    const p=d.data();
+    if(!p.criadoEm) return;
+    const criado=new Date(p.criadoEm.seconds?p.criadoEm.seconds*1000:p.criadoEm);
+    if(criado<inicio||criado>fim) return;
+    linhas.push([
+      p.nome,p.manutencao,p.go||"-",
+      p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
+      criado.toLocaleString("pt-BR"),
+      p.aprovadoEm?new Date(p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm).toLocaleString("pt-BR"):"-",
+      p.status
+    ]);
+  });
+
+  pdf.text("Relatório de Pedidos – Almoxarifado CMC",14,15);
+  pdf.autoTable({
+    startY:22,
+    head:[["Solicitante","Manutenção","GO","Peças","Pedido","Aprovação","Status"]],
+    body:linhas,
+    styles:{fontSize:9}
+  });
+  pdf.save("relatorio-pedidos.pdf");
+};
+
+/* AUTO LOGIN */
+if (localStorage.getItem("adminLogado") === "true") {
+  loginBox.style.display = "none";
+  painel.style.display = "block";
+  carregarPedidos();
+}
+</script>
+
+</body>
+</html>

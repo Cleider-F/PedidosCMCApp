@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Pedido de Peças – Almoxarifado CMC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+.logo {
+  text-align: center;
+  margin-bottom: 15px;
+}
+.logo img {
+  max-width: 180px;
+  width: 100%;
+}
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f2f2f2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.container {
+  background: #fff;
+  max-width: 480px;
+  width: 100%;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.1);
+}
+h1 { text-align:center; font-size:20px; }
+label { font-weight:bold; margin-top:10px; display:block; }
+input, textarea, select {
+  width:100%; padding:8px; margin-top:5px;
+  border-radius:6px; border:1px solid #ccc;
+}
+textarea { min-height:50px; }
+.peca {
+  border:1px solid #e5e7eb;
+  padding:10px; border-radius:8px; margin-top:10px;
+}
+button {
+  width:100%; padding:12px; margin-top:12px;
+  border:none; border-radius:8px;
+  background:#16a34a; color:#fff; font-size:15px;
+}
+button:hover { background:#15803d; }
+.secundario { background:#2563eb; }
+.remover { background:#dc2626; }
+.admin-btn { background:#111827; }
+.mensagem { text-align:center; font-weight:bold; margin-top:10px; }
+.sucesso { color:green; }
+.erro { color:red; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="logo">
+    <img src="suzano-logo.png" alt="Suzano">
+  </div>
+
+  <h1>Pedido de Peças – Almoxarifado</h1>
+
+  <form id="formPedido">
+
+    <div id="listaPecas">
+      <div class="peca">
+        <label>Descrição da Peça</label>
+        <textarea class="descricao" required></textarea>
+
+        <label>Quantidade</label>
+        <input type="number" class="quantidade" min="1" required>
+
+        <button type="button" class="remover" onclick="removerPeca(this)">❌ Remover</button>
+      </div>
+    </div>
+
+    <button type="button" class="secundario" onclick="adicionarPeca()">➕ Adicionar peça</button>
+
+    <label>Tipo de Manutenção</label>
+    <select id="manutencao" required>
+      <option value="">Selecione</option>
+      <option>Revisão</option>
+      <option>Preventiva-ITR</option>
+      <option>CNP</option>
+      <option>SOS</option>
+      <option>Uso Geral</option>
+    </select>
+
+    <label>GO do Equipamento</label>
+    <input id="go" required>
+
+    <label>Nome do solicitante</label>
+    <input id="nome" required>
+
+    <button type="submit">📦 Enviar Pedido</button>
+
+    <div id="mensagem" class="mensagem"></div>
+  </form>
+
+  <a href="admin.html">
+    <button class="admin-btn">🔐 Área de Técnicos 🛠️</button>
+  </a>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 FIREBASE */
+const firebaseConfig = {
+  apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
+  authDomain: "pedidos-almoxarifado.firebaseapp.com",
+  projectId: "pedidos-almoxarifado",
+  storageBucket: "pedidos-almoxarifado.appspot.com",
+  messagingSenderId: "443882865992",
+  appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* TELEGRAM */
+const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
+const TELEGRAM_CHAT_ID = "-1003671947511D";
+
+/* ELEMENTOS */
+const form = document.getElementById("formPedido");
+const mensagem = document.getElementById("mensagem");
+const lista = document.getElementById("listaPecas");
+
+/* FUNÇÕES DE PEÇAS */
+window.adicionarPeca = () => {
+  const div = document.createElement("div");
+  div.className = "peca";
+  div.innerHTML = `
+    <label>Descrição da Peça</label>
+    <textarea class="descricao" required></textarea>
+    <label>Quantidade</label>
+    <input type="number" class="quantidade" min="1" required>
+    <button type="button" class="remover" onclick="removerPeca(this)">❌ Remover</button>
+  `;
+  lista.appendChild(div);
+};
+
+window.removerPeca = (btn) => {
+  if (document.querySelectorAll(".peca").length === 1) return;
+  btn.parentElement.remove();
+};
+
+/* TELEGRAM */
+function notificarTelegram(pedido) {
+  const texto = `
+📦 NOVO PEDIDO DE PEÇAS
+
+Solicitante: ${pedido.nome}
+Manutenção: ${pedido.manutencao}
+GO: ${pedido.go}
+
+Peças:
+${pedido.pecas.map(p => `- ${p.descricao} (${p.quantidade})`).join("\n")}
+`;
+
+  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: texto
+    })
+  });
+}
+
+/* SUBMIT */
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  try {
+    const pecas = [];
+    document.querySelectorAll(".peca").forEach(p => {
+      pecas.push({
+        descricao: p.querySelector(".descricao").value,
+        quantidade: p.querySelector(".quantidade").value
+      });
+    });
+
+    const pedido = {
+      manutencao: manutencao.value,
+      go: go.value,
+      nome: nome.value,
+      pecas
+    };
+
+    await addDoc(collection(db, "pedidos"), {
+      ...pedido,
+      status: "Pendente",
+      criadoEm: new Date()
+    });
+
+    notificarTelegram(pedido);
+
+    mensagem.textContent = "✅ Pedido enviado com sucesso!";
+    mensagem.className = "mensagem sucesso";
+    form.reset();
+
+  } catch (err) {
+    console.error(err);
+    mensagem.textContent = "❌ Erro ao enviar pedido";
+    mensagem.className = "mensagem erro";
+  }
+});
+</script>
+
+</body>
+</html>
