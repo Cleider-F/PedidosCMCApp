@@ -49,6 +49,13 @@ th { background:#f3f4f6; }
 .status-aprovado { color:#16a34a; font-weight:bold; }
 .status-reprovado { color:#dc2626; font-weight:bold; }
 
+footer {
+  text-align:center;
+  margin-top:25px;
+  font-size:11px;
+  color:#6b7280;
+}
+
 @media (max-width: 768px) {
   table, thead, tbody, th, td, tr { display:block; }
   thead { display:none; }
@@ -117,6 +124,10 @@ th { background:#f3f4f6; }
     <tbody id="lista"></tbody>
   </table>
 </div>
+
+<footer>
+  Criado e Desenvolvido por Cleider Filho
+</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
@@ -279,39 +290,48 @@ window.gerarRelatorioPeriodo = async (somenteHoje=false)=>{
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("landscape");
 
-  const hoje=new Date();
-  const inicio = somenteHoje ? new Date(hoje.setHours(0,0,0,0)) : new Date(dataInicio.value+"T00:00:00");
-  const fim = somenteHoje ? new Date(hoje.setHours(23,59,59,999)) : new Date(dataFim.value+"T23:59:59");
+  const logo = new Image();
+  logo.src = "suzano-logo.png";
+  logo.onload = () => {
+    pdf.addImage(logo, "PNG", 14, 8, 40, 12);
+    pdf.text("Relatório de Pedidos – Almoxarifado CMC", 60, 16);
 
-  const snap=await getDocs(collection(db,"pedidos"));
-  const linhas=[];
+    (async function(){
+      const hoje=new Date();
+      const inicio = somenteHoje ? new Date(hoje.setHours(0,0,0,0)) : new Date(dataInicio.value+"T00:00:00");
+      const fim = somenteHoje ? new Date(hoje.setHours(23,59,59,999)) : new Date(dataFim.value+"T23:59:59");
 
-  snap.forEach(d=>{
-    const p=d.data();
-    if(!p.criadoEm) return;
-    const criado=new Date(p.criadoEm.seconds?p.criadoEm.seconds*1000:p.criadoEm);
-    if(criado<inicio||criado>fim) return;
-    linhas.push([
-      p.nome,p.manutencao,p.go||"-",
-      p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
-      criado.toLocaleString("pt-BR"),
-      p.aprovadoEm
-        ? `${new Date(
-            p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm
-          ).toLocaleString("pt-BR")} - ${p.aprovadoPor||""}`
-        : "-",
-      p.status
-    ]);
-  });
+      const snap=await getDocs(collection(db,"pedidos"));
+      const linhas=[];
 
-  pdf.text("Relatório de Pedidos – Almoxarifado CMC",14,15);
-  pdf.autoTable({
-    startY:22,
-    head:[["Solicitante","Manutenção","GO","Peças","Pedido","Aprovação","Status"]],
-    body:linhas,
-    styles:{fontSize:9}
-  });
-  pdf.save("relatorio-pedidos.pdf");
+      snap.forEach(d=>{
+        const p=d.data();
+        if(!p.criadoEm) return;
+        const criado=new Date(p.criadoEm.seconds?p.criadoEm.seconds*1000:p.criadoEm);
+        if(criado<inicio||criado>fim) return;
+        linhas.push([
+          p.nome,p.manutencao,p.go||"-",
+          p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
+          criado.toLocaleString("pt-BR"),
+          p.aprovadoEm
+            ? `${new Date(
+                p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm
+              ).toLocaleString("pt-BR")} - ${p.aprovadoPor||""}`
+            : "-",
+          p.status
+        ]);
+      });
+
+      pdf.autoTable({
+        startY:28,
+        head:[["Solicitante","Manutenção","GO","Peças","Pedido","Aprovação","Status"]],
+        body:linhas,
+        styles:{fontSize:9}
+      });
+
+      pdf.save("relatorio-pedidos.pdf");
+    })();
+  };
 };
 
 /* AUTO LOGIN */
