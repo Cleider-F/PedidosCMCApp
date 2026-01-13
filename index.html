@@ -23,7 +23,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  flex-direction: column; /* Ajuste para rodapé */
+  flex-direction: column;
 }
 .container {
   background: #fff;
@@ -147,6 +147,17 @@ const TELEGRAM_CHAT_ID = "-1003671947511D";
 const form = document.getElementById("formPedido");
 const mensagem = document.getElementById("mensagem");
 const lista = document.getElementById("listaPecas");
+const manutencaoSelect = document.getElementById("manutencao");
+const goInput = document.getElementById("go");
+
+/* Tornar GO opcional se "Uso Geral" */
+manutencaoSelect.addEventListener("change", () => {
+  if (manutencaoSelect.value === "Uso Geral") {
+    goInput.required = false;
+  } else {
+    goInput.required = true;
+  }
+});
 
 /* FUNÇÕES DE PEÇAS */
 window.adicionarPeca = () => {
@@ -204,9 +215,9 @@ form.addEventListener("submit", async (e) => {
     });
 
     const pedido = {
-      manutencao: manutencao.value,
-      go: go.value,
-      nome: nome.value,
+      manutencao: manutencaoSelect.value,
+      go: goInput.value,
+      nome: document.getElementById("nome").value,
       pecas
     };
 
@@ -221,7 +232,6 @@ form.addEventListener("submit", async (e) => {
     mensagem.textContent = "✅ Pedido enviado com sucesso!";
     mensagem.className = "mensagem sucesso";
     form.reset();
-
   } catch (err) {
     console.error(err);
     mensagem.textContent = "❌ Erro ao enviar pedido";
