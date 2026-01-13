@@ -305,43 +305,37 @@ window.gerarRelatorioPeriodo = async (somenteHoje=false)=>{
         p.status
       ]);
 
-      // Contagem para gráficos
+      // Contagem correta para gráficos
       contagemManut[p.manutencao] = (contagemManut[p.manutencao] || 0) + 1;
-      p.pecas.forEach(px => {
-        if (!p.go) return;
-        contagemGO[p.go] = (contagemGO[p.go] || 0) + px.quantidade;
-      });
+      if(p.go) {
+        let totalPecas = p.pecas.reduce((acc, px) => acc + px.quantidade, 0);
+        contagemGO[p.go] = (contagemGO[p.go] || 0) + totalPecas;
+      }
     });
 
     pdf.autoTable({ startY:28, head:[["Solicitante","Manutenção","GO","Peças","Pedido","Aprovação","Status"]], body:linhas, styles:{fontSize:9} });
 
-    // Criar canvas invisível para gerar gráficos
-    const canvas1 = document.createElement("canvas");
-    const ctx1 = canvas1.getContext("2d");
-    new Chart(ctx1, {
-      type: "pie",
-      data: { labels:Object.keys(contagemManut), datasets:[{ data:Object.values(contagemManut), backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40'] }] },
-      options: { responsive:false, plugins:{ legend:{display:true} } }
-    });
+    // Função para gerar gráfico como imagem
+    async function gerarGraficoDataURL(labels, data, titulo) {
+      return new Promise(resolve => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        new Chart(ctx, {
+          type: "pie",
+          data: { labels, datasets:[{ data, backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#FF9F50','#AA66FF','#66FFAA'] }] },
+          options:{ responsive:false, plugins:{ legend:{display:true, position:"bottom", labels:{font:{size:10}}}, title:{display:true,text:titulo} } }
+        });
+        setTimeout(()=>resolve(canvas.toDataURL("image/png")),500);
+      });
+    }
 
-    const canvas2 = document.createElement("canvas");
-    const ctx2 = canvas2.getContext("2d");
-    new Chart(ctx2, {
-      type: "pie",
-      data: { labels:Object.keys(contagemGO), datasets:[{ data:Object.values(contagemGO), backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40'] }] },
-      options: { responsive:false, plugins:{ legend:{display:true} } }
-    });
+    const graficoManutDataURL = await gerarGraficoDataURL(Object.keys(contagemManut), Object.values(contagemManut), "Pedidos por Tipo de Manutenção");
+    const graficoGODataURL = await gerarGraficoDataURL(Object.keys(contagemGO), Object.values(contagemGO), "Peças usadas por GO");
 
-    // Esperar gráficos renderizarem
-    await new Promise(r => setTimeout(r, 300));
-
-    // Adicionar gráficos ao PDF
+    // Inserir gráficos lado a lado no PDF
     pdf.addPage();
-    pdf.text("Pedidos por Tipo de Manutenção", 14, 10);
-    pdf.addImage(canvas1.toDataURL("image/png"), "PNG", 10, 15, 120, 80);
-
-    pdf.text("Peças usadas por GO", 150, 10);
-    pdf.addImage(canvas2.toDataURL("image/png"), "PNG", 150, 15, 120, 80);
+    pdf.addImage(graficoManutDataURL,"PNG",10,20,120,80);
+    pdf.addImage(graficoGODataURL,"PNG",150,20,120,80);
 
     pdf.save("relatorio-pedidos.pdf");
   };
