@@ -63,6 +63,11 @@ footer {
   color: #6b7280;
   margin-top: 15px;
 }
+
+input:disabled {
+  background:#e5e7eb;
+  cursor:not-allowed;
+}
 </style>
 </head>
 
@@ -150,12 +155,15 @@ const lista = document.getElementById("listaPecas");
 const manutencaoSelect = document.getElementById("manutencao");
 const goInput = document.getElementById("go");
 
-/* Tornar GO opcional se "Uso Geral" */
+/* Tornar GO opcional e visualmente desabilitado se "Uso Geral" */
 manutencaoSelect.addEventListener("change", () => {
   if (manutencaoSelect.value === "Uso Geral") {
     goInput.required = false;
+    goInput.disabled = true;
+    goInput.value = "";
   } else {
     goInput.required = true;
+    goInput.disabled = false;
   }
 });
 
@@ -185,7 +193,7 @@ function notificarTelegram(pedido) {
 
 Solicitante: ${pedido.nome}
 Manutenção: ${pedido.manutencao}
-GO: ${pedido.go}
+GO: ${pedido.go || "-"}
 
 Peças:
 ${pedido.pecas.map(p => `- ${p.descricao} (${p.quantidade})`).join("\n")}
@@ -232,6 +240,16 @@ form.addEventListener("submit", async (e) => {
     mensagem.textContent = "✅ Pedido enviado com sucesso!";
     mensagem.className = "mensagem sucesso";
     form.reset();
+
+    // Reset GO desabilitado após envio se for Uso Geral
+    if (manutencaoSelect.value === "Uso Geral") {
+      goInput.disabled = true;
+      goInput.required = false;
+    } else {
+      goInput.disabled = false;
+      goInput.required = true;
+    }
+
   } catch (err) {
     console.error(err);
     mensagem.textContent = "❌ Erro ao enviar pedido";
