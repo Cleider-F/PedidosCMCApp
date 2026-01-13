@@ -131,6 +131,7 @@ footer {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -177,15 +178,9 @@ const btnLogin = document.getElementById("btnLogin");
 /* LOGIN */
 btnLogin.addEventListener("click", () => {
   const nome = USUARIOS[senhaInput.value];
-
-  if (!nome) {
-    alert("Senha incorreta");
-    return;
-  }
-
+  if (!nome) { alert("Senha incorreta"); return; }
   localStorage.setItem("adminLogado", "true");
   localStorage.setItem("adminNome", nome);
-
   loginBox.style.display = "none";
   painel.style.display = "block";
   carregarPedidos();
@@ -202,24 +197,18 @@ window.logout = () => {
 function notificarAprovacao(p) {
   const texto = `
 ✅ PEDIDO APROVADO
-
 Solicitante: ${p.nome}
 Manutenção: ${p.manutencao}
 GO: ${p.go || "-"}
-
 Peças:
 ${p.pecas.map(x => `- ${x.descricao} (${x.quantidade})`).join("\n")}
-
 Aprovado por: ${localStorage.getItem("adminNome")}
 `;
 
   fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: texto
-    })
+    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: texto })
   });
 }
 
@@ -227,10 +216,8 @@ Aprovado por: ${localStorage.getItem("adminNome")}
 async function carregarPedidos(){
   const lista = document.getElementById("lista");
   lista.innerHTML = "";
-
   const snap = await getDocs(collection(db,"pedidos"));
   const pendentes=[], outros=[];
-
   snap.forEach(d=>{
     const p=d.data();
     (p.status==="Pendente"?pendentes:outros).push({id:d.id,...p});
@@ -242,9 +229,7 @@ async function carregarPedidos(){
       : "-";
 
     const aprovado = p.aprovadoEm
-      ? `${new Date(
-          p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm
-        ).toLocaleString("pt-BR")}<br><small>${p.aprovadoPor || ""}</small>`
+      ? `${new Date(p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm).toLocaleString("pt-BR")}<br><small>${p.aprovadoPor || ""}</small>`
       : "-";
 
     lista.innerHTML += `
@@ -271,7 +256,6 @@ window.mudarStatus = async (id,status)=>{
   const ref = doc(db,"pedidos",id);
   const snap = await getDoc(ref);
   const p = snap.data();
-
   if (p.status !== "Pendente") return;
 
   await updateDoc(ref,{
@@ -280,60 +264,86 @@ window.mudarStatus = async (id,status)=>{
     aprovadoPor: localStorage.getItem("adminNome")
   });
 
-  if (status === "Aprovado") {
-    notificarAprovacao(p);
-  }
-
+  if (status === "Aprovado") notificarAprovacao(p);
   carregarPedidos();
 };
 
-/* RELATÓRIOS */
+/* RELATÓRIOS COM GRÁFICOS */
 window.gerarRelatorio = () => gerarRelatorioPeriodo(true);
 window.gerarRelatorioPeriodo = async (somenteHoje=false)=>{
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("landscape");
-
   const logo = new Image();
   logo.src = "suzano-logo.png";
-  logo.onload = () => {
+
+  logo.onload = async () => {
     pdf.addImage(logo, "PNG", 14, 8, 40, 12);
     pdf.text("Relatório de Pedidos – Almoxarifado CMC", 60, 16);
 
-    (async function(){
-      const hoje=new Date();
-      const inicio = somenteHoje ? new Date(hoje.setHours(0,0,0,0)) : new Date(dataInicio.value+"T00:00:00");
-      const fim = somenteHoje ? new Date(hoje.setHours(23,59,59,999)) : new Date(dataFim.value+"T23:59:59");
+    const hoje=new Date();
+    const inicio = somenteHoje ? new Date(hoje.setHours(0,0,0,0)) : new Date(dataInicio.value+"T00:00:00");
+    const fim = somenteHoje ? new Date(hoje.setHours(23,59,59,999)) : new Date(dataFim.value+"T23:59:59");
 
-      const snap=await getDocs(collection(db,"pedidos"));
-      const linhas=[];
+    const snap = await getDocs(collection(db,"pedidos"));
+    const linhas=[];
+    const contagemManut = {};
+    const contagemGO = {};
 
-      snap.forEach(d=>{
-        const p=d.data();
-        if(!p.criadoEm) return;
-        const criado=new Date(p.criadoEm.seconds?p.criadoEm.seconds*1000:p.criadoEm);
-        if(criado<inicio||criado>fim) return;
-        linhas.push([
-          p.nome,p.manutencao,p.go||"-",
-          p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
-          criado.toLocaleString("pt-BR"),
-          p.aprovadoEm
-            ? `${new Date(
-                p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm
-              ).toLocaleString("pt-BR")} - ${p.aprovadoPor||""}`
-            : "-",
-          p.status
-        ]);
+    snap.forEach(d=>{
+      const p=d.data();
+      if(!p.criadoEm) return;
+      const criado=new Date(p.criadoEm.seconds?p.criadoEm.seconds*1000:p.criadoEm);
+      if(criado<inicio||criado>fim) return;
+
+      linhas.push([
+        p.nome,p.manutencao,p.go||"-",
+        p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
+        criado.toLocaleString("pt-BR"),
+        p.aprovadoEm
+          ? `${new Date(p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm).toLocaleString("pt-BR")} - ${p.aprovadoPor||""}`
+          : "-",
+        p.status
+      ]);
+
+      // Contagem para gráficos
+      contagemManut[p.manutencao] = (contagemManut[p.manutencao] || 0) + 1;
+      p.pecas.forEach(px => {
+        if (!p.go) return;
+        contagemGO[p.go] = (contagemGO[p.go] || 0) + px.quantidade;
       });
+    });
 
-      pdf.autoTable({
-        startY:28,
-        head:[["Solicitante","Manutenção","GO","Peças","Pedido","Aprovação","Status"]],
-        body:linhas,
-        styles:{fontSize:9}
-      });
+    pdf.autoTable({ startY:28, head:[["Solicitante","Manutenção","GO","Peças","Pedido","Aprovação","Status"]], body:linhas, styles:{fontSize:9} });
 
-      pdf.save("relatorio-pedidos.pdf");
-    })();
+    // Criar canvas invisível para gerar gráficos
+    const canvas1 = document.createElement("canvas");
+    const ctx1 = canvas1.getContext("2d");
+    new Chart(ctx1, {
+      type: "pie",
+      data: { labels:Object.keys(contagemManut), datasets:[{ data:Object.values(contagemManut), backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40'] }] },
+      options: { responsive:false, plugins:{ legend:{display:true} } }
+    });
+
+    const canvas2 = document.createElement("canvas");
+    const ctx2 = canvas2.getContext("2d");
+    new Chart(ctx2, {
+      type: "pie",
+      data: { labels:Object.keys(contagemGO), datasets:[{ data:Object.values(contagemGO), backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40'] }] },
+      options: { responsive:false, plugins:{ legend:{display:true} } }
+    });
+
+    // Esperar gráficos renderizarem
+    await new Promise(r => setTimeout(r, 300));
+
+    // Adicionar gráficos ao PDF
+    pdf.addPage();
+    pdf.text("Pedidos por Tipo de Manutenção", 14, 10);
+    pdf.addImage(canvas1.toDataURL("image/png"), "PNG", 10, 15, 120, 80);
+
+    pdf.text("Peças usadas por GO", 150, 10);
+    pdf.addImage(canvas2.toDataURL("image/png"), "PNG", 150, 15, 120, 80);
+
+    pdf.save("relatorio-pedidos.pdf");
   };
 };
 
