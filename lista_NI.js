@@ -2,7 +2,7 @@ window.LISTA_NI = [
 { produto: "PORCA 24 ROSCA GROSSA" , ni: 27174074 },
 { produto: "PARAFUSO 12X70" , ni: 27019689 },
 { produto: "PORCA 12" , ni: 27033562 },
-{ produto: "MANGOTE (FLEXÍVEL DE CUÍCA)" , ni: 27017950 },
+{ produto: "MANGOTE" , ni: 27017950 },
 { produto: "PARAFUSO 18X120" , ni: 27036723 },
 { produto: "PORCA 18" , ni: 27025456 },
 { produto: "PARAFUSO 16X150" , ni: 27019724 },
