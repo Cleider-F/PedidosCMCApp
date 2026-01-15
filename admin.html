@@ -107,6 +107,58 @@ footer {
     width: 100%;
     margin-top: 6px;
   }
+
+  /**/
+
+  /* 📱 MOBILE – transformar tabela em cards */
+@media (max-width: 768px) {
+
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    background: #fff;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    padding: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+    border-left: 6px solid #e5e7eb;
+  }
+
+  /* 🔥 destaque pendente */
+  tr.status-pendente-card {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+  }
+
+  td {
+    border: none;
+    padding: 6px 0;
+    font-size: 14px;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+    color: #374151;
+    margin-bottom: 2px;
+  }
+
+  /* Botões grandes no mobile */
+  .acoes-mobile button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 6px;
+  }
+}
+
 }
 
 </style>
@@ -270,32 +322,53 @@ async function carregarPedidos() {
       }
     }
 
-    lista.innerHTML += `
-<tr>
-<td data-label="Solicitante">${p.nome}</td>
-<td data-label="Manutenção">${p.manutencao}</td>
-<td data-label="GO">${p.go || "-"}</td>
-<td>
-${p.pecas.map((x,i)=>`
-<div>
-<b>${x.descricao}</b> (${x.quantidade})<br>
-NI:
-<input value="${x.ni ?? ""}"
-onchange="atualizarNI('${d.id}',${i},'${x.descricao}',this.value)"
-style="width:100px">
-</div>
-`).join("<hr>")}
-</td>
-<td>${new Date(p.criadoEm.seconds*1000).toLocaleString("pt-BR")}</td>
-<td>${p.aprovadoPor || "-"}</td>
-<td class="status-${p.status.toLowerCase()}">${p.status}</td>
-<td>
-${p.status==="Pendente"
-? `<button class="aprovar" onclick="mudarStatus('${d.id}','Aprovado')">✅</button>
-   <button class="reprovar" onclick="mudarStatus('${d.id}','Reprovado')">❌</button>`
-: "—"}
-</td>
-</tr>`;
+   const classeStatus = p.status === "Pendente"
+  ? "status-pendente-card"
+  : "";
+
+lista.innerHTML += `
+<tr class="${classeStatus}">
+  <td data-label="Solicitante">${p.nome}</td>
+
+  <td data-label="Manutenção">${p.manutencao}</td>
+
+  <td data-label="GO">${p.go || "-"}</td>
+
+  <td data-label="Peças">
+    ${p.pecas.map((x,i)=>`
+      <div style="margin-bottom:8px">
+        <b>${x.descricao}</b> (${x.quantidade})<br>
+        NI:
+        <input
+          value="${x.ni ?? ""}"
+          onchange="atualizarNI('${d.id}',${i},'${x.descricao}',this.value)"
+          style="width:110px"
+        >
+      </div>
+    `).join("<hr>")}
+  </td>
+
+  <td data-label="Criado em">
+    ${new Date(p.criadoEm.seconds*1000).toLocaleString("pt-BR")}
+  </td>
+
+  <td data-label="Aprovado">
+    ${p.aprovadoPor || "-"}
+  </td>
+
+  <td data-label="Status">
+    <span class="status-${p.status.toLowerCase()}">${p.status}</span>
+  </td>
+
+  <td data-label="Ações" class="acoes-mobile">
+    ${p.status==="Pendente"
+      ? `<button class="aprovar" onclick="mudarStatus('${d.id}','Aprovado')">✅ Aprovar</button>
+         <button class="reprovar" onclick="mudarStatus('${d.id}','Reprovado')">❌ Reprovar</button>`
+      : "—"}
+  </td>
+</tr>
+`;
+
   }
 }
 
