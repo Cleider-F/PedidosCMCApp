@@ -146,7 +146,6 @@ window.LISTA_NI = [
 { produto: "PINO DE CENTRO PEQUENO" , ni: 27019813 },
 { produto: "PORCA DO PINO DE CENTRO" , ni: 27019742 },
 { produto: "PINO DE CENTRO GRANDE" , ni: 27019815 },
-{ produto: "MANGOTE" , ni: 27017950},
 { produto: "MANGUEIRA" , ni: 27017950 }
 
 ];
