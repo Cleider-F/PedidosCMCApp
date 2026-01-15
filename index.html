@@ -8,46 +8,50 @@
 <meta name="theme-color" content="#1f2937">
 
 <style>
-.logo {
-  text-align: center;
-  margin-bottom: 15px;
-}
-.logo img {
-  max-width: 180px;
-  width: 100%;
-}
+.logo { text-align:center; margin-bottom:15px; }
+.logo img { max-width:180px; width:100%; }
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background: #f2f2f2;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  flex-direction: column;
+  background:#f2f2f2;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  flex-direction:column;
 }
 .container {
-  background: #fff;
-  max-width: 480px;
-  width: 100%;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,.1);
+  background:#fff;
+  max-width:480px;
+  width:100%;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,.1);
 }
 h1 { text-align:center; font-size:20px; }
 label { font-weight:bold; margin-top:10px; display:block; }
 input, textarea, select {
-  width:97%; padding:8px; margin-top:5px;
-  border-radius:6px; border:1px solid #ccc;
+  width:97%;
+  padding:8px;
+  margin-top:5px;
+  border-radius:6px;
+  border:1px solid #ccc;
 }
 textarea { min-height:50px; }
 .peca {
   border:1px solid #e5e7eb;
-  padding:10px; border-radius:8px; margin-top:10px;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
 }
 button {
-  width:100%; padding:12px; margin-top:12px;
-  border:none; border-radius:8px;
-  background:#16a34a; color:#fff; font-size:15px;
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:none;
+  border-radius:8px;
+  background:#16a34a;
+  color:#fff;
+  font-size:15px;
 }
 button:hover { background:#15803d; }
 .secundario { background:#2563eb; }
@@ -56,14 +60,12 @@ button:hover { background:#15803d; }
 .mensagem { text-align:center; font-weight:bold; margin-top:10px; }
 .sucesso { color:green; }
 .erro { color:red; }
-
 footer {
-  text-align: center;
-  font-size: 11px;
-  color: #6b7280;
-  margin-top: 15px;
+  text-align:center;
+  font-size:11px;
+  color:#6b7280;
+  margin-top:15px;
 }
-
 input:disabled {
   background:#e5e7eb;
   cursor:not-allowed;
@@ -73,9 +75,12 @@ input:disabled {
 
 <body>
 
+<!-- 📦 LISTA OFICIAL DE NI -->
+<script src="lista_NI.js"></script>
+
 <div class="container">
   <div class="logo">
-    <img src="suzano-logo.png" alt="Suzano">
+    <img src="suzano-logo.png">
   </div>
 
   <h1>Pedido de Peças – Almoxarifado CMC</h1>
@@ -113,7 +118,6 @@ input:disabled {
     <input id="nome" required>
 
     <button type="submit">📦 Enviar Pedido</button>
-
     <div id="mensagem" class="mensagem"></div>
   </form>
 
@@ -128,25 +132,24 @@ input:disabled {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, collection, addDoc, getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* 🔥 FIREBASE */
-const firebaseConfig = {
-  apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
+const app = initializeApp({
+   apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
   authDomain: "pedidos-almoxarifado.firebaseapp.com",
   projectId: "pedidos-almoxarifado",
   storageBucket: "pedidos-almoxarifado.appspot.com",
   messagingSenderId: "443882865992",
   appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
-};
-
-const app = initializeApp(firebaseConfig);
+});
 const db = getFirestore(app);
 
-/* TELEGRAM */
+/* 📲 TELEGRAM */
 const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
-const TELEGRAM_CHAT_ID = "-1003671947511D";
+const TELEGRAM_CHAT_ID = "-1003646317990";
 
 /* ELEMENTOS */
 const form = document.getElementById("formPedido");
@@ -155,7 +158,7 @@ const lista = document.getElementById("listaPecas");
 const manutencaoSelect = document.getElementById("manutencao");
 const goInput = document.getElementById("go");
 
-/* Tornar GO opcional e visualmente desabilitado se "Uso Geral" */
+/* GO opcional se Uso Geral */
 manutencaoSelect.addEventListener("change", () => {
   if (manutencaoSelect.value === "Uso Geral") {
     goInput.required = false;
@@ -167,7 +170,7 @@ manutencaoSelect.addEventListener("change", () => {
   }
 });
 
-/* FUNÇÕES DE PEÇAS */
+/* PEÇAS */
 window.adicionarPeca = () => {
   const div = document.createElement("div");
   div.className = "peca";
@@ -186,7 +189,77 @@ window.removerPeca = (btn) => {
   btn.parentElement.remove();
 };
 
-/* TELEGRAM */
+/* 🧠 NORMALIZAÇÃO ÚNICA */
+function normalizar(txt) {
+  return txt.toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/\bPOLCA\b|\bPOCA\b/g,"PORCA")
+    .replace(/\bARUELA\b/g,"ARRUELA")
+    .replace(/\bPARAFUZO\b/g,"PARAFUSO")
+    .trim();
+}
+
+/* 📚 APRENDIZADO (SOMENTE INDEX) */
+let APRENDIZADO_NI = [];
+
+async function carregarAprendizadoNI() {
+  const snap = await getDocs(collection(db,"aprendizado_ni"));
+  APRENDIZADO_NI = snap.docs.map(d => d.data());
+}
+
+/* 🔎 BUSCA DE NI */
+function buscarNI(descricao) {
+  const descNorm = normalizar(descricao);
+
+  /* 1️⃣ aprendizado */
+  const aprendido = APRENDIZADO_NI.find(x =>
+    x.descricao_normalizada === descNorm
+  );
+  if (aprendido) return aprendido.ni;
+
+  /* 2️⃣ lista oficial */
+  if (!window.LISTA_NI) return null;
+
+  const numsDesc = descNorm.match(/\d+/g) || [];
+  const palavrasDesc = descNorm
+    .replace(/\d+/g,"")
+    .split(" ")
+    .filter(p => p.length > 2);
+
+  let melhorNI = null;
+  let melhorScore = 0;
+
+  window.LISTA_NI.forEach(item => {
+    const prod = normalizar(item.produto);
+    const numsProd = prod.match(/\d+/g) || [];
+    const palavrasProd = prod
+      .replace(/\d+/g,"")
+      .split(" ")
+      .filter(p => p.length > 2);
+
+    if (
+      numsDesc.length !== numsProd.length ||
+      !numsDesc.every(n => numsProd.includes(n))
+    ) return;
+
+    const comuns = palavrasDesc.filter(p =>
+      palavrasProd.includes(p)
+    );
+
+    const score = comuns.length;
+    const minimo = palavrasProd.length === 1 ? 1 : 2;
+
+    if (score >= minimo && score > melhorScore) {
+      melhorScore = score;
+      melhorNI = item.ni;
+    }
+  });
+
+  return melhorNI;
+}
+
+/* 📲 TELEGRAM */
 function notificarTelegram(pedido) {
   const texto = `
 📦 NOVO PEDIDO DE PEÇAS
@@ -196,29 +269,30 @@ Manutenção: ${pedido.manutencao}
 GO: ${pedido.go || "-"}
 
 Peças:
-${pedido.pecas.map(p => `- ${p.descricao} (${p.quantidade})`).join("\n")}
+${pedido.pecas.map(p => 
+`- ${p.descricao}
+  NI: ${p.ni ?? "NÃO INFORMADO"}
+  Qtd: ${p.quantidade}`).join("\n\n")}
 `;
 
-  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: texto
-    })
+  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ chat_id:TELEGRAM_CHAT_ID, text:texto })
   });
 }
 
-/* SUBMIT */
-form.addEventListener("submit", async (e) => {
+/* 🚀 SUBMIT */
+form.addEventListener("submit", async e => {
   e.preventDefault();
-
   try {
     const pecas = [];
     document.querySelectorAll(".peca").forEach(p => {
+      const descricao = p.querySelector(".descricao").value;
       pecas.push({
-        descricao: p.querySelector(".descricao").value,
-        quantidade: p.querySelector(".quantidade").value
+        descricao,
+        quantidade: p.querySelector(".quantidade").value,
+        ni: buscarNI(descricao)
       });
     });
 
@@ -229,10 +303,10 @@ form.addEventListener("submit", async (e) => {
       pecas
     };
 
-    await addDoc(collection(db, "pedidos"), {
+    await addDoc(collection(db,"pedidos"),{
       ...pedido,
-      status: "Pendente",
-      criadoEm: new Date()
+      status:"Pendente",
+      criadoEm:new Date()
     });
 
     notificarTelegram(pedido);
@@ -240,23 +314,16 @@ form.addEventListener("submit", async (e) => {
     mensagem.textContent = "✅ Pedido enviado com sucesso!";
     mensagem.className = "mensagem sucesso";
     form.reset();
-
-    // Reset GO desabilitado após envio se for Uso Geral
-    if (manutencaoSelect.value === "Uso Geral") {
-      goInput.disabled = true;
-      goInput.required = false;
-    } else {
-      goInput.disabled = false;
-      goInput.required = true;
-    }
-
-  } catch (err) {
+  } catch(err) {
     console.error(err);
     mensagem.textContent = "❌ Erro ao enviar pedido";
     mensagem.className = "mensagem erro";
   }
 });
-</script>
 
+/* ⏳ carregar aprendizado ao abrir */
+await carregarAprendizadoNI();
+
+</script>
 </body>
 </html>

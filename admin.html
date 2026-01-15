@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest-admin.json">
 <meta name="theme-color" content="#111827">
+
 <style>
 body {
   font-family: Arial, Helvetica, sans-serif;
@@ -14,16 +15,19 @@ body {
 }
 .logo { text-align:center; margin-bottom:15px; }
 .logo img { max-width:160px; width:100%; }
+
 .login, .painel {
-  max-width:1100px;
+  max-width:1200px;
   margin:auto;
   background:#fff;
   padding:15px;
   border-radius:12px;
   box-shadow:0 4px 10px rgba(0,0,0,.1);
 }
+
 h2 { text-align:center; }
-input { width:30%; padding:10px; margin-top:8px; }
+input { padding:6px; margin-top:4px; }
+
 button {
   padding:6px 10px;
   margin:2px;
@@ -31,20 +35,25 @@ button {
   border:none;
   border-radius:6px;
 }
+
 .aprovar { background:#16a34a; color:#fff; }
 .reprovar { background:#dc2626; color:#fff; }
+
 table {
   width:100%;
   border-collapse:collapse;
   margin-top:15px;
 }
+
 th, td {
   border:1px solid #ccc;
   padding:6px;
   font-size:13px;
   vertical-align:top;
 }
+
 th { background:#f3f4f6; }
+
 .status-pendente { color:#ca8a04; font-weight:bold; }
 .status-aprovado { color:#16a34a; font-weight:bold; }
 .status-reprovado { color:#dc2626; font-weight:bold; }
@@ -56,18 +65,50 @@ footer {
   color:#6b7280;
 }
 
+/* 📱 RESPONSIVO – MOBILE */
 @media (max-width: 768px) {
-  table, thead, tbody, th, td, tr { display:block; }
-  thead { display:none; }
-  tr {
-    border:1px solid #ddd;
-    margin-bottom:10px;
-    padding:10px;
-    border-radius:8px;
-    background:#fafafa;
+
+  table, thead, tbody, th, td, tr {
+    display: block;
   }
-  td { border:none; padding:4px 0; }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    background: #f9fafb;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  }
+
+  td {
+    border: none;
+    padding: 6px 0;
+    font-size: 14px;
+  }
+
+  td::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: bold;
+    color: #374151;
+    margin-bottom: 2px;
+  }
+
+  input {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 6px;
+  }
 }
+
 </style>
 </head>
 
@@ -75,7 +116,7 @@ footer {
 
 <div class="logo">
   <a href="index.html">
-    <img src="suzano-logo.png" alt="Suzano">
+    <img src="suzano-logo.png">
   </a>
 </div>
 
@@ -92,19 +133,19 @@ footer {
     🚪 Sair
   </button>
 
-  <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+  <div style="margin-bottom:15px;display:flex;gap:10px;flex-wrap:wrap">
     <button onclick="gerarRelatorio()">📄 Relatório do dia (PDF)</button>
-  </div>
 
-  <div>
-    <label>Data inicial</label><br>
-    <input type="date" id="dataInicio">
-  </div>
-  <div>
-    <label>Data final</label><br>
-    <input type="date" id="dataFim">
-  </div>
-  <div style="align-self:end">
+    <div>
+      <label>Data inicial</label><br>
+      <input type="date" id="dataInicio">
+    </div>
+
+    <div>
+      <label>Data final</label><br>
+      <input type="date" id="dataFim">
+    </div>
+
     <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período (PDF)</button>
   </div>
 
@@ -114,9 +155,9 @@ footer {
         <th>Solicitante</th>
         <th>Manutenção</th>
         <th>GO</th>
-        <th>Peças</th>
+        <th>Peças (NI editável)</th>
         <th>Criado em</th>
-        <th>Aprovado em / Por</th>
+        <th>Aprovado</th>
         <th>Status</th>
         <th>Ações</th>
       </tr>
@@ -134,27 +175,27 @@ footer {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc, updateDoc }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, collection, getDocs,
+  doc, updateDoc, getDoc, query, orderBy, addDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 FIREBASE */
-const firebaseConfig = {
-  apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
-  authDomain: "pedidos-almoxarifado.firebaseapp.com",
-  projectId: "pedidos-almoxarifado",
-  storageBucket: "pedidos-almoxarifado.appspot.com",
-  messagingSenderId: "443882865992",
-  appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
-};
-
-const app = initializeApp(firebaseConfig);
+/* FIREBASE */
+const app = initializeApp({
+  apiKey: "AIzaSyBsF6D5l1dXR4rSR3axpFrD-idXh2ZaRUE",
+  authDomain: "testeer-1516c.firebaseapp.com",
+  projectId: "testeer-1516c",
+  storageBucket: "testeer-1516c.firebasestorage.app",
+  messagingSenderId: "1030430919430",
+  appId: "1:1030430919430:web:22224089ad1c80f8a56c87"
+});
 const db = getFirestore(app);
 
 /* TELEGRAM */
 const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
-const TELEGRAM_CHAT_ID = "-1003646317990";
+const TELEGRAM_CHAT_ID = "-1003208006500";
 
-/* USUÁRIOS (senha → nome) */
+/* USUÁRIOS */
 const USUARIOS = {
   "otto2026": "Leonardo Otto",
   "salles2026": "Douglas Salles",
@@ -169,38 +210,114 @@ const USUARIOS = {
   "cleider": "Cleider Filho"
 };
 
-/* ELEMENTOS */
-const senhaInput = document.getElementById("senha");
-const loginBox = document.getElementById("loginBox");
-const painel = document.getElementById("painel");
-const btnLogin = document.getElementById("btnLogin");
+/* NORMALIZAÇÃO */
+function normalizar(txt) {
+  return txt
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .trim();
+}
+
+/* BUSCAR NI NO APRENDIZADO */
+async function buscarNIporAprendizado(descricao) {
+  const termo = normalizar(descricao);
+  const snap = await getDocs(collection(db,"ni_aprendizado"));
+
+  let encontrado = null;
+  snap.forEach(d=>{
+    const a = d.data();
+    if (termo.includes(a.termo)) {
+      encontrado = a.ni;
+    }
+  });
+
+  return encontrado;
+}
 
 /* LOGIN */
-btnLogin.addEventListener("click", () => {
-  const nome = USUARIOS[senhaInput.value];
-
-  if (!nome) {
-    alert("Senha incorreta");
-    return;
-  }
-
-  localStorage.setItem("adminLogado", "true");
-  localStorage.setItem("adminNome", nome);
-
-  loginBox.style.display = "none";
-  painel.style.display = "block";
+btnLogin.onclick = () => {
+  const nome = USUARIOS[senha.value];
+  if (!nome) return alert("Senha incorreta");
+  localStorage.setItem("adminLogado","true");
+  localStorage.setItem("adminNome",nome);
+  loginBox.style.display="none";
+  painel.style.display="block";
   carregarPedidos();
-});
+};
 
-/* LOGOUT */
 window.logout = () => {
-  localStorage.removeItem("adminLogado");
-  localStorage.removeItem("adminNome");
+  localStorage.clear();
   location.reload();
 };
 
-/* TELEGRAM */
-function notificarAprovacao(p) {
+/* LISTAR PEDIDOS */
+async function carregarPedidos() {
+  lista.innerHTML = "";
+  const q = query(collection(db,"pedidos"), orderBy("criadoEm","desc"));
+  const snap = await getDocs(q);
+
+  for (const d of snap.docs) {
+    const p = d.data();
+
+    for (let i=0;i<p.pecas.length;i++) {
+      if (!p.pecas[i].ni) {
+        const niAprendido = await buscarNIporAprendizado(p.pecas[i].descricao);
+        if (niAprendido) {
+          p.pecas[i].ni = niAprendido;
+          await updateDoc(doc(db,"pedidos",d.id),{ pecas:p.pecas });
+        }
+      }
+    }
+
+    lista.innerHTML += `
+<tr>
+<td data-label="Solicitante">${p.nome}</td>
+<td data-label="Manutenção">${p.manutencao}</td>
+<td data-label="GO">${p.go || "-"}</td>
+<td>
+${p.pecas.map((x,i)=>`
+<div>
+<b>${x.descricao}</b> (${x.quantidade})<br>
+NI:
+<input value="${x.ni ?? ""}"
+onchange="atualizarNI('${d.id}',${i},'${x.descricao}',this.value)"
+style="width:100px">
+</div>
+`).join("<hr>")}
+</td>
+<td>${new Date(p.criadoEm.seconds*1000).toLocaleString("pt-BR")}</td>
+<td>${p.aprovadoPor || "-"}</td>
+<td class="status-${p.status.toLowerCase()}">${p.status}</td>
+<td>
+${p.status==="Pendente"
+? `<button class="aprovar" onclick="mudarStatus('${d.id}','Aprovado')">✅</button>
+   <button class="reprovar" onclick="mudarStatus('${d.id}','Reprovado')">❌</button>`
+: "—"}
+</td>
+</tr>`;
+  }
+}
+
+/* ATUALIZAR NI + APRENDER */
+window.atualizarNI = async (id, idx, descricao, ni) => {
+  const ref = doc(db,"pedidos",id);
+  const snap = await getDoc(ref);
+  const p = snap.data();
+
+  p.pecas[idx].ni = ni || null;
+  await updateDoc(ref,{ pecas:p.pecas });
+
+  if (ni) {
+    await addDoc(collection(db,"ni_aprendizado"),{
+      termo: normalizar(descricao),
+      ni
+    });
+  }
+};
+
+/* 📲 TELEGRAM – NOTIFICAÇÃO DE APROVAÇÃO */
+window.notificarAprovacao = function (p) {
   const texto = `
 ✅ PEDIDO APROVADO
 
@@ -209,7 +326,11 @@ Manutenção: ${p.manutencao}
 GO: ${p.go || "-"}
 
 Peças:
-${p.pecas.map(x => `- ${x.descricao} (${x.quantidade})`).join("\n")}
+${p.pecas.map(x =>
+`- ${x.descricao}
+NI: ${x.ni ?? "NÃO INFORMADO"}
+Qtd: ${x.quantidade}`
+).join("\n\n")}
 
 Aprovado por: ${localStorage.getItem("adminNome")}
 `;
@@ -222,126 +343,81 @@ Aprovado por: ${localStorage.getItem("adminNome")}
       text: texto
     })
   });
-}
-
-/* LISTAR PEDIDOS */
-async function carregarPedidos(){
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "";
-
-  const snap = await getDocs(collection(db,"pedidos"));
-  const pendentes=[], outros=[];
-
-  snap.forEach(d=>{
-    const p=d.data();
-    (p.status==="Pendente"?pendentes:outros).push({id:d.id,...p});
-  });
-
-  [...pendentes,...outros].forEach(p=>{
-    const criado = p.criadoEm
-      ? new Date(p.criadoEm.seconds?p.criadoEm.seconds*1000:p.criadoEm).toLocaleString("pt-BR")
-      : "-";
-
-    const aprovado = p.aprovadoEm
-      ? `${new Date(
-          p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm
-        ).toLocaleString("pt-BR")}<br><small>${p.aprovadoPor || ""}</small>`
-      : "-";
-
-    lista.innerHTML += `
-    <tr>
-      <td>${p.nome}</td>
-      <td>${p.manutencao}</td>
-      <td>${p.go||"-"}</td>
-      <td>${p.pecas.map(x=>`• ${x.descricao} (${x.quantidade})`).join("<br>")}</td>
-      <td>${criado}</td>
-      <td>${aprovado}</td>
-      <td class="status-${p.status.toLowerCase()}">${p.status}</td>
-      <td>
-        ${p.status==="Pendente"
-          ? `<button class="aprovar" onclick="mudarStatus('${p.id}','Aprovado')">✅</button>
-             <button class="reprovar" onclick="mudarStatus('${p.id}','Reprovado')">❌</button>`
-          : "—"}
-      </td>
-    </tr>`;
-  });
-}
+};
 
 /* STATUS */
-window.mudarStatus = async (id,status)=>{
+window.mudarStatus = async (id, status) => {
   const ref = doc(db,"pedidos",id);
   const snap = await getDoc(ref);
   const p = snap.data();
 
   if (p.status !== "Pendente") return;
 
+  const aprovadoPor = localStorage.getItem("adminNome");
+
   await updateDoc(ref,{
     status,
     aprovadoEm: new Date(),
-    aprovadoPor: localStorage.getItem("adminNome")
+    aprovadoPor
   });
 
+  // 🔔 TELEGRAM (AGORA FUNCIONA)
   if (status === "Aprovado") {
+    p.status = "Aprovado";
+    p.aprovadoPor = aprovadoPor;
     notificarAprovacao(p);
   }
 
   carregarPedidos();
 };
 
+
 /* RELATÓRIOS */
 window.gerarRelatorio = () => gerarRelatorioPeriodo(true);
+
 window.gerarRelatorioPeriodo = async (somenteHoje=false)=>{
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("landscape");
 
-  const logo = new Image();
-  logo.src = "suzano-logo.png";
-  logo.onload = () => {
-    pdf.addImage(logo, "PNG", 14, 8, 40, 12);
-    pdf.text("Relatório de Pedidos – Almoxarifado CMC", 60, 16);
+  const inicio = somenteHoje
+    ? new Date(new Date().setHours(0,0,0,0))
+    : new Date(dataInicio.value+"T00:00:00");
 
-    (async function(){
-      const hoje=new Date();
-      const inicio = somenteHoje ? new Date(hoje.setHours(0,0,0,0)) : new Date(dataInicio.value+"T00:00:00");
-      const fim = somenteHoje ? new Date(hoje.setHours(23,59,59,999)) : new Date(dataFim.value+"T23:59:59");
+  const fim = somenteHoje
+    ? new Date(new Date().setHours(23,59,59,999))
+    : new Date(dataFim.value+"T23:59:59");
 
-      const snap=await getDocs(collection(db,"pedidos"));
-      const linhas=[];
+  const snap = await getDocs(collection(db,"pedidos"));
+  const linhas = [];
 
-      snap.forEach(d=>{
-        const p=d.data();
-        if(!p.criadoEm) return;
-        const criado=new Date(p.criadoEm.seconds?p.criadoEm.seconds*1000:p.criadoEm);
-        if(criado<inicio||criado>fim) return;
-        linhas.push([
-          p.nome,p.manutencao,p.go||"-",
-          p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
-          criado.toLocaleString("pt-BR"),
-          p.aprovadoEm
-            ? `${new Date(
-                p.aprovadoEm.seconds?p.aprovadoEm.seconds*1000:p.aprovadoEm
-              ).toLocaleString("pt-BR")} - ${p.aprovadoPor||""}`
-            : "-",
-          p.status
-        ]);
-      });
+  snap.forEach(d=>{
+    const p=d.data();
+    if(!p.criadoEm) return;
+    const criado=new Date(p.criadoEm.seconds*1000);
+    if(criado<inicio||criado>fim) return;
+    linhas.push([
+      p.nome,p.manutencao,p.go||"-",
+      p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
+      criado.toLocaleString("pt-BR"),
+      p.aprovadoPor||"-",
+      p.status
+    ]);
+  });
 
-      pdf.autoTable({
-        startY:28,
-        head:[["Solicitante","Manutenção","GO","Peças","Pedido","Aprovação","Status"]],
-        body:linhas,
-        styles:{fontSize:9}
-      });
+  pdf.autoTable({
+    startY:20,
+    head:[["Solicitante","Manutenção","GO","Peças","Pedido","Aprovado","Status"]],
+    body:linhas,
+    styles:{fontSize:9}
+  });
 
-      pdf.save("relatorio-pedidos.pdf");
-    })();
-  };
+  pdf.save("relatorio-pedidos.pdf");
 };
 
 /* AUTO LOGIN */
-if (localStorage.getItem("adminLogado") === "true") {
-  loginBox.style.display = "none";
-  painel.style.display = "block";
+if (localStorage.getItem("adminLogado")==="true") {
+  loginBox.style.display="none";
+  painel.style.display="block";
   carregarPedidos();
 }
 </script>
