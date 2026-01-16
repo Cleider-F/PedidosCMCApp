@@ -255,12 +255,19 @@ onclick="mudarStatus('${d.id}','Reprovado')">❌ Reprovar</button>`}
 }
 
 /* NI */
-window.atualizarNI=async(id,i,ni)=>{
-  const ref=doc(db,"pedidos",id);
-  const p=(await getDoc(ref)).data();
-  p.pecas[i].ni=ni;
-  await updateDoc(ref,{pecas:p.pecas});
-}
+window.atualizarNI = async (id, i, ni) => {
+  const ref = doc(db, "pedidos", id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  const p = snap.data();
+  p.pecas[i].ni = ni.trim();
+
+  await updateDoc(ref, { pecas: p.pecas });
+
+  // 🔄 Recarrega para recalcular faltaNI e liberar Aprovar
+  carregarPedidos();
+};
 
 /* APRENDER */
 async function aprender(p){
