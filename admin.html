@@ -186,8 +186,8 @@ const app=initializeApp({
 const db=getFirestore(app);
 
 /* TELEGRAM */
-const TELEGRAM_TOKEN="8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
-const TELEGRAM_CHAT_ID="-1003208006500";
+const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
+const TELEGRAM_CHAT_ID = "-1003646317990";
 
 async function enviarTelegram(msg){
   await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
