@@ -38,7 +38,7 @@ window.LISTA_NI = [
 { produto: "PARAFUSO 12X80" , ni: 27019689 },
 { produto: "PORCA 12mm" , ni: 27033304 },
 { produto: "ARRUELA 12mm" , ni: 27033562 },
-{ produto: "BARRA DA 5ª RODA" , ni: 27018192 },
+{ produto: "BARRA DA 5ª RODA 3,5pol" , ni: 27018192 },
 { produto: "CUPILHA (CONTRA PINO)" , ni: 8005364 },
 { produto: "ROLAMENTO 90" , ni: 27033525 },
 { produto: "SABÃO DESENGRAXANTE (LANÇAR 2L)" , ni: 25126239 },
@@ -90,7 +90,7 @@ window.LISTA_NI = [
 { produto: "MOLA DO GAVIÃO" , ni: 27036837 },
 { produto: "BUCHA DE ANCORAGEM" , ni: 27017924 },
 { produto: "GAVIÃO 3,5" , ni: 27024635 },
-{ produto: "PARAFUSO DA FERRADURA" , ni: 27019944 },
+{ produto: "PARAFUSO DA FERRADURA 3,5" , ni: 27019944 },
 { produto: "PINO DO GAVIÃO" , ni: 27017875 },
 { produto: "TRAVA ROSCA" , ni: 27036783 },
 { produto: "ARRUELA DE 6mm" , ni: 27033572 },
@@ -127,5 +127,27 @@ window.LISTA_NI = [
 { produto: "LANTERNA DE PLACA (SEM LAMPADA)" , ni: 27019934 },
 { produto: "LAMPADA 69" , ni: 27019796 },
 { produto: "DISCO DE DESBASTE 4pol" , ni: 27033344 },
-{ produto: "TINTA SPRAY VERMELHA" , ni: 25582141 }
- ];
+{ produto: "TINTA SPRAY VERMELHA" , ni: 25582141 },
+{ produto: "INDICADOR DE RODA" , ni: 27093316 },
+{ produto: "FERRADURA 3,5pol" , ni: 27025440 },
+{ produto: "DISCO DE DESBASTE 7pol" , ni: 27033492 },
+{ produto: "MOLA DO GAVIÃO" , ni: 27036837 },
+{ produto: "GANCHO PNEUMATICO WDS" , ni: 27177164 },
+{ produto: "VALVULA NIVELADORA" , ni: 27033850 },
+{ produto: "REPARO DA NIVELADORA" , ni: 27033342 },
+{ produto: "BUCHA TRIFUNCIONAL LIBRELATO" , ni: 27095008 },
+{ produto: "ARRUELA CONICA" , ni: 27094288 },
+{ produto: "ENGATE RAPIDO" , ni: 27018183 },
+{ produto: "DISCO FLAP" , ni: 25250241 },
+{ produto: "ARRUELA DE 6" , ni: 27033564 },
+{ produto: "ARRUELA CONICA" , ni: 27094288 },
+{ produto: "PARAFUSO DA TRIFUNCIONAL LIBRELATO" , ni: 27130048 },
+{ produto: "EMENDA DE 12 (ferro)" , ni: 27019822 },
+{ produto: "INSERTO DE 12" , ni: 27017956 },
+{ produto: "MANGUEIRA DE 12" , ni: 27017983 },
+{ produto: "PARAFUSO 10X60" , ni: 27033737 },
+{ produto: "PORCA DE 10" , ni: 27033309 },
+{ produto: "BATERIA 180Ah" , ni: 25568503 }
+
+
+];
