@@ -161,7 +161,7 @@ window.LISTA_NI = [
 { produto: "DISCO DE CORTE 4pol" , ni: 25055359 },
 { produto: "BOLSA DA CABIBE TRASEIRA (VOLVO)" , ni: 27118605 },
 { produto: "FUSIVEL 10A" , ni: 27019908 },
-{ produto: "FUSIVEL 15A" , ni: 27019908 }
+{ produto: "FUSIVEL 15A" , ni: 27019908 },
 { produto: "LANTERNA TRASEIRA LE (GRANDE)" , ni: 27018129 },
 { produto: "LANTERNA TRASEIRA LD (GRANDE)" , ni: 27018124 },
 { produto: "REPARO RASPADOR" , ni: 27161851 },
