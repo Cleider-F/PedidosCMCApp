@@ -147,7 +147,35 @@ window.LISTA_NI = [
 { produto: "PORCA DO PINO DE CENTRO" , ni: 27019742 },
 { produto: "PINO DE CENTRO GRANDE" , ni: 27019815 },
 { produto: "MANGUEIRA" , ni: 27017950 },
-{ produto: "CORRENTE" , ni: 27036877 }
-
+{ produto: "CORRENTE" , ni: 27036877 },
+{ produto: "PARAFUSO 6X40" , ni: 27033804 },
+{ produto: "PORCA DE 6mm" , ni: 27039730 },
+{ produto: "ARUELA DE ARTICULAÇÃO TRIFUNCIONAL" , ni: 27174059 },
+{ produto: "CATRACA DE FREIO" , ni: 27045420 },
+{ produto: "PARAFUSO 12X150" , ni: 27019949},
+{ produto: "PORCA DE 12mm" , ni: 27033345},
+{ produto: "ARRUELA DE 12mm" , ni: 27033562 },
+{ produto: "PARAFUSO 16X60" , ni: 27037015 },
+{ produto: "MANILHA" , ni: 27033499 },
+{ produto: "DRENO DO BALÃO" , ni: 27023775 },
+{ produto: "DISCO DE CORTE 4pol" , ni: 25055359 },
+{ produto: "BOLSA DA CABIBE TRASEIRA (VOLVO)" , ni: 27118605 },
+{ produto: "FUSIVEL 10A" , ni: 27019908 },
+{ produto: "FUSIVEL 15A" , ni: 27019908 }
+{ produto: "LANTERNA TRASEIRA LE (GRANDE)" , ni: 27018129 },
+{ produto: "LANTERNA TRASEIRA LD (GRANDE)" , ni: 27018124 },
+{ produto: "REPARO RASPADOR" , ni: 27161851 },
+{ produto: "LENTE DE LANTERNA (COMBOIO)" , ni: 27017939 },
+{ produto: "MOSQUETAO" , ni: 27147400 },
+{ produto: "BUCHA DE ANCORAGEM" , ni: 27017924 },
+{ produto: "TERMINAL DE ENCAIXE" , ni: 27033541 },
+{ produto: "LUVA DO TERMINAL DE ENCAIXE" , ni: 27033505},
+{ produto: "TUBO 50X50" , ni: 27029926 },
+{ produto: "CHICOTE ELETRICO ASPIRAL" , ni: 27017941 }, 
+{ produto: "PORCA DO GRAMPO" , ni: 27019733 },
+{ produto: "LANTERNA DE PLACA (SEM LAMPADA)" , ni: 27019934 },
+{ produto: "LAMPADA 69" , ni: 27019796 },
+{ produto: "DISCO DE DESBASTE 4pol" , ni: 27033344 },
+{ produto: "TINTA SPRAY VERMELHA" , ni: 25582141 }
 
 ];
