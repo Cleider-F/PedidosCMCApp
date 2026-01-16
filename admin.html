@@ -44,8 +44,8 @@ h2{text-align:center;margin-bottom:10px}
 
 button{
   border:none;
-  padding:8px 12px;
-  border-radius:8px;
+  padding:10px;
+  border-radius:10px;
   cursor:pointer;
   font-size:14px;
 }
@@ -67,50 +67,46 @@ button{
 
 .cards{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-  gap:12px;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:14px;
 }
 
 .card{
-  background:#fff;
-  border-radius:14px;
-  padding:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
+  background:#fffbeb;
+  border-left:6px solid #f59e0b;
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 4px 10px rgba(0,0,0,.08);
   position:relative;
 }
 
-.card-pendente{
-  background:#fffbeb;
-  border-left:6px solid #f59e0b;
-}
+.info{margin-bottom:8px;font-size:14px}
+.info b{display:block;color:#374151}
 
-.status{
-  font-weight:bold;
-  margin-bottom:6px;
-}
+.status{font-weight:bold;margin-bottom:8px}
 .status-pendente{color:#ca8a04}
 .status-aprovado{color:#16a34a}
 .status-reprovado{color:#dc2626}
 
 .peca{
-  border-top:1px dashed #ddd;
-  padding-top:6px;
-  margin-top:6px;
+  margin-top:10px;
+  padding-top:8px;
+  border-top:1px dashed #d1d5db;
 }
 
 .peca input{
   width:100%;
-  padding:6px;
-  margin-top:4px;
-  border-radius:6px;
+  padding:8px;
+  margin-top:6px;
+  border-radius:8px;
   border:1px solid #ccc;
 }
 
 .acoes{
   display:flex;
-  flex-wrap:wrap;
+  flex-direction:column;
   gap:8px;
-  margin-top:10px;
+  margin-top:12px;
 }
 
 .aprovar{background:#16a34a;color:#fff}
@@ -119,17 +115,17 @@ button{
 
 .btn-excluir{
   position:absolute;
-  top:8px;
-  right:8px;
+  top:10px;
+  right:10px;
   background:none;
   color:#dc2626;
-  font-size:16px;
+  font-size:18px;
 }
 
 .selo{
   background:#e5e7eb;
-  padding:6px;
-  border-radius:10px;
+  padding:10px;
+  border-radius:12px;
   text-align:center;
   font-weight:bold;
 }
@@ -180,19 +176,26 @@ import {
 
 /* FIREBASE */
 const app=initializeApp({
-  apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
-  authDomain: "pedidos-almoxarifado.firebaseapp.com",
-  projectId: "pedidos-almoxarifado",
-  storageBucket: "pedidos-almoxarifado.appspot.com",
-  messagingSenderId: "443882865992",
-  appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
-
+  apiKey:"AIzaSyBsF6D5l1dXR4rSR3axpFrD-idXh2ZaRUE",
+  authDomain:"testeer-1516c.firebaseapp.com",
+  projectId:"testeer-1516c"
 });
 const db=getFirestore(app);
 
 /* TELEGRAM */
-const const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
-const TELEGRAM_CHAT_ID = "-1003646317990";
+const TELEGRAM_TOKEN="8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
+const TELEGRAM_CHAT_ID="-1003208006500";
+
+async function enviarTelegram(msg){
+  await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      chat_id:TELEGRAM_CHAT_ID,
+      text:msg
+    })
+  });
+}
 
 /* LOGIN */
 window.login=()=>{
@@ -201,10 +204,7 @@ window.login=()=>{
   painel.style.display="block";
   carregarPedidos();
 }
-window.logout=()=>{
-  localStorage.clear();
-  location.reload();
-}
+window.logout=()=>{localStorage.clear();location.reload()}
 
 /* NORMALIZAR */
 const norm=t=>t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
@@ -221,15 +221,19 @@ async function carregarPedidos(){
     const faltaNI=p.pecas.some(x=>!x.ni);
 
     lista.innerHTML+=`
-<div class="card ${p.status==="Pendente"?"card-pendente":""}">
+<div class="card">
 ${!finalizado?`<button class="btn-excluir" onclick="excluir('${d.id}')">❌</button>`:""}
 <div class="status status-${p.status.toLowerCase()}">${p.status}</div>
-<b>${p.nome}</b><br>
-${p.manutencao} | GO: ${p.go||"-"}
+
+<div class="info"><b>Solicitante</b>${p.nome}</div>
+<div class="info"><b>Manutenção</b>${p.manutencao}</div>
+<div class="info"><b>GO</b>${p.go||"-"}</div>
+
+<div class="info"><b>Peças</b></div>
 
 ${p.pecas.map((x,i)=>`
 <div class="peca">
-${x.descricao} (${x.quantidade})
+<b>${x.descricao} (${x.quantidade})</b>
 <input value="${x.ni||""}" ${finalizado?"disabled":""}
 onchange="atualizarNI('${d.id}',${i},this.value)">
 </div>`).join("")}
@@ -239,15 +243,15 @@ ${finalizado
 ?`<div class="selo">✔ Pedido Finalizado</div>`
 :`
 <button class="aprovar" ${faltaNI?"disabled":""}
-onclick="mudarStatus('${d.id}','Aprovado')">Aprovar</button>
+onclick="mudarStatus('${d.id}','Aprovado')">✅ Aprovar</button>
 <button class="reprovar"
-onclick="mudarStatus('${d.id}','Reprovado')">Reprovar</button>`}
+onclick="mudarStatus('${d.id}','Reprovado')">❌ Reprovar</button>`}
 </div>
 </div>`;
   });
 }
 
-/* ATUALIZAR NI */
+/* NI */
 window.atualizarNI=async(id,i,ni)=>{
   const ref=doc(db,"pedidos",id);
   const p=(await getDoc(ref)).data();
@@ -255,7 +259,7 @@ window.atualizarNI=async(id,i,ni)=>{
   await updateDoc(ref,{pecas:p.pecas});
 }
 
-/* APRENDIZADO */
+/* APRENDER */
 async function aprender(p){
   for(const x of p.pecas){
     if(x.ni){
@@ -268,7 +272,7 @@ async function aprender(p){
   }
 }
 
-/* STATUS */
+/* STATUS + TELEGRAM */
 window.mudarStatus=async(id,status)=>{
   const ref=doc(db,"pedidos",id);
   const p=(await getDoc(ref)).data();
@@ -276,6 +280,16 @@ window.mudarStatus=async(id,status)=>{
 
   await updateDoc(ref,{status,finalizadoEm:new Date()});
   if(status==="Aprovado")await aprender(p);
+
+  await enviarTelegram(
+`📦 Pedido ${status}
+👤 ${p.nome}
+🛠 ${p.manutencao}
+📌 GO: ${p.go||"-"}
+🧾 Peças:
+${p.pecas.map(x=>`- ${x.descricao} (${x.quantidade}) NI:${x.ni||"-"}`).join("\n")}`
+  );
+
   carregarPedidos();
 }
 
@@ -287,9 +301,8 @@ window.excluir=async(id)=>{
   }
 }
 
-/* RELATÓRIOS */
-window.gerarRelatorioDia=()=>gerarRelatorioPeriodo(true);
-
+/* RELATÓRIO */
+window.gerarRelatorioDia=()=>gerarRelatorioPeriodo();
 window.gerarRelatorioPeriodo=async()=>{
   const { jsPDF }=window.jspdf;
   const pdf=new jsPDF("landscape");
