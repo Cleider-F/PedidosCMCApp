@@ -10,6 +10,7 @@
 <style>
 .logo { text-align:center; margin-bottom:15px; }
 .logo img { max-width:180px; width:100%; }
+
 body {
   font-family: Arial, Helvetica, sans-serif;
   background:#f2f2f2;
@@ -19,6 +20,7 @@ body {
   min-height:100vh;
   flex-direction:column;
 }
+
 .container {
   background:#fff;
   max-width:480px;
@@ -27,8 +29,10 @@ body {
   border-radius:12px;
   box-shadow:0 4px 10px rgba(0,0,0,.1);
 }
+
 h1 { text-align:center; font-size:20px; }
 label { font-weight:bold; margin-top:10px; display:block; }
+
 input, textarea, select {
   width:97%;
   padding:8px;
@@ -36,13 +40,18 @@ input, textarea, select {
   border-radius:6px;
   border:1px solid #ccc;
 }
+
 textarea { min-height:50px; }
+
 .peca {
   border:1px solid #e5e7eb;
   padding:10px;
   border-radius:8px;
   margin-top:10px;
 }
+
+.ni-info { font-size:12px; color:#6b7280; }
+
 button {
   width:100%;
   padding:12px;
@@ -53,29 +62,56 @@ button {
   color:#fff;
   font-size:15px;
 }
+
 button:hover { background:#15803d; }
 .secundario { background:#2563eb; }
 .remover { background:#dc2626; }
 .admin-btn { background:#111827; }
+
 .mensagem { text-align:center; font-weight:bold; margin-top:10px; }
 .sucesso { color:green; }
 .erro { color:red; }
+
 footer {
   text-align:center;
   font-size:11px;
   color:#6b7280;
   margin-top:15px;
 }
+
 input:disabled {
   background:#e5e7eb;
   cursor:not-allowed;
+}
+
+/* 🔎 AUTOCOMPLETE */
+.autocomplete-box { position: relative; }
+
+.sugestoes {
+  position:absolute;
+  background:#fff;
+  border:1px solid #d1d5db;
+  border-radius:8px;
+  width:100%;
+  max-height:160px;
+  overflow-y:auto;
+  z-index:1000;
+}
+
+.sugestoes div {
+  padding:8px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+.sugestoes div:hover {
+  background:#e5e7eb;
 }
 </style>
 </head>
 
 <body>
 
-<!-- 📦 LISTA OFICIAL DE NI -->
 <script src="lista_NI.js"></script>
 
 <div class="container">
@@ -90,7 +126,14 @@ input:disabled {
     <div id="listaPecas">
       <div class="peca">
         <label>Descrição da Peça</label>
-        <textarea class="descricao" required></textarea>
+        <div class="autocomplete-box">
+          <textarea class="descricao" required oninput="sugerirPecas(this)"></textarea>
+          <div class="sugestoes" style="display:none"></div>
+        </div>
+
+        <label>NI (opcional)</label>
+        <input type="text" class="ni-manual" placeholder="Informe se souber">
+        <div class="ni-info">Se não informar, o sistema tentará identificar automaticamente</div>
 
         <label>Quantidade</label>
         <input type="number" class="quantidade" min="1" required>
@@ -132,53 +175,43 @@ input:disabled {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 FIREBASE */
 const app = initializeApp({
-   apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
-  authDomain: "pedidos-almoxarifado.firebaseapp.com",
-  projectId: "pedidos-almoxarifado",
-  storageBucket: "pedidos-almoxarifado.appspot.com",
-  messagingSenderId: "443882865992",
-  appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
+  apiKey: "AIzaSyBsF6D5l1dXR4rSR3axpFrD-idXh2ZaRUE",
+  authDomain: "testeer-1516c.firebaseapp.com",
+  projectId: "testeer-1516c"
 });
 const db = getFirestore(app);
 
-/* 📲 TELEGRAM */
-const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
-const TELEGRAM_CHAT_ID = "-1003671947511";
-
-/* ELEMENTOS */
 const form = document.getElementById("formPedido");
 const mensagem = document.getElementById("mensagem");
 const lista = document.getElementById("listaPecas");
 const manutencaoSelect = document.getElementById("manutencao");
 const goInput = document.getElementById("go");
 
-/* GO opcional se Uso Geral */
 manutencaoSelect.addEventListener("change", () => {
-  if (manutencaoSelect.value === "Uso Geral") {
-    goInput.required = false;
-    goInput.disabled = true;
-    goInput.value = "";
-  } else {
-    goInput.required = true;
-    goInput.disabled = false;
-  }
+  goInput.required = manutencaoSelect.value !== "Uso Geral";
+  goInput.disabled = manutencaoSelect.value === "Uso Geral";
+  if (goInput.disabled) goInput.value = "";
 });
 
-/* PEÇAS */
 window.adicionarPeca = () => {
   const div = document.createElement("div");
   div.className = "peca";
   div.innerHTML = `
     <label>Descrição da Peça</label>
-    <textarea class="descricao" required></textarea>
+    <div class="autocomplete-box">
+      <textarea class="descricao" required oninput="sugerirPecas(this)"></textarea>
+      <div class="sugestoes" style="display:none"></div>
+    </div>
+
+    <label>NI (opcional)</label>
+    <input type="text" class="ni-manual">
+
     <label>Quantidade</label>
     <input type="number" class="quantidade" min="1" required>
+
     <button type="button" class="remover" onclick="removerPeca(this)">❌ Remover</button>
   `;
   lista.appendChild(div);
@@ -189,77 +222,71 @@ window.removerPeca = (btn) => {
   btn.parentElement.remove();
 };
 
-/* 🧠 NORMALIZAÇÃO ÚNICA */
 function normalizar(txt) {
-  return txt.toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .replace(/\bPOLCA\b|\bPOCA\b/g,"PORCA")
-    .replace(/\bARUELA\b/g,"ARRUELA")
-    .replace(/\bPARAFUZO\b/g,"PARAFUSO")
-    .trim();
+  return txt.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 }
 
-/* 📚 APRENDIZADO (SOMENTE INDEX) */
-let APRENDIZADO_NI = [];
+/* 🔎 AUTOCOMPLETE (lista fixa + aprendizado real) */
+let aprendizadoNI = [];
 
 async function carregarAprendizadoNI() {
   const snap = await getDocs(collection(db,"aprendizado_ni"));
-  APRENDIZADO_NI = snap.docs.map(d => d.data());
+  aprendizadoNI = snap.docs.map(d => ({
+    descricao: normalizar(d.data().descricao),
+    ni: d.data().ni
+  }));
 }
+await carregarAprendizadoNI();
 
-/* 🔎 BUSCA DE NI */
-function buscarNI(descricao) {
-  const descNorm = normalizar(descricao);
+window.sugerirPecas = (textarea) => {
+  const termo = normalizar(textarea.value);
+  const box = textarea.parentElement.querySelector(".sugestoes");
 
-  /* 1️⃣ aprendizado */
-  const aprendido = APRENDIZADO_NI.find(x =>
-    x.descricao_normalizada === descNorm
-  );
-  if (aprendido) return aprendido.ni;
+  if (!termo || termo.length < 2) {
+    box.style.display = "none";
+    return;
+  }
 
-  /* 2️⃣ lista oficial */
-  if (!window.LISTA_NI) return null;
+  let resultados = [];
 
-  const numsDesc = descNorm.match(/\d+/g) || [];
-  const palavrasDesc = descNorm
-    .replace(/\d+/g,"")
-    .split(" ")
-    .filter(p => p.length > 2);
-
-  let melhorNI = null;
-  let melhorScore = 0;
-
-  window.LISTA_NI.forEach(item => {
-    const prod = normalizar(item.produto);
-    const numsProd = prod.match(/\d+/g) || [];
-    const palavrasProd = prod
-      .replace(/\d+/g,"")
-      .split(" ")
-      .filter(p => p.length > 2);
-
-    if (
-      numsDesc.length !== numsProd.length ||
-      !numsDesc.every(n => numsProd.includes(n))
-    ) return;
-
-    const comuns = palavrasDesc.filter(p =>
-      palavrasProd.includes(p)
-    );
-
-    const score = comuns.length;
-    const minimo = palavrasProd.length === 1 ? 1 : 2;
-
-    if (score >= minimo && score > melhorScore) {
-      melhorScore = score;
-      melhorNI = item.ni;
+  aprendizadoNI.forEach(i => {
+    if (i.descricao.includes(termo)) {
+      resultados.push({ produto:i.descricao, ni:i.ni });
     }
   });
 
-  return melhorNI;
-}
+  if (window.LISTA_NI) {
+    window.LISTA_NI.forEach(i => {
+      const prod = normalizar(i.produto);
+      if (prod.includes(termo) && !resultados.some(r => r.produto === prod)) {
+        resultados.push({ produto:prod, ni:i.ni });
+      }
+    });
+  }
+
+  resultados = resultados.slice(0,6);
+  if (!resultados.length) { box.style.display="none"; return; }
+
+  box.innerHTML = resultados.map(r => `
+    <div onclick="selecionarPeca(this,'${r.produto}','${r.ni}')">
+      ${r.produto} <span style="color:#6b7280;font-size:11px">| NI ${r.ni}</span>
+    </div>
+  `).join("");
+
+  box.style.display="block";
+};
+
+window.selecionarPeca = (el, produto, ni) => {
+  const peca = el.closest(".peca");
+  peca.querySelector(".descricao").value = produto;
+  peca.querySelector(".ni-manual").value = ni;
+  el.parentElement.style.display="none";
+};
 
 /* 📲 TELEGRAM */
+const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
+const TELEGRAM_CHAT_ID = "-1003208006500";
+
 function notificarTelegram(pedido) {
   const texto = `
 📦 NOVO PEDIDO DE PEÇAS
@@ -268,62 +295,57 @@ Solicitante: ${pedido.nome}
 Manutenção: ${pedido.manutencao}
 GO: ${pedido.go || "-"}
 
-Peças:
-${pedido.pecas.map(p => 
-`- ${p.descricao}
-  NI: ${p.ni ?? "NÃO INFORMADO"}
-  Qtd: ${p.quantidade}`).join("\n\n")}
+${pedido.pecas.map(p => `- ${p.descricao} | NI: ${p.ni || "NÃO INFORMADO"} | Qtd: ${p.quantidade}`).join("\n")}
 `;
-
   fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ chat_id:TELEGRAM_CHAT_ID, text:texto })
+    body:JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: texto })
   });
 }
 
-/* 🚀 SUBMIT */
 form.addEventListener("submit", async e => {
   e.preventDefault();
   try {
     const pecas = [];
     document.querySelectorAll(".peca").forEach(p => {
-      const descricao = p.querySelector(".descricao").value;
+      const desc = p.querySelector(".descricao").value;
+      const niManual = p.querySelector(".ni-manual").value.trim();
+      const niAuto = aprendizadoNI.find(a => a.descricao === normalizar(desc))?.ni
+        || window.LISTA_NI?.find(i => normalizar(i.produto) === normalizar(desc))?.ni;
+
       pecas.push({
-        descricao,
+        descricao: desc,
         quantidade: p.querySelector(".quantidade").value,
-        ni: buscarNI(descricao)
+        ni: niManual || niAuto || null
       });
     });
 
-    const pedido = {
+    await addDoc(collection(db,"pedidos"),{
       manutencao: manutencaoSelect.value,
       go: goInput.value,
       nome: document.getElementById("nome").value,
-      pecas
-    };
-
-    await addDoc(collection(db,"pedidos"),{
-      ...pedido,
+      pecas,
       status:"Pendente",
       criadoEm:new Date()
     });
 
-    notificarTelegram(pedido);
+    notificarTelegram({
+      nome: document.getElementById("nome").value,
+      manutencao: manutencaoSelect.value,
+      go: goInput.value,
+      pecas
+    });
 
     mensagem.textContent = "✅ Pedido enviado com sucesso!";
     mensagem.className = "mensagem sucesso";
     form.reset();
-  } catch(err) {
-    console.error(err);
+  } catch {
     mensagem.textContent = "❌ Erro ao enviar pedido";
     mensagem.className = "mensagem erro";
   }
 });
-
-/* ⏳ carregar aprendizado ao abrir */
-await carregarAprendizadoNI();
-
 </script>
+
 </body>
 </html>
