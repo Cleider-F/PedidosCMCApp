@@ -147,7 +147,7 @@ window.LISTA_NI = [
 { produto: "MANGUEIRA DE 12" , ni: 27017983 },
 { produto: "PARAFUSO 10X60" , ni: 27033737 },
 { produto: "PORCA DE 10" , ni: 27033309 },
-{ produto: "BATERIA 180Ah" , ni: 25568503 }
+{ produto: "BATERIA 180Ah" , ni: 25568503 },
 { produto: "DISCO DE CORTE 4POL" , ni: 25055359 },
 { produto: "DISCO DE DESBASTE 4POL" , ni: 27033344 },
 { produto: "DISCO DE CORTE 12POL" , ni: 25438746 },
