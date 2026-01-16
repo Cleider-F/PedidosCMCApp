@@ -160,7 +160,7 @@ window.LISTA_NI = [
 { produto: "BUCHA DO TIRANTE P" , ni: 27019891 },
 { produto: "FORQUILHA" , ni: 27100632 },
 { produto: "ARRUELA DE ARTICULAÇÃO" , ni: 27174059 },
-{ produto: "ARREBITE" , ni: 27033874 },
+{ produto: "REBITE" , ni: 27033874 },
 { produto: "REBITE (MERCEDES)" , ni: 27035434 },
 { produto: "PORCA DA MONTANHEIRA" , ni: 27033438 },
 { produto: "ARRUELA DE 10" , ni: 27033740 },
