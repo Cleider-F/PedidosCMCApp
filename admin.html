@@ -2,227 +2,171 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Área de Pedidos – Almoxarifado CMC</title>
+<title>Área de Técnicos – Almoxarifado CMC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest-admin.json">
 <meta name="theme-color" content="#111827">
 
 <style>
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  background:#f2f2f2;
-  padding:15px;
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f3f4f6;
+  padding:12px;
 }
-.logo { text-align:center; margin-bottom:15px; }
-.logo img { max-width:160px; width:100%; }
+.logo{text-align:center;margin-bottom:10px}
+.logo img{max-width:150px;width:100%}
 
- footer {
+footer{
   text-align:center;
-  margin-top:25px;
+  margin-top:20px;
   font-size:11px;
   color:#6b7280;
 }
-  
-.login, .painel {
+
+.login,.painel{
   max-width:1200px;
   margin:auto;
   background:#fff;
   padding:15px;
-  border-radius:12px;
+  border-radius:14px;
   box-shadow:0 4px 10px rgba(0,0,0,.1);
 }
 
-h2 { text-align:center; }
-input { padding:6px; margin-top:4px; }
+h2{text-align:center;margin-bottom:10px}
 
-button {
-  padding:6px 10px;
-  margin:2px;
-  cursor:pointer;
+.top-actions{
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+button{
   border:none;
-  border-radius:6px;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:14px;
 }
 
-.aprovar { background:#16a34a; color:#fff; }
-.reprovar { background:#dc2626; color:#fff; }
+.btn-sair{background:#111827;color:#fff}
+.btn-refresh{background:#2563eb;color:#fff}
 
-table {
+.relatorio-box{
+  background:#f9fafb;
+  padding:12px;
+  border-radius:12px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.relatorio-box button{background:#16a34a;color:#fff}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:12px;
+}
+
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+  position:relative;
+}
+
+.card-pendente{
+  background:#fffbeb;
+  border-left:6px solid #f59e0b;
+}
+
+.status{
+  font-weight:bold;
+  margin-bottom:6px;
+}
+.status-pendente{color:#ca8a04}
+.status-aprovado{color:#16a34a}
+.status-reprovado{color:#dc2626}
+
+.peca{
+  border-top:1px dashed #ddd;
+  padding-top:6px;
+  margin-top:6px;
+}
+
+.peca input{
   width:100%;
-  border-collapse:collapse;
-  margin-top:15px;
-}
-
-th, td {
-  border:1px solid #ccc;
   padding:6px;
-  font-size:13px;
-  vertical-align:top;
+  margin-top:4px;
+  border-radius:6px;
+  border:1px solid #ccc;
 }
 
-th { background:#f3f4f6; }
-
-.status-pendente { color:#ca8a04; font-weight:bold; }
-.status-aprovado { color:#16a34a; font-weight:bold; }
-.status-reprovado { color:#dc2626; font-weight:bold; }
-
-
-
-/* 📱 RESPONSIVO – MOBILE */
-@media (max-width: 768px) {
-
-  table, thead, tbody, th, td, tr {
-    display: block;
-  }
-
-  thead {
-    display: none;
-  }
-
-  tr {
-    background: #f9fafb;
-    margin-bottom: 15px;
-    border-radius: 10px;
-    padding: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.08);
-  }
-
-  td {
-    border: none;
-    padding: 6px 0;
-    font-size: 14px;
-  }
-
-  td::before {
-    content: attr(data-label);
-    display: block;
-    font-weight: bold;
-    color: #374151;
-    margin-bottom: 2px;
-  }
-
-  input {
-    width: 100% !important;
-    box-sizing: border-box;
-  }
-
-  button {
-    width: 100%;
-    margin-top: 6px;
-  }
-
-  /**/
-
-  /* 📱 MOBILE – transformar tabela em cards */
-@media (max-width: 768px) {
-
-  table, thead, tbody, th, td, tr {
-    display: block;
-  }
-
-  thead {
-    display: none;
-  }
-
-  tr {
-    background: #fff;
-    border-radius: 12px;
-    margin-bottom: 15px;
-    padding: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,.08);
-    border-left: 6px solid #e5e7eb;
-  }
-
-  /* 🔥 destaque pendente */
-  tr.status-pendente-card {
-    border-left-color: #f59e0b;
-    background: #fffbeb;
-  }
-
-  td {
-    border: none;
-    padding: 6px 0;
-    font-size: 14px;
-  }
-
-  td::before {
-    content: attr(data-label);
-    font-weight: bold;
-    display: block;
-    color: #374151;
-    margin-bottom: 2px;
-  }
-
-  /* Botões grandes no mobile */
-  .acoes-mobile button {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    margin-top: 6px;
-  }
+.acoes{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
 }
 
+.aprovar{background:#16a34a;color:#fff}
+.reprovar{background:#dc2626;color:#fff}
+.aprovar:disabled{background:#9ca3af;cursor:not-allowed}
+
+.btn-excluir{
+  position:absolute;
+  top:8px;
+  right:8px;
+  background:none;
+  color:#dc2626;
+  font-size:16px;
 }
 
+.selo{
+  background:#e5e7eb;
+  padding:6px;
+  border-radius:10px;
+  text-align:center;
+  font-weight:bold;
+}
 </style>
 </head>
 
 <body>
 
 <div class="logo">
-  <a href="index.html">
-    <img src="suzano-logo.png">
-  </a>
+  <img src="suzano-logo.png">
 </div>
-  
- <footer>
-  Criado e Desenvolvido por Cleider Filho
-</footer>
 
 <div class="login" id="loginBox">
   <h2>🔐 Área de Técnicos</h2>
   <input type="password" id="senha" placeholder="Senha">
-  <button id="btnLogin">Entrar</button>
+  <button onclick="login()">Entrar</button>
 </div>
 
 <div class="painel" id="painel" style="display:none">
   <h2>📦 Pedidos Recebidos</h2>
 
-  <button onclick="logout()" style="background:#111827;color:#fff;margin-bottom:10px">
-    🚪 Sair
-  </button>
-
-  <div style="margin-bottom:15px;display:flex;gap:10px;flex-wrap:wrap">
-    <button onclick="gerarRelatorio()">📄 Relatório do dia (PDF)</button>
-
-    <div>
-      <label>Data inicial</label><br>
-      <input type="date" id="dataInicio">
-    </div>
-
-    <div>
-      <label>Data final</label><br>
-      <input type="date" id="dataFim">
-    </div>
-
-    <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período (PDF)</button>
+  <div class="top-actions">
+    <button class="btn-sair" onclick="logout()">🚪 Sair</button>
+    <button class="btn-refresh" onclick="carregarPedidos()">🔄 Atualizar</button>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Solicitante</th>
-        <th>Manutenção</th>
-        <th>GO</th>
-        <th>Peças (NI editável)</th>
-        <th>Criado em</th>
-        <th>Aprovado</th>
-        <th>Status</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody id="lista"></tbody>
-  </table>
+  <div class="relatorio-box">
+    <button onclick="gerarRelatorioDia()">📄 Relatório do dia</button>
+    <input type="date" id="inicio">
+    <input type="date" id="fim">
+    <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período</button>
+  </div>
+
+  <div class="cards" id="lista"></div>
 </div>
+
+<footer>Criado e Desenvolvido por Cleider Filho</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
@@ -230,269 +174,140 @@ th { background:#f3f4f6; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-  getFirestore, collection, getDocs,
-  doc, updateDoc, getDoc, query, orderBy, addDoc
+  getFirestore, collection, getDocs, addDoc,
+  doc, updateDoc, getDoc, query, orderBy, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* FIREBASE */
-const app = initializeApp({
-   apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
-  authDomain: "pedidos-almoxarifado.firebaseapp.com",
-  projectId: "pedidos-almoxarifado",
-  storageBucket: "pedidos-almoxarifado.appspot.com",
-  messagingSenderId: "443882865992",
-  appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
+const app=initializeApp({
+  apiKey:"AIzaSyBsF6D5l1dXR4rSR3axpFrD-idXh2ZaRUE",
+  authDomain:"testeer-1516c.firebaseapp.com",
+  projectId:"testeer-1516c"
 });
-const db = getFirestore(app);
+const db=getFirestore(app);
 
 /* TELEGRAM */
-const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
-const TELEGRAM_CHAT_ID = "-1003646317990";
-
-/* USUÁRIOS */
-const USUARIOS = {
-  "otto2026": "Leonardo Otto",
-  "salles2026": "Douglas Salles",
-  "robson2026": "Robson dos Santos",
-  "gleyson2026": "Gleyson Murça",
-  "cleiton2026": "Cleiton Castro",
-  "junior2026": "Geraldo Junior",
-  "amanda2026": "Amanda",
-  "mariana2026": "Mariana",
-  "breno2026": "Breno",
-  "luiz2026": "Luis",
-  "reginaldo2026": "Reginaldo Bocafoli",
-  "rodiney2026": "Rodiney",
-  "cleider": "Cleider Filho"
-};
-
-/* NORMALIZAÇÃO */
-function normalizar(txt) {
-  return txt
-    .toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .trim();
-}
-
-/* BUSCAR NI NO APRENDIZADO */
-async function buscarNIporAprendizado(descricao) {
-  const termo = normalizar(descricao);
-  const snap = await getDocs(collection(db,"ni_aprendizado"));
-
-  let encontrado = null;
-  snap.forEach(d=>{
-    const a = d.data();
-    if (termo.includes(a.termo)) {
-      encontrado = a.ni;
-    }
-  });
-
-  return encontrado;
-}
+const TELEGRAM_TOKEN="8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
+const TELEGRAM_CHAT_ID="-1003208006500";
 
 /* LOGIN */
-btnLogin.onclick = () => {
-  const nome = USUARIOS[senha.value];
-  if (!nome) return alert("Senha incorreta");
-  localStorage.setItem("adminLogado","true");
-  localStorage.setItem("adminNome",nome);
+window.login=()=>{
+  localStorage.setItem("admin","true");
   loginBox.style.display="none";
   painel.style.display="block";
   carregarPedidos();
-};
-
-window.logout = () => {
+}
+window.logout=()=>{
   localStorage.clear();
   location.reload();
-};
-
-/* LISTAR PEDIDOS */
-async function carregarPedidos() {
-  lista.innerHTML = "";
-  const q = query(collection(db,"pedidos"), orderBy("criadoEm","desc"));
-  const snap = await getDocs(q);
-
-  for (const d of snap.docs) {
-    const p = d.data();
-
-    for (let i=0;i<p.pecas.length;i++) {
-      if (!p.pecas[i].ni) {
-        const niAprendido = await buscarNIporAprendizado(p.pecas[i].descricao);
-        if (niAprendido) {
-          p.pecas[i].ni = niAprendido;
-          await updateDoc(doc(db,"pedidos",d.id),{ pecas:p.pecas });
-        }
-      }
-    }
-
-   const classeStatus = p.status === "Pendente"
-  ? "status-pendente-card"
-  : "";
-
-lista.innerHTML += `
-<tr class="${classeStatus}">
-  <td data-label="Solicitante">${p.nome}</td>
-
-  <td data-label="Manutenção">${p.manutencao}</td>
-
-  <td data-label="GO">${p.go || "-"}</td>
-
-  <td data-label="Peças">
-    ${p.pecas.map((x,i)=>`
-      <div style="margin-bottom:8px">
-        <b>${x.descricao}</b> (${x.quantidade})<br>
-        NI:
-        <input
-          value="${x.ni ?? ""}"
-          onchange="atualizarNI('${d.id}',${i},'${x.descricao}',this.value)"
-          style="width:110px"
-        >
-      </div>
-    `).join("<hr>")}
-  </td>
-
-  <td data-label="Criado em">
-    ${new Date(p.criadoEm.seconds*1000).toLocaleString("pt-BR")}
-  </td>
-
-  <td data-label="Aprovado">
-    ${p.aprovadoPor || "-"}
-  </td>
-
-  <td data-label="Status">
-    <span class="status-${p.status.toLowerCase()}">${p.status}</span>
-  </td>
-
-  <td data-label="Ações" class="acoes-mobile">
-    ${p.status==="Pendente"
-      ? `<button class="aprovar" onclick="mudarStatus('${d.id}','Aprovado')">✅ Aprovar</button>
-         <button class="reprovar" onclick="mudarStatus('${d.id}','Reprovado')">❌ Reprovar</button>`
-      : "—"}
-  </td>
-</tr>
-`;
-
-  }
 }
 
-/* ATUALIZAR NI + APRENDER */
-window.atualizarNI = async (id, idx, descricao, ni) => {
-  const ref = doc(db,"pedidos",id);
-  const snap = await getDoc(ref);
-  const p = snap.data();
+/* NORMALIZAR */
+const norm=t=>t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 
-  p.pecas[idx].ni = ni || null;
-  await updateDoc(ref,{ pecas:p.pecas });
-
-  if (ni) {
-    await addDoc(collection(db,"ni_aprendizado"),{
-      termo: normalizar(descricao),
-      ni
-    });
-  }
-};
-
-/* 📲 TELEGRAM – NOTIFICAÇÃO DE APROVAÇÃO */
-window.notificarAprovacao = function (p) {
-  const texto = `
-✅ PEDIDO APROVADO
-
-Solicitante: ${p.nome}
-Manutenção: ${p.manutencao}
-GO: ${p.go || "-"}
-
-Peças:
-${p.pecas.map(x =>
-`- ${x.descricao}
-NI: ${x.ni ?? "NÃO INFORMADO"}
-Qtd: ${x.quantidade}`
-).join("\n\n")}
-
-Aprovado por: ${localStorage.getItem("adminNome")}
-`;
-
-  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: texto
-    })
-  });
-};
-
-/* STATUS */
-window.mudarStatus = async (id, status) => {
-  const ref = doc(db,"pedidos",id);
-  const snap = await getDoc(ref);
-  const p = snap.data();
-
-  if (p.status !== "Pendente") return;
-
-  const aprovadoPor = localStorage.getItem("adminNome");
-
-  await updateDoc(ref,{
-    status,
-    aprovadoEm: new Date(),
-    aprovadoPor
-  });
-
-  // 🔔 TELEGRAM (AGORA FUNCIONA)
-  if (status === "Aprovado") {
-    p.status = "Aprovado";
-    p.aprovadoPor = aprovadoPor;
-    notificarAprovacao(p);
-  }
-
-  carregarPedidos();
-};
-
-
-/* RELATÓRIOS */
-window.gerarRelatorio = () => gerarRelatorioPeriodo(true);
-
-window.gerarRelatorioPeriodo = async (somenteHoje=false)=>{
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("landscape");
-
-  const inicio = somenteHoje
-    ? new Date(new Date().setHours(0,0,0,0))
-    : new Date(dataInicio.value+"T00:00:00");
-
-  const fim = somenteHoje
-    ? new Date(new Date().setHours(23,59,59,999))
-    : new Date(dataFim.value+"T23:59:59");
-
-  const snap = await getDocs(collection(db,"pedidos"));
-  const linhas = [];
+/* CARREGAR */
+async function carregarPedidos(){
+  lista.innerHTML="";
+  const q=query(collection(db,"pedidos"),orderBy("criadoEm","desc"));
+  const snap=await getDocs(q);
 
   snap.forEach(d=>{
     const p=d.data();
-    if(!p.criadoEm) return;
-    const criado=new Date(p.criadoEm.seconds*1000);
-    if(criado<inicio||criado>fim) return;
-    linhas.push([
+    const finalizado=p.status!=="Pendente";
+    const faltaNI=p.pecas.some(x=>!x.ni);
+
+    lista.innerHTML+=`
+<div class="card ${p.status==="Pendente"?"card-pendente":""}">
+${!finalizado?`<button class="btn-excluir" onclick="excluir('${d.id}')">❌</button>`:""}
+<div class="status status-${p.status.toLowerCase()}">${p.status}</div>
+<b>${p.nome}</b><br>
+${p.manutencao} | GO: ${p.go||"-"}
+
+${p.pecas.map((x,i)=>`
+<div class="peca">
+${x.descricao} (${x.quantidade})
+<input value="${x.ni||""}" ${finalizado?"disabled":""}
+onchange="atualizarNI('${d.id}',${i},this.value)">
+</div>`).join("")}
+
+<div class="acoes">
+${finalizado
+?`<div class="selo">✔ Pedido Finalizado</div>`
+:`
+<button class="aprovar" ${faltaNI?"disabled":""}
+onclick="mudarStatus('${d.id}','Aprovado')">Aprovar</button>
+<button class="reprovar"
+onclick="mudarStatus('${d.id}','Reprovado')">Reprovar</button>`}
+</div>
+</div>`;
+  });
+}
+
+/* ATUALIZAR NI */
+window.atualizarNI=async(id,i,ni)=>{
+  const ref=doc(db,"pedidos",id);
+  const p=(await getDoc(ref)).data();
+  p.pecas[i].ni=ni;
+  await updateDoc(ref,{pecas:p.pecas});
+}
+
+/* APRENDIZADO */
+async function aprender(p){
+  for(const x of p.pecas){
+    if(x.ni){
+      await addDoc(collection(db,"aprendizado_ni"),{
+        descricao:norm(x.descricao),
+        ni:x.ni,
+        validadoEm:new Date()
+      });
+    }
+  }
+}
+
+/* STATUS */
+window.mudarStatus=async(id,status)=>{
+  const ref=doc(db,"pedidos",id);
+  const p=(await getDoc(ref)).data();
+  if(p.status!=="Pendente")return;
+
+  await updateDoc(ref,{status,finalizadoEm:new Date()});
+  if(status==="Aprovado")await aprender(p);
+  carregarPedidos();
+}
+
+/* EXCLUIR */
+window.excluir=async(id)=>{
+  if(confirm("Excluir pedido pendente?")){
+    await deleteDoc(doc(db,"pedidos",id));
+    carregarPedidos();
+  }
+}
+
+/* RELATÓRIOS */
+window.gerarRelatorioDia=()=>gerarRelatorioPeriodo(true);
+
+window.gerarRelatorioPeriodo=async()=>{
+  const { jsPDF }=window.jspdf;
+  const pdf=new jsPDF("landscape");
+  const snap=await getDocs(collection(db,"pedidos"));
+  const rows=[];
+  snap.forEach(d=>{
+    const p=d.data();
+    rows.push([
       p.nome,p.manutencao,p.go||"-",
       p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
-      criado.toLocaleString("pt-BR"),
-      p.aprovadoPor||"-",
       p.status
     ]);
   });
-
   pdf.autoTable({
-    startY:20,
-    head:[["Solicitante","Manutenção","GO","Peças","Pedido","Aprovado","Status"]],
-    body:linhas,
-    styles:{fontSize:9}
+    head:[["Solicitante","Manutenção","GO","Peças","Status"]],
+    body:rows
   });
-
   pdf.save("relatorio-pedidos.pdf");
-};
+}
 
-/* AUTO LOGIN */
-if (localStorage.getItem("adminLogado")==="true") {
+/* AUTOLOGIN */
+if(localStorage.getItem("admin")==="true"){
   loginBox.style.display="none";
   painel.style.display="block";
   carregarPedidos();
