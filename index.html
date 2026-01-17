@@ -307,7 +307,7 @@ ${titulo}
 
 👤 Solicitante: ${pedido.nome}
 🛠 Manutenção: ${pedido.manutencao}
-📄 GO: ${pedido.go || "-"}
+🚚 GO: ${pedido.go || "-"}
 
 📦 Peças:
 ${pedido.pecas.map(p => `- ${p.descricao} | NI: ${p.ni || "NÃO INFORMADO"} | Qtd: ${p.quantidade}`).join("\n")}
