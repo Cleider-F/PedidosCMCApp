@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Área de Técnicos – Almoxarifado CMC</title>
+<title>Área de Técnicos CMC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest-admin.json">
 <meta name="theme-color" content="#111827">
@@ -12,7 +12,7 @@ body{
   font-family:Arial,Helvetica,sans-serif;
   background:#f3f4f6;
   padding:12px;
-  
+
 }
 .logo{text-align:center;margin-bottom:10px}
 .logo img{max-width:150px;width:100%}
@@ -207,16 +207,21 @@ button{
 </div>
 
   <div class="top-actions">
+  <div style="display:flex; gap:10px;">
     <button class="btn-sair" onclick="logout()">🚪 Sair</button>
-    <button class="btn-refresh" onclick="carregarPedidos()">🔄 Atualizar</button>
+    <button class="btn-refresh" onclick="toggleRelatorio()">📊 Relatórios</button>
   </div>
+  <button class="btn-refresh" onclick="carregarPedidos()">🔄 Atualizar</button>
+</div>
 
-  <div class="relatorio-box">
-    <button onclick="gerarRelatorioDia()">📄 Relatório do dia</button>
-    <input type="date" id="inicio">
-    <input type="date" id="fim">
-    <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período</button>
-  </div>
+<div class="relatorio-box" id="relatorioBox" style="display:none;">
+  <button onclick="gerarRelatorioDia()">📄 Relatório do dia</button>
+
+  <input type="date" id="inicio">
+  <input type="date" id="fim">
+
+  <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período</button>
+</div>
 
   <div class="cards" id="lista"></div>
 </div>
@@ -232,6 +237,11 @@ import {
   getFirestore, collection, getDocs, addDoc,
   doc, updateDoc, getDoc, query, orderBy, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+window.toggleRelatorio = () => {
+  const box = document.getElementById("relatorioBox");
+  box.style.display = box.style.display === "none" ? "flex" : "none";
+};
 
 /* FIREBASE */
 const app=initializeApp({
@@ -440,26 +450,68 @@ window.excluir=async(id)=>{
 }
 
 /* RELATÓRIO */
-window.gerarRelatorioDia=()=>gerarRelatorioPeriodo();
-window.gerarRelatorioPeriodo=async()=>{
-  const { jsPDF }=window.jspdf;
-  const pdf=new jsPDF("landscape");
-  const snap=await getDocs(collection(db,"pedidos"));
-  const rows=[];
-  snap.forEach(d=>{
-    const p=d.data();
-    rows.push([
-      p.nome,p.manutencao,p.go||"-",
-      p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
-      p.status
-    ]);
+window.gerarRelatorioDia = () => {
+  const hoje = new Date().toISOString().split("T")[0];
+  document.getElementById("inicio").value = hoje;
+  document.getElementById("fim").value = hoje;
+  gerarRelatorioPeriodo();
+};
+
+window.gerarRelatorioPeriodo = async () => {
+  const inicio = document.getElementById("inicio").value;
+  const fim = document.getElementById("fim").value;
+
+  if (!inicio || !fim) {
+    alert("Selecione a data inicial e final");
+    return;
+  }
+
+  const dataInicio = new Date(inicio + "T00:00:00");
+  const dataFim = new Date(fim + "T23:59:59");
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("landscape");
+
+  const snap = await getDocs(collection(db, "pedidos"));
+  const rows = [];
+
+  snap.forEach(d => {
+    const p = d.data();
+    if (!p.criadoEm) return;
+
+    const criadoEm = p.criadoEm.toDate(); // 🔑 converte Timestamp
+
+    if (criadoEm >= dataInicio && criadoEm <= dataFim) {
+      rows.push([
+        p.nome,
+        p.manutencao,
+        p.go || "-",
+        p.pecas.map(x => `${x.descricao} (${x.quantidade})`).join("\n"),
+        p.status,
+        criadoEm.toLocaleString("pt-BR")
+      ]);
+    }
   });
+
+  if (rows.length === 0) {
+    alert("Nenhum pedido encontrado no período selecionado");
+    return;
+  }
+
   pdf.autoTable({
-    head:[["Solicitante","Manutenção","GO","Peças","Status"]],
-    body:rows
+    head: [[
+      "Solicitante",
+      "Manutenção",
+      "GO",
+      "Peças",
+      "Status",
+      "Criado em"
+    ]],
+    body: rows
   });
+
   pdf.save("relatorio-pedidos.pdf");
-}
+};
 
 /* AUTOLOGIN */
 if(localStorage.getItem("admin")==="true"){
