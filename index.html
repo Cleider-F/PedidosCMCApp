@@ -294,10 +294,11 @@ function notificarTelegram(pedido) {
   const texto = `
 📦 NOVO PEDIDO DE PEÇAS
 
-Solicitante: ${pedido.nome}
-Manutenção: ${pedido.manutencao}
-GO: ${pedido.go || "-"}
+👤 Solicitante: ${pedido.nome}
+🛠 Manutenção: ${pedido.manutencao}
+📄 GO: ${pedido.go || "-"}
 
+📦 Peças:
 ${pedido.pecas.map(p => `- ${p.descricao} | NI: ${p.ni || "NÃO INFORMADO"} | Qtd: ${p.quantidade}`).join("\n")}
 `;
   fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
