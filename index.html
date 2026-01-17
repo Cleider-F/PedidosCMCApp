@@ -143,6 +143,14 @@ input:disabled {
 
     <button type="button" class="secundario" onclick="adicionarPeca()">➕ Adicionar peça</button>
 
+    <div class="form-group">
+  <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
+    <input type="checkbox" id="isDevolucao" style="width:auto; margin:0;">
+    <strong>Pedido de devolução de peças</strong>
+  </label>
+</div>
+
+
     <label>Tipo de Manutenção</label>
     <select id="manutencao" required>
       <option value="">Selecione</option>
@@ -177,7 +185,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-     apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
+  apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
   authDomain: "pedidos-almoxarifado.firebaseapp.com",
   projectId: "pedidos-almoxarifado",
   storageBucket: "pedidos-almoxarifado.appspot.com",
@@ -228,7 +236,6 @@ function normalizar(txt) {
   return txt.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 }
 
-/* 🔎 AUTOCOMPLETE */
 let aprendizadoNI = [];
 
 async function carregarAprendizadoNI() {
@@ -286,13 +293,17 @@ window.selecionarPeca = (el, produto, ni) => {
   el.parentElement.style.display="none";
 };
 
-/* 📲 TELEGRAM */
 const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
 const TELEGRAM_CHAT_ID = "-1003671947511";
 
 function notificarTelegram(pedido) {
+  const titulo =
+    pedido.tipo === "DEVOLUCAO"
+      ? "📦 PEDIDO DE DEVOLUÇÃO"
+      : "🧰 NOVO PEDIDO DE PEÇAS";
+
   const texto = `
-📦 NOVO PEDIDO DE PEÇAS
+${titulo}
 
 👤 Solicitante: ${pedido.nome}
 🛠 Manutenção: ${pedido.manutencao}
@@ -301,6 +312,7 @@ function notificarTelegram(pedido) {
 📦 Peças:
 ${pedido.pecas.map(p => `- ${p.descricao} | NI: ${p.ni || "NÃO INFORMADO"} | Qtd: ${p.quantidade}`).join("\n")}
 `;
+
   fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
@@ -326,11 +338,16 @@ form.addEventListener("submit", async e => {
       });
     });
 
+    const tipoPedido = document.getElementById("isDevolucao").checked
+      ? "DEVOLUCAO"
+      : "PEDIDO";
+
     await addDoc(collection(db,"pedidos"),{
       manutencao: manutencaoSelect.value,
       go: goInput.value,
       nome: document.getElementById("nome").value,
       pecas,
+      tipo: tipoPedido,
       status:"Pendente",
       criadoEm:new Date()
     });
@@ -339,7 +356,8 @@ form.addEventListener("submit", async e => {
       nome: document.getElementById("nome").value,
       manutencao: manutencaoSelect.value,
       go: goInput.value,
-      pecas
+      pecas,
+      tipo: tipoPedido
     });
 
     mensagem.textContent = "✅ Pedido enviado com sucesso!";
