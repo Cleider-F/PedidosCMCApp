@@ -217,10 +217,13 @@ button{
 <div class="relatorio-box" id="relatorioBox" style="display:none;">
   <button onclick="gerarRelatorioDia()">📄 Relatório do dia</button>
 
-  <input type="date" id="inicio">
-  <input type="date" id="fim">
+  <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período<br></></button>
 
-  <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período</button>
+  <input type="date" id="inicio">
+  <input type="date" id="fim"> 
+
+  <button onclick="relatorioPecasDia()">📦 Peças mais usadas hoje</button>
+  <button onclick="relatorioPecasSemana()">📦 Peças mais usadas na semana</button>
 </div>
 
   <div class="cards" id="lista"></div>
@@ -235,7 +238,7 @@ button{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, collection, getDocs, addDoc,
-  doc, updateDoc, getDoc, query, orderBy, deleteDoc
+  doc, updateDoc, getDoc, query, orderBy, deleteDoc, limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 window.toggleRelatorio = () => {
@@ -314,7 +317,11 @@ const norm=t=>t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").tr
 /* CARREGAR */
 async function carregarPedidos(){
   lista.innerHTML="";
-  const q=query(collection(db,"pedidos"),orderBy("criadoEm","desc"));
+  const q = query(
+  collection(db,"pedidos"),
+  orderBy("criadoEm", "desc"),
+  limit(25)
+);
   const snap = await getDocs(q);
 
 // transforma em array
@@ -511,6 +518,79 @@ window.gerarRelatorioPeriodo = async () => {
   });
 
   pdf.save("relatorio-pedidos.pdf");
+};
+
+const normalizarPeca = t =>
+  t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+
+async function gerarRelatorioPecas(dataInicio, dataFim, titulo) {
+  const snap = await getDocs(collection(db, "pedidos"));
+  const contador = {};
+
+  snap.forEach(d => {
+    const p = d.data();
+    if (!p.criadoEm) return;
+    if (p.status !== "Aprovado") return;
+    if (p.tipo === "DEVOLUCAO") return;
+
+    const criadoEm = p.criadoEm.toDate();
+    if (criadoEm < dataInicio || criadoEm > dataFim) return;
+
+    p.pecas.forEach(x => {
+      const nome = normalizarPeca(x.descricao);
+      const qtd = Number(x.quantidade) || 0;
+
+      contador[nome] = (contador[nome] || 0) + qtd;
+    });
+  });
+
+  const linhas = Object.entries(contador)
+    .sort((a,b) => b[1] - a[1])
+    .map(([nome, qtd]) => [nome, qtd]);
+
+  if (linhas.length === 0) {
+    alert("Nenhuma peça encontrada no período");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+
+  pdf.setFontSize(14);
+  pdf.text(titulo, 14, 15);
+
+  pdf.autoTable({
+    startY: 20,
+    head: [["Peça", "Quantidade Total"]],
+    body: linhas
+  });
+
+  pdf.save(`${titulo}.pdf`);
+}
+
+window.relatorioPecasDia = () => {
+  const hoje = new Date();
+  const inicio = new Date(hoje.setHours(0,0,0,0));
+  const fim = new Date(hoje.setHours(23,59,59,999));
+
+  gerarRelatorioPecas(
+    inicio,
+    fim,
+    "Relatório diário – Peças mais usadas"
+  );
+};
+
+window.relatorioPecasSemana = () => {
+  const fim = new Date();
+  const inicio = new Date();
+  inicio.setDate(fim.getDate() - 6);
+  inicio.setHours(0,0,0,0);
+
+  gerarRelatorioPecas(
+    inicio,
+    fim,
+    "Relatório semanal – Peças mais usadas"
+  );
 };
 
 /* AUTOLOGIN */
