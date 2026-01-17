@@ -419,7 +419,7 @@ await enviarTelegram(
 
 👤 *Solicitante:* ${p.nome}
 🛠 *Manutenção:* ${p.manutencao}
-📄 *GO:* ${p.go || "-"}
+🚚 *GO:* ${p.go || "-"}
 
 📦 *Peças:*
 ${p.pecas.map(x => `• ${x.descricao} (${x.quantidade}) | NI: ${x.ni || "-"}`).join("\n")}
