@@ -171,6 +171,20 @@ button{
   background:#d1d5db;
 }
 
+.card-devolucao{
+  border-left-color:#2563eb;
+}
+
+.selo-devolucao{
+  background:#dbeafe;
+  color:#1e40af;
+  font-weight:bold;
+  text-align:center;
+  padding:6px;
+  border-radius:8px;
+  margin-bottom:8px;
+}
+
 </style>
 </head>
 
@@ -311,10 +325,13 @@ pedidos.forEach(p => {
   const faltaNI = p.pecas.some(x => !x.ni);
 
   lista.innerHTML += `
-<div class="card card-${p.status.toLowerCase()}">
+<div class="card card-${p.status.toLowerCase()} ${p.tipo === "DEVOLUCAO" ? "card-devolucao" : ""}">
 ${!finalizado ? `<button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>` : ""}
 
 <div class="status status-${p.status.toLowerCase()}">${p.status}</div>
+${p.tipo === "DEVOLUCAO"
+  ? `<div class="selo-devolucao">🔁 PEDIDO DE DEVOLUÇÃO</div>`
+  : ""}
 
 <div class="info"><b>Solicitante</b>${p.nome}</div>
 <div class="info"><b>Manutenção</b>${p.manutencao}</div>
@@ -391,8 +408,13 @@ window.mudarStatus=async(id,status)=>{
 
   const agora = new Date().toLocaleString("pt-BR");
 
+const tituloTelegram =
+  p.tipo === "DEVOLUCAO"
+    ? "🔁 *PEDIDO DE DEVOLUÇÃO APROVADO*"
+    : "🧰 *PEDIDO DE PEÇAS APROVADO*";
+
 await enviarTelegram(
-`✅ *PEDIDO APROVADO*
+`${tituloTelegram}
 
 👤 *Solicitante:* ${p.nome}
 🛠 *Manutenção:* ${p.manutencao}
