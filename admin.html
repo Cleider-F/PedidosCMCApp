@@ -12,6 +12,7 @@ body{
   font-family:Arial,Helvetica,sans-serif;
   background:#f3f4f6;
   padding:12px;
+  
 }
 .logo{text-align:center;margin-bottom:10px}
 .logo img{max-width:150px;width:100%}
@@ -72,12 +73,27 @@ button{
 }
 
 .card{
-  background:#fffbeb;
-  border-left:6px solid #f59e0b;
+  background:#ffffff;
+  border-left:6px solid transparent;
   border-radius:16px;
   padding:14px;
   box-shadow:0 4px 10px rgba(0,0,0,.08);
   position:relative;
+}
+
+.card-pendente{
+  background:#fffbeb;
+  border-left-color:#f59e0b;
+}
+
+.card-aprovado{
+  background:#ffffff;
+  border-left-color:#16a34a;
+}
+
+.card-reprovado{
+  background:#ffffff;
+  border-left-color:#dc2626;
 }
 
 .info{margin-bottom:8px;font-size:14px}
@@ -129,6 +145,32 @@ button{
   text-align:center;
   font-weight:bold;
 }
+.header-admin{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.header-admin h2{
+  flex:1;
+  text-align:center;
+  margin:0;
+}
+
+.btn-home{
+  text-decoration:none;
+  font-size:20px;
+  background:#e5e7eb;
+  border-radius:10px;
+  padding:8px 10px;
+  box-shadow:0 2px 4px rgba(0,0,0,.1);
+}
+
+.btn-home:hover{
+  background:#d1d5db;
+}
+
 </style>
 </head>
 
@@ -145,7 +187,10 @@ button{
 </div>
 
 <div class="painel" id="painel" style="display:none">
+ <div class="header-admin">
+  <a href="index.html" class="btn-home" title="Voltar ao início">🏠</a>
   <h2>📦 Pedidos Recebidos</h2>
+</div>
 
   <div class="top-actions">
     <button class="btn-sair" onclick="logout()">🚪 Sair</button>
@@ -194,19 +239,48 @@ async function enviarTelegram(msg){
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
-      chat_id:TELEGRAM_CHAT_ID,
-      text:msg
+      chat_id: TELEGRAM_CHAT_ID,
+      text: msg,
+      parse_mode: "Markdown"
     })
   });
 }
 
+/* USUÁRIOS */
+const USUARIOS = {
+  "cleider": "Cleider Filho",
+  "salles2026": "Douglas Salles",
+  "gleyson2026": "Gleyson Murça",
+  "robson2026": "Robson Jesus",
+  "otto2026": "Leonardo Otto",
+  "junior2026": "Geraldo Junior",
+  "cleiton2026": "Cleiton Castro",
+  "amanda2026": "Amanda",
+  "mariana2026": "Mariana",
+  "couto2026": "Grazy Couto",
+  "breno2026": "Breno",
+  "luiz2026": "Luiz"
+};
+
+
 /* LOGIN */
-window.login=()=>{
-  localStorage.setItem("admin","true");
-  loginBox.style.display="none";
-  painel.style.display="block";
+window.login = () => {
+  const senha = document.getElementById("senha").value;
+
+  if (!USUARIOS[senha]) {
+    alert("Senha inválida");
+    return;
+  }
+
+  localStorage.setItem("admin", "true");
+  localStorage.setItem("usuario_nome", USUARIOS[senha]);
+
+  loginBox.style.display = "none";
+  painel.style.display = "block";
   carregarPedidos();
-}
+};
+
+
 window.logout=()=>{localStorage.clear();location.reload()}
 
 /* NORMALIZAR */
@@ -216,21 +290,35 @@ const norm=t=>t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").tr
 async function carregarPedidos(){
   lista.innerHTML="";
   const q=query(collection(db,"pedidos"),orderBy("criadoEm","desc"));
-  const snap=await getDocs(q);
+  const snap = await getDocs(q);
 
-  snap.forEach(d=>{
-    const p=d.data();
-    const finalizado=p.status!=="Pendente";
-    const faltaNI=p.pecas.some(x=>!x.ni);
+// transforma em array
+const pedidos = [];
+snap.forEach(d => {
+  pedidos.push({ id: d.id, ...d.data() });
+});
 
-    lista.innerHTML+=`
-<div class="card">
-${!finalizado?`<button class="btn-excluir" onclick="excluir('${d.id}')">❌</button>`:""}
+// ordena: Pendentes primeiro
+pedidos.sort((a, b) => {
+  if (a.status === "Pendente" && b.status !== "Pendente") return -1;
+  if (a.status !== "Pendente" && b.status === "Pendente") return 1;
+  return 0; // mantém ordem original (data)
+});
+
+// renderiza
+pedidos.forEach(p => {
+  const finalizado = p.status !== "Pendente";
+  const faltaNI = p.pecas.some(x => !x.ni);
+
+  lista.innerHTML += `
+<div class="card card-${p.status.toLowerCase()}">
+${!finalizado ? `<button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>` : ""}
+
 <div class="status status-${p.status.toLowerCase()}">${p.status}</div>
 
 <div class="info"><b>Solicitante</b>${p.nome}</div>
 <div class="info"><b>Manutenção</b>${p.manutencao}</div>
-<div class="info"><b>GO</b>${p.go||"-"}</div>
+<div class="info"><b>GO</b>${p.go || "-"}</div>
 
 <div class="info"><b>Peças</b></div>
 
@@ -238,20 +326,26 @@ ${p.pecas.map((x,i)=>`
 <div class="peca">
 <b>${x.descricao} (${x.quantidade})</b>
 <input value="${x.ni||""}" ${finalizado?"disabled":""}
-onchange="atualizarNI('${d.id}',${i},this.value)">
+onchange="atualizarNI('${p.id}',${i},this.value)">
 </div>`).join("")}
 
 <div class="acoes">
 ${finalizado
-?`<div class="selo">✔ Pedido Finalizado</div>`
+?`
+<div class="selo">
+✔ Pedido ${p.status}<br>
+👷‍♂️ ${p.aprovadoPor || "-"}
+</div>
+`
 :`
 <button class="aprovar" ${faltaNI?"disabled":""}
-onclick="mudarStatus('${d.id}','Aprovado')">✅ Aprovar</button>
+onclick="mudarStatus('${p.id}','Aprovado')">✅ Aprovar</button>
 <button class="reprovar"
-onclick="mudarStatus('${d.id}','Reprovado')">❌ Reprovar</button>`}
+onclick="mudarStatus('${p.id}','Reprovado')">❌ Reprovar</button>`}
 </div>
+
 </div>`;
-  });
+});
 }
 
 /* NI */
@@ -288,17 +382,28 @@ window.mudarStatus=async(id,status)=>{
   const p=(await getDoc(ref)).data();
   if(p.status!=="Pendente")return;
 
-  await updateDoc(ref,{status,finalizadoEm:new Date()});
+  await updateDoc(ref, {
+  status,
+  finalizadoEm: new Date(),
+  aprovadoPor: localStorage.getItem("usuario_nome") || "Não identificado"
+});
   if(status==="Aprovado")await aprender(p);
 
-  await enviarTelegram(
-`📦 Pedido ${status}
-👤 ${p.nome}
-🛠 ${p.manutencao}
-📌 GO: ${p.go||"-"}
-🧾 Peças:
-${p.pecas.map(x=>`- ${x.descricao} (${x.quantidade}) NI:${x.ni||"-"}`).join("\n")}`
-  );
+  const agora = new Date().toLocaleString("pt-BR");
+
+await enviarTelegram(
+`✅ *PEDIDO APROVADO*
+
+👤 *Solicitante:* ${p.nome}
+🛠 *Manutenção:* ${p.manutencao}
+📄 *GO:* ${p.go || "-"}
+
+📦 *Peças:*
+${p.pecas.map(x => `• ${x.descricao} (${x.quantidade}) | NI: ${x.ni || "-"}`).join("\n")}
+
+👷‍♂️ *Aprovado por:* ${localStorage.getItem("usuario_nome") || "Não identificado"}
+⏰ *Data:* ${agora}`
+);
 
   carregarPedidos();
 }
