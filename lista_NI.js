@@ -20,7 +20,7 @@ window.LISTA_NI = [
 { produto: "BARRA DA 5 RODA 2 POL", ni: 27033327 },
 { produto: "BARRA DA 5 RODA 3,5 POL", ni: 27018192 },
 { produto: "BATERIA 180 AH", ni: 25568503 },
-{ produto: "BOLSA DA CABIBE TRASEIRA (VOLVO)", ni: 27118605 },
+{ produto: "BOLSA DA CABINE TRASEIRA (VOLVO)", ni: 27118605 },
 { produto: "BOLSA DE AR FACCHINI GRANDE", ni: 27178996 },
 { produto: "BOLSA DE AR LIBRELATO GRANDE", ni: 27258592 },
 { produto: "BOLSA FACCHINI GRANDE", ni: 27178996 },
