@@ -74,7 +74,7 @@ window.LISTA_NI = [
 { produto: "GARRA DE BLOQUEIO", ni: 27055933 },
 { produto: "GARRA DE BLOQUEIO", ni: 27058933 },
 { produto: "GARRAFA TERMICA", ni: 25094793 },
-{ produto: "GAVIAO 3,5", ni: 27024635 },
+{ produto: "GAVIAO 3,5", ni: 27034635 },
 { produto: "INDICADOR DE RODA", ni: 27093316 },
 { produto: "INSERTO DE 12 MM", ni: 27017956 },
 { produto: "INSERTO DE 16 MM", ni: 27017963 },
