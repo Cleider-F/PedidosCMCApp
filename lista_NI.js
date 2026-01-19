@@ -198,5 +198,6 @@ window.LISTA_NI = [
 { produto: "TAMBOR DE FREIO" , ni: 27036769 },
 { produto: "VÁLVULA RELÉ" , ni: 27033549 },
 { produto: "FILTRO DA VÁLVULA APM" , ni: 27110095 },
-{ produto: "FILTRO SELCOM 200" , ni: 25576892 }
+{ produto: "FILTRO SELCOM 200" , ni: 25576892 },
+{ produto: "FILTRO SELCOM 100" , ni: 25576891 }
 ];
