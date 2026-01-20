@@ -57,7 +57,7 @@ window.LISTA_NI = [
 { produto: "DRENO DO BALAO", ni: 27023775 },
 { produto: "EMENDA 8 PARA 16", ni: 27111328 },
 { produto: "EMENDA DE 12 (FERRO)", ni: 27019822 },
-{ produto: "EMENDA DE 8 PLASTICA", ni: 27017874 },
+{ produto: "EMENDA DE 8 PLASTICA", ni: 27033747 },
 { produto: "EMENDA DE 8 MM (METAL)", ni: 27033754 },
 { produto: "ENGATE RAPIDO", ni: 27018183 },
 { produto: "ESTOJO DE RODA", ni: 27037084 },
