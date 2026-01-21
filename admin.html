@@ -36,11 +36,15 @@ footer{
 h2{text-align:center;margin-bottom:10px}
 
 .top-actions{
-  display:flex;
-  justify-content:space-between;
+  display:center;
+  justify-content:flex-start;
   flex-wrap:wrap;
   gap:10px;
   margin-bottom:15px;
+}
+
+.btn-atualizar{
+  margin-left:auto;
 }
 
 button{
@@ -210,8 +214,8 @@ button{
   <div style="display:flex; gap:10px;">
     <button class="btn-sair" onclick="logout()">🚪 Sair</button>
     <button class="btn-refresh" onclick="toggleRelatorio()">📊 Relatórios</button>
-  </div>
-  <button class="btn-refresh" onclick="location.reload()">🔄 Atualizar</button>
+    <button class="btn-atualizar" onclick="location.reload()">🔄 Atualizar</button>
+</div>
 
 <div class="relatorio-box" id="relatorioBox" style="display:none;">
   <button onclick="gerarRelatorioDia()">📄 Relatório do dia</button>
