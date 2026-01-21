@@ -316,7 +316,7 @@ window.login = () => {
 
 window.logout=()=>{localStorage.clear();location.reload()}
 
-/* ATUALIZAR PEDIDOS 
+ ATUALIZAR PEDIDOS 
   window.carregarPedidos = async function(){
   lista.innerHTML = "";
 
@@ -331,8 +331,7 @@ window.logout=()=>{localStorage.clear();location.reload()}
   snap.forEach(doc => {
     renderPedido(doc.id, doc.data());
   });
-}; */
-  
+}; 
   
 /* NORMALIZAR */
 const norm=t=>t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
