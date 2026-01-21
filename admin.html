@@ -423,15 +423,57 @@ window.atualizarNI = async (id, i, ni) => {
 /* APRENDER */
 async function aprender(p){
   for(const x of p.pecas){
-    if(x.ni){
-      await addDoc(collection(db,"aprendizado_ni"),{
-        descricao:norm(x.descricao),
-        ni:x.ni,
-        validadoEm:new Date()
-      });
-    }
+    if(!x.ni) continue;
+
+    const descricaoNorm = norm(x.descricao);
+    const niLimpo = x.ni.trim();
+
+    // 🔍 verifica se já existe
+    const q = query(
+      collection(db, "aprendizado_ni"),
+      where("descricao", "==", descricaoNorm),
+      where("ni", "==", niLimpo)
+    );
+
+    const snap = await getDocs(q);
+
+    // ❌ se já existe, NÃO salva de novo
+    if (!snap.empty) continue;
+
+    // ✅ se não existe, aprende
+    await addDoc(collection(db,"aprendizado_ni"),{
+      descricao: descricaoNorm,
+      ni: niLimpo,
+      validadoEm: new Date()
+    });
   }
 }
+
+//limpeza NI//
+
+window.limparDuplicados = async () => {
+  if (!confirm("Isso irá remover NIs duplicados. Continuar?")) return;
+
+  const snap = await getDocs(collection(db, "aprendizado_ni"));
+
+  const mapa = {}; // chave = descricao|ni
+  let removidos = 0;
+
+  snap.forEach(d => {
+    const data = d.data();
+    const chave = `${data.descricao}|${data.ni}`;
+
+    if (!mapa[chave]) {
+      mapa[chave] = d.id; // mantém o primeiro
+    } else {
+      // duplicado → remove
+      deleteDoc(doc(db, "aprendizado_ni", d.id));
+      removidos++;
+    }
+  });
+
+  alert(`Limpeza concluída ✅\nDuplicados removidos: ${removidos}`);
+};
 
 /* STATUS + TELEGRAM */
 window.mudarStatus=async(id,status)=>{
