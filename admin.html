@@ -450,31 +450,6 @@ async function aprender(p){
   }
 }
 
-//limpeza NI//
-
-window.limparDuplicados = async () => {
-  if (!confirm("Isso irá remover NIs duplicados. Continuar?")) return;
-
-  const snap = await getDocs(collection(db, "aprendizado_ni"));
-
-  const mapa = {}; // chave = descricao|ni
-  let removidos = 0;
-
-  snap.forEach(d => {
-    const data = d.data();
-    const chave = `${data.descricao}|${data.ni}`;
-
-    if (!mapa[chave]) {
-      mapa[chave] = d.id; // mantém o primeiro
-    } else {
-      // duplicado → remove
-      deleteDoc(doc(db, "aprendizado_ni", d.id));
-      removidos++;
-    }
-  });
-
-  alert(`Limpeza concluída ✅\nDuplicados removidos: ${removidos}`);
-};
 
 /* STATUS + TELEGRAM */
 window.mudarStatus=async(id,status)=>{
