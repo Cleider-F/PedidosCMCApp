@@ -123,7 +123,7 @@ window.LISTA_NI = [
 { produto: "PINO DE CENTRO MENOR", ni: 27019813 },
 { produto: "PINO DO GAVIAO", ni: 27017875 },
 { produto: "PLACA TEKNIL TECNIL", ni: 27172628 },
-{ produto: "PORCA DE 16", ni: 27033858 },
+{ produto: "PORCA DE 16", ni: 27033358 },
 { produto: "PORCA DE 18", ni: 27025456 },
 { produto: "PORCA DE 24 ROSCA GROSSA", ni: 27174074 },
 { produto: "PORCA DA MONTANHEIRA", ni: 27033438 },
