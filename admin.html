@@ -296,11 +296,6 @@ let swRegistration = null;
       { scope: "/PedidosCMCApp/" }
     );
 
-    // sincroniza botões
-    ajustarBotaoNotificacao("novo", document.getElementById("btnNovo"));
-    ajustarBotaoNotificacao("status", document.getElementById("btnStatus"));
-  }
-})();
 
 /* =========================================================
    PUSH NOTIFICATIONS
@@ -425,6 +420,11 @@ window.login = () => {
 
   loginBox.style.display="none";
   painel.style.display="block";
+
+  // sincroniza botões
+    ajustarBotaoNotificacao("novo", document.getElementById("btnNovo"));
+    ajustarBotaoNotificacao("status", document.getElementById("btnStatus"));
+  }
   carregarPedidos();
 };
 
@@ -432,6 +432,9 @@ window.logout = ()=>{
   localStorage.clear();
   location.reload();
 };
+
+  
+})();
 
 /* =========================================================
    NORMALIZAÇÃO
