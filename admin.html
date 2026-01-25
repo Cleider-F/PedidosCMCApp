@@ -57,6 +57,7 @@ button{
 
 .btn-sair{background:#111827;color:#fff}
 .btn-refresh{background:#2abf3b;color:#fff}
+.btn-notificacao{background:#f2cf35;color:#fff}
 .btn-atualizar{background:#2563eb;color:#fff}
 
 .relatorio-box{
@@ -70,6 +71,18 @@ button{
 }
 
 .relatorio-box button{background:#16a34a;color:#fff}
+
+.notificacao-box{
+  background:#f9fafb;
+  padding:12px;
+  border-radius:12px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.notificacao-box button{background:#7a7a77;color:#fff}
 
 .cards{
   display:grid;
@@ -211,15 +224,12 @@ button{
   <h2>📦 Pedidos Recebidos</h2>
 </div>
 
-<div style="display:flex;gap:10px;justify-content:center;margin-bottom:15px">
-<button onclick="salvarTokenPush('novo')">🔔 Push Novo Pedido</button>
-<button onclick="salvarTokenPush('status')">🔔 Push Status Pedido</button>
-</div>
 
   <div class="top-actions">
   <div style="display:flex; gap:10px;">
     <button class="btn-sair" onclick="logout()">🚪 Sair</button>
     <button class="btn-refresh" onclick="toggleRelatorio()">📊 Relatórios</button>
+    <button class="btn-notificacao" onclick="toggleNotificacaoBox()">🔔 Notificações</button>
     <button class="btn-atualizar" onclick="location.reload()">🔄 Atualizar</button>
 </div>
 
@@ -234,6 +244,12 @@ button{
   <button onclick="relatorioPecasDia()">📦 Peças mais usadas hoje</button>
   <button onclick="relatorioPecasSemana()">📦 Peças mais usadas na semana</button>
 </div>
+
+<div class="notificacao-box" id="notificacaoBox" style="display:none;">
+<button onclick="salvarTokenPush('novo')">🔔 Notificações - Novo Pedido</button>
+<button onclick="salvarTokenPush('status')">🔔 Notificações - Pedidos Aprovados</button>
+</div>
+
 
   <div class="cards" id="lista"></div>
 </div>
@@ -718,6 +734,11 @@ window.relatorioPecasSemana = () => {
     fim,
     "Relatório semanal – Peças mais usadas"
   );
+};
+
+window.toggleNotificacaoBox = () => {
+  const box = document.getElementById("notificacaoBox");
+  box.style.display = box.style.display === "none" ? "flex" : "none";
 };
 
 /* AUTOLOGIN */
