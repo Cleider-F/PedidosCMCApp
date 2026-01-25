@@ -292,8 +292,8 @@ let swRegistration = null;
 (async () => {
   if ("serviceWorker" in navigator) {
     swRegistration = await navigator.serviceWorker.register(
-      "/PedidosCMCApp/firebase-messaging-sw.js",
-      { scope: "/PedidosCMCApp/" }
+      "/Tester/firebase-messaging-sw.js",
+      { scope: "/Tester/" }
     );
 
     // sincroniza botões
