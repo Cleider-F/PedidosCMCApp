@@ -114,6 +114,26 @@ button{
   border-left-color:#dc2626;
 }
 
+.card-separado{
+  background:#eff6ff;
+  border-left-color:#2563eb;
+}
+
+.btn-separado{
+  background:#2563eb;
+  color:#fff;
+}
+
+.selo-separado{
+  background:#dbeafe;
+  color:#1e40af;
+  font-weight:bold;
+  text-align:center;
+  padding:8px;
+  border-radius:10px;
+}
+
+
 .info{margin-bottom:8px;font-size:14px}
 .info b{display:block;color:#374151}
 
@@ -227,6 +247,7 @@ button{
 </div>
 
 
+
   <div class="top-actions">
   <div style="display:flex; gap:10px;">
     <button class="btn-sair" onclick="logout()">🚪 Sair</button>
@@ -251,10 +272,11 @@ button{
 <button onclick="salvarTokenPush('novo')">🔔 Notificações - Novo Pedido</button>
 <button onclick="salvarTokenPush('status')">🔔 Notificações - Pedidos Aprovados</button>
 </div>
-<br><br>
+
 <div class="cards" id="lista"></div>
 </div>
-
+  
+<br></br>
   
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
@@ -293,8 +315,8 @@ const messaging = getMessaging(app);
 (async () => {
   if ("serviceWorker" in navigator) {
     swRegistration = await navigator.serviceWorker.register(
-      "/PedidosCMCApp/firebase-messaging-sw.js",
-      { scope: "/PedidosCMCApp/" }
+      "/firebase-messaging-sw.js",
+      { scope: "/" }
     );
   }
 })();
@@ -359,8 +381,8 @@ let swRegistration = null;
 (async () => {
   if ("serviceWorker" in navigator) {
     swRegistration = await navigator.serviceWorker.register(
-      "/PedidosCMCApp/firebase-messaging-sw.js",
-      { scope: "/PedidosCMCApp/" }
+      "/firebase-messaging-sw.js",
+      { scope: "/" }
     );
   }
 })();
@@ -397,7 +419,7 @@ async function salvarTokenPush(tipo) {
 
   // 🛑 EVITA TOKEN DUPLICADO
   if (tokensAtuais.includes(token)) {
-    alert("Este dispositivo já está registrado para receber notificações");
+    alert("Este celular já está registrado para receber notificações");
     return;
   }
 
@@ -469,8 +491,19 @@ pedidos.forEach(p => {
   const faltaNI = p.pecas.some(x => !x.ni);
 
   lista.innerHTML += `
-<div class="card card-${p.status.toLowerCase()} ${p.tipo === "DEVOLUCAO" ? "card-devolucao" : ""}">
-${!finalizado ? `<button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>` : ""}
+<div class="card 
+card-${p.status.toLowerCase()} 
+${p.tipo === "DEVOLUCAO" ? "card-devolucao" : ""} 
+${p.separado ? "card-separado" : ""}">
+${p.status === "Pendente"
+  ? `<button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>`
+  : p.status === "Aprovado" && !p.separado
+    ? `<button class="btn-excluir" 
+        style="color:#2563eb" 
+        title="Confirmar que o pedido foi separado"
+        onclick="confirmarSeparacao('${p.id}')">✔️</button>`
+    : ""
+}
 
 <div class="status status-${p.status.toLowerCase()}">${p.status}</div>
 ${p.tipo === "DEVOLUCAO"
@@ -497,6 +530,11 @@ ${finalizado
 ✔ Pedido ${p.status}<br>
 👷‍♂️ ${p.aprovadoPor || "-"}
 </div>
+
+${p.separado ? `
+<div class="selo-separado">
+🔵 Separado por ${p.separadoPor || "-"}
+</div>` : ""}
 `
 :`
 <button class="aprovar" ${faltaNI?"disabled":""}
@@ -598,6 +636,20 @@ window.excluir=async(id)=>{
     carregarPedidos();
   }
 }
+
+/* SEPARAÇÃO */
+window.confirmarSeparacao = async (id) => {
+  if (!confirm("Confirmar que o pedido já foi separado?")) return;
+
+  await updateDoc(doc(db,"pedidos",id),{
+    separado: true,
+    separadoPor: localStorage.getItem("usuario_nome") || "Não identificado",
+    separadoEm: new Date()
+  });
+
+  carregarPedidos();
+};
+
 
 /* RELATÓRIO */
 window.gerarRelatorioDia = () => {
