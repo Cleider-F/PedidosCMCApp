@@ -251,11 +251,10 @@ button{
 <button onclick="salvarTokenPush('novo')">🔔 Notificações - Novo Pedido</button>
 <button onclick="salvarTokenPush('status')">🔔 Notificações - Pedidos Aprovados</button>
 </div>
-
+<br><br>
 <div class="cards" id="lista"></div>
 </div>
-  
-<br></br>
+
   
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
@@ -294,8 +293,8 @@ const messaging = getMessaging(app);
 (async () => {
   if ("serviceWorker" in navigator) {
     swRegistration = await navigator.serviceWorker.register(
-      "/Tester/firebase-messaging-sw.js",
-      { scope: "/Tester/" }
+      "/PedidosCMCApp/firebase-messaging-sw.js",
+      { scope: "/PedidosCMCApp/" }
     );
   }
 })();
