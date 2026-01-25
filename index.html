@@ -185,11 +185,16 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
+   apiKey: "AIzaSyCAJPyQ7-a4Efxxh5yTXQ_326hn22OYAuc",
+
   authDomain: "pedidos-almoxarifado.firebaseapp.com",
+
   projectId: "pedidos-almoxarifado",
-  storageBucket: "pedidos-almoxarifado.appspot.com",
+
+  storageBucket: "pedidos-almoxarifado.firebasestorage.app",
+
   messagingSenderId: "443882865992",
+
   appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
 });
 const db = getFirestore(app);

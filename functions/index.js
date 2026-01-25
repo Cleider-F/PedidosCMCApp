@@ -1,35 +1,30 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { initializeApp } = require("firebase-admin/app");
+const { getMessaging } = require("firebase-admin/messaging");
+const { getFirestore } = require("firebase-admin/firestore");
+const fetch = require("node-fetch");
 
-admin.initializeApp();
+initializeApp();
 
-const db = admin.firestore();
-const messaging = admin.messaging();
+const db = getFirestore();
+const messaging = getMessaging();
 
 const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
 const CHAT_ID = "-1003671947511";
 
-/**
- * 📦 Notificação de novo pedido (Telegram + Push)
- */
-exports.notificarNovoPedido = functions.firestore
-  .document("pedidos/{pedidoId}")
-  .onCreate(async (snap, context) => {
+/* ======================================================
+   TELEGRAM – NOVO PEDIDO
+====================================================== */
+exports.notificarNovoPedido = onDocumentCreated(
+  {
+    document: "pedidos/{pedidoId}",
+    region: "southamerica-east1"
+  },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
     const p = snap.data();
-
-    if (!p) {
-      return null;
-    }
-
-    /* ======================
-       1️⃣ TELEGRAM
-    ====================== */
-
-    const listaPecas = Array.isArray(p.pecas)
-      ? p.pecas
-          .map((x) => `• ${x.descricao} (${x.quantidade})`)
-          .join("\n")
-      : "—";
 
     const texto = `
 📦 *NOVO PEDIDO DE PEÇAS*
@@ -39,96 +34,92 @@ exports.notificarNovoPedido = functions.firestore
 🏷 *GO:* ${p.go || "-"}
 
 🧾 *Peças:*
-${listaPecas}
-
-🕒 *Data:* ${new Date().toLocaleString("pt-BR")}
+${Array.isArray(p.pecas)
+  ? p.pecas.map(x => `• ${x.descricao} (${x.quantidade})`).join("\n")
+  : "-"}
 `;
 
-    const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-
-    await fetch(telegramUrl, {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: CHAT_ID,
         text: texto,
-        parse_mode: "Markdown",
-      }),
+        parse_mode: "Markdown"
+      })
     });
+  }
+);
 
-    /* ======================
-       2️⃣ PUSH NOTIFICATION
-    ====================== */
-
-    const adminsSnap = await db
-      .collection("usuarios")
-      .where("perfil", "==", "admin")
-      .get();
+/* ======================================================
+   PUSH – NOVO PEDIDO
+====================================================== */
+/*exports.pushNovoPedido = onDocumentCreated(
+  {
+    document: "pedidos/{pedidoId}",
+    region: "southamerica-east1"
+  },
+  async () => {
+    const snap = await db.collection("admin_push_tokens").get();
+    if (snap.empty) return;
 
     const tokens = [];
 
-    adminsSnap.forEach((doc) => {
+    snap.forEach(doc => {
       const data = doc.data();
       if (Array.isArray(data.fcmTokens)) {
         tokens.push(...data.fcmTokens);
       }
     });
 
-    if (!tokens.length) {
-      return null;
-    }
+    if (!tokens.length) return;
 
-    const response = await messaging.sendEachForMulticast({
+    await messaging.sendEachForMulticast({
       tokens,
       notification: {
-        title: "📦 Novo pedido de peças",
-        body: `${p.nome || "Usuário"} solicitou ${
-          Array.isArray(p.pecas) ? p.pecas.length : 0
-        } item(ns)`,
-      },
-      data: {
-        tipo: "novo_pedido",
-        pedidoId: context.params.pedidoId,
-      },
+        title: "📦 Novo pedido",
+        body: "Um novo pedido foi criado no sistema"
+      }
     });
+  }
+);
+*/
+/* ======================================================
+   PUSH – STATUS DO PEDIDO
+====================================================== */
+/*exports.pushStatusPedido = onDocumentUpdated(
+  {
+    document: "pedidos/{pedidoId}",
+    region: "southamerica-east1"
+  },
+  async (event) => {
+    const antes = event.data.before.data();
+    const depois = event.data.after.data();
 
-    /* ======================
-       3️⃣ LIMPAR TOKENS INVÁLIDOS
-    ====================== */
+    if (!antes || !depois) return;
+    if (antes.status === depois.status) return;
 
-    const tokensInvalidos = [];
+    const snap = await db.collection("admin_push_tokens").get();
+    if (snap.empty) return;
 
-    response.responses.forEach((r, i) => {
-      if (!r.success) {
-        tokensInvalidos.push(tokens[i]);
+    const tokens = [];
+
+    snap.forEach(doc => {
+      const data = doc.data();
+      if (Array.isArray(data.fcmTokens)) {
+        tokens.push(...data.fcmTokens);
       }
     });
 
-    if (tokensInvalidos.length) {
-      const snapTokens = await db
-        .collection("usuarios")
-        .where("perfil", "==", "admin")
-        .get();
+    if (!tokens.length) return;
 
-      const batch = db.batch();
+    await messaging.sendEachForMulticast({
+      tokens,
+      notification: {
+        title: `📋 Pedido ${depois.status}`,
+        body: `Pedido de ${depois.nome || "-"}`
+      }
+    });*/
+  }
+);
 
-      snapTokens.forEach((doc) => {
-        const data = doc.data();
-        if (!Array.isArray(data.fcmTokens)) {
-          return;
-        }
-
-        const tokensValidos = data.fcmTokens.filter(
-          (t) => !tokensInvalidos.includes(t),
-        );
-
-        if (tokensValidos.length !== data.fcmTokens.length) {
-          batch.update(doc.ref, { fcmTokens: tokensValidos });
-        }
-      });
-
-      await batch.commit();
-    }
-
-    return null;
-  });
