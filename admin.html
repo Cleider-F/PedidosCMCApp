@@ -315,8 +315,8 @@ const messaging = getMessaging(app);
 (async () => {
   if ("serviceWorker" in navigator) {
     swRegistration = await navigator.serviceWorker.register(
-      "/firebase-messaging-sw.js",
-      { scope: "/" }
+      "/PedidosCMCApp/firebase-messaging-sw.js",
+      { scope: "/PedidosCMCApp/" }
     );
   }
 })();
@@ -381,8 +381,8 @@ let swRegistration = null;
 (async () => {
   if ("serviceWorker" in navigator) {
     swRegistration = await navigator.serviceWorker.register(
-      "/firebase-messaging-sw.js",
-      { scope: "/" }
+      "/PedidosCMCApp/firebase-messaging-sw.js",
+      { scope: "/PedidosCMCApp/" }
     );
   }
 })();
