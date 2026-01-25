@@ -22,7 +22,39 @@ messaging.onBackgroundMessage((payload) => {
 
   self.registration.showNotification(title, {
     body,
-    icon: "/icon-192.png",
-    badge: "/icon-192.png"
+    icon: "/PedidosCMCApp/icon-192.png",
+    badge: "/PedidosCMCApp/icon-192.png",
+
+    // 👇 IMPORTANTE: dados usados no clique
+    data: {
+      url: "/PedidosCMCApp/admin.html"
+    }
   });
+});
+
+/**
+ * 👉 CLIQUE NA NOTIFICAÇÃO
+ */
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+
+  const url = event.notification.data?.url || "/PedidosCMCApp/admin.html";
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true })
+      .then(clientList => {
+
+        // Se o painel já estiver aberto, apenas traz para frente
+        for (const client of clientList) {
+          if (client.url.includes("admin") && "focus" in client) {
+            return client.focus();
+          }
+        }
+
+        // Caso contrário, abre o painel
+        if (clients.openWindow) {
+          return clients.openWindow(url);
+        }
+      })
+  );
 });
