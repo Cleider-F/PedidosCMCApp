@@ -800,6 +800,13 @@ if(localStorage.getItem("admin")==="true"){
   carregarPedidos();
 }
 
+/* 🔄 ATUALIZA AUTOMÁTICA A CADA 3 MINUTOS */
+setInterval(() => {
+  if (localStorage.getItem("admin") === "true") {
+    console.log("🔄 Atualização automática dos pedidos");
+    carregarPedidos();
+  }
+}, 3 * 60 * 1000); // 3 minutos
 
 </script>
 
