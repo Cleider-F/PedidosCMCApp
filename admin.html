@@ -500,7 +500,7 @@ ${p.status === "Pendente"
   : p.status === "Aprovado" && !p.separado
     ? `<button class="btn-excluir" 
         style="color:#2563eb" 
-        title="Confirmar que o pedido foi separado"
+        title="Confirmar que o pedido já foi reservado?"
         onclick="confirmarSeparacao('${p.id}')">✔️</button>`
     : ""
 }
