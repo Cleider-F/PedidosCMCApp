@@ -1,3 +1,4 @@
+Admin funcional
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -57,7 +58,7 @@ button{
 
 .btn-sair{background:#111827;color:#fff}
 .btn-refresh{background:#2abf3b;color:#fff}
-.btn-notificacao{background:#f2cf35;color:#fff}
+.btn-notificacao{background:#dfbe1b;color:#fff}
 .btn-atualizar{background:#2563eb;color:#fff}
 
 .relatorio-box{
@@ -82,7 +83,7 @@ button{
   margin-bottom:15px;
 }
 
-.notificacao-box button{background:#7a7a77;color:#fff}
+.notificacao-box button{background:#767674;color:#fff}
 
 .cards{
   display:grid;
@@ -113,26 +114,6 @@ button{
   background:#ffffff;
   border-left-color:#dc2626;
 }
-
-.card-separado{
-  background:#eff6ff;
-  border-left-color:#2563eb;
-}
-
-.btn-separado{
-  background:#2563eb;
-  color:#fff;
-}
-
-.selo-separado{
-  background:#dbeafe;
-  color:#1e40af;
-  font-weight:bold;
-  text-align:center;
-  padding:8px;
-  border-radius:10px;
-}
-
 
 .info{margin-bottom:8px;font-size:14px}
 .info b{display:block;color:#374151}
@@ -232,8 +213,6 @@ button{
   <img src="suzano-logo.png">
 </div>
 
-<footer>Criado e Desenvolvido por Cleider Filho</footer>
-  
 <div class="login" id="loginBox">
   <h2>🔐 Área de Técnicos</h2>
   <input type="password" id="senha" placeholder="Senha">
@@ -245,7 +224,6 @@ button{
   <a href="index.html" class="btn-home" title="Voltar ao início">🏠</a>
   <h2>📦 Pedidos Recebidos</h2>
 </div>
-
 
 
   <div class="top-actions">
@@ -266,55 +244,154 @@ button{
 
   <button onclick="relatorioPecasDia()">📦 Peças mais usadas hoje</button>
   <button onclick="relatorioPecasSemana()">📦 Peças mais usadas na semana</button>
+
+  <br><input type="date" id="inicio">
+  <input type="date" id="fim"></br>
+
+  <button onclick="relatorioPecasDia()">📦 Peças mais usadas hoje</button>
+  <button onclick="relatorioPecasSemana()">📦 Peças mais usadas na semana</button>
 </div>
 
-<div class="notificacao-box" id="notificacaoBox" style="display:none;">
-<button onclick="salvarTokenPush('novo')">🔔 Notificações - Novo Pedido</button>
-<button onclick="salvarTokenPush('status')">🔔 Notificações - Pedidos Aprovados</button>
+ <div class="notificacao-box" id="notificacaoBox" style="display:none;">
+  <button id="btnNovo" onclick="toggleNotificacao('novo', this)"></button>
+  <button id="btnStatus" onclick="toggleNotificacao('status', this)"></button>
 </div>
 
-<div class="cards" id="lista"></div>
+
+  <div class="cards" id="lista"></div>
 </div>
-  
-<br></br>
-  
+
+<footer>Criado e Desenvolvido por Cleider Filho</footer>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <script type="module">
+/* =========================================================
+   IMPORTS
+========================================================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, collection, getDocs, addDoc,
-  doc, updateDoc, getDoc, query, orderBy, arrayUnion,
-  deleteDoc, limit, where, setDoc} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  doc, updateDoc, getDoc, query, orderBy,
+  deleteDoc, limit, where, setDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
-
-window.toggleRelatorio = () => {
-  const box = document.getElementById("relatorioBox");
-  box.style.display = box.style.display === "none" ? "flex" : "none";
-};
-
-/* FIREBASE */
-const app=initializeApp({
-   apiKey: "AIzaSyCAJPyQ7-a4Efxxh5yTXQ_326hn22OYAuc",
-
+/* =========================================================
+   FIREBASE
+========================================================= */
+const app = initializeApp({
+  apiKey: "AIzaSyCAJPyQ7-a4Efxxh5yTXQ_326hn22OYAuc",
   authDomain: "pedidos-almoxarifado.firebaseapp.com",
-
   projectId: "pedidos-almoxarifado",
-
   storageBucket: "pedidos-almoxarifado.firebasestorage.app",
-
   messagingSenderId: "443882865992",
-
   appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
 });
-const db=getFirestore(app);
+
+const db = getFirestore(app);
 const messaging = getMessaging(app);
 
-/* TELEGRAM */
+/* =========================================================
+   SERVICE WORKER
+========================================================= */
+let swRegistration = null;
+
+(async () => {
+  if ("serviceWorker" in navigator) {
+    swRegistration = await navigator.serviceWorker.register(
+      "/PedidosCMCApp/firebase-messaging-sw.js",
+      { scope: "/PedidosCMCApp/" }
+    );
+
+    // sincroniza botões
+    ajustarBotaoNotificacao("novo", document.getElementById("btnNovo"));
+    ajustarBotaoNotificacao("status", document.getElementById("btnStatus"));
+  }
+})();
+
+/* =========================================================
+   PUSH NOTIFICATIONS
+========================================================= */
+const textos = {
+  novo: {
+    on: "🔕 Desativar notificações – Novos pedidos",
+    off: "🔔 Ativar notificações – Novos pedidos"
+  },
+  status: {
+    on: "🔕 Desativar notificações – Pedidos aprovados",
+    off: "🔔 Ativar notificações – Pedidos aprovados"
+  }
+};
+
+async function ajustarBotaoNotificacao(tipo, botao) {
+  if (!botao || !swRegistration) return;
+
+  const token = await getToken(messaging, {
+    vapidKey: "BFjRfkUJ8hXuoy7gWDDfUzSN28VQxTFrR2UrYgxLe_1oZehIdFVfNHdZba21LN9afSHWiKUppajQ2fQGeWR3-n0",
+    serviceWorkerRegistration: swRegistration
+  });
+console.log("TOKEN FCM:", token);
+  if (!token) return;
+
+  const ref = doc(db, "admin_push_tokens", `${token}_${tipo}`);
+  const snap = await getDoc(ref);
+
+  botao.innerText =
+    snap.exists() && snap.data().ativo
+      ? textos[tipo].on
+      : textos[tipo].off;
+}
+
+async function toggleNotificacao(tipo, botao) {
+  if (!swRegistration) return alert("Service Worker não pronto");
+
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") return alert("Permissão negada");
+
+  const token = await getToken(messaging, {
+    vapidKey: "BFjRfkUJ8hXuoy7gWDDfUzSN28VQxTFrR2UrYgxLe_1oZehIdFVfNHdZba21LN9afSHWiKUppajQ2fQGeWR3-n0",
+    serviceWorkerRegistration: swRegistration
+  });
+
+  if (!token) return alert("Token não gerado");
+
+  const ref = doc(db, "admin_push_tokens", `${token}_${tipo}`);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref,{
+      usuario: localStorage.getItem("usuario_nome"),
+      token,
+      tipo,
+      ativo:true,
+      perfil:"admin",
+      criadoEm:new Date()
+    });
+
+    botao.innerText = textos[tipo].on;
+    return alert("🔔 Notificações ativadas");
+  }
+
+  const novoEstado = !snap.data().ativo;
+
+  await updateDoc(ref,{
+    ativo:novoEstado,
+    atualizadoEm:new Date()
+  });
+
+  botao.innerText = novoEstado ? textos[tipo].on : textos[tipo].off;
+  alert(novoEstado ? "🔔 Notificações ativadas" : "🔕 Notificações desativadas");
+}
+
+window.toggleNotificacao = toggleNotificacao;
+
+/* =========================================================
+   TELEGRAM
+========================================================= */
 const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
-const TELEGRAM_CHAT_ID = "-1003646317990";
+const TELEGRAM_CHAT_ID = "-1003208006500";
 
 async function enviarTelegram(msg){
   await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
@@ -328,7 +405,9 @@ async function enviarTelegram(msg){
   });
 }
 
-/* USUÁRIOS */
+/* =========================================================
+   USUÁRIOS / LOGIN
+========================================================= */
 const USUARIOS = {
   "cleider": "Cleider Filho",
   "salles2026": "Douglas Salles",
@@ -346,151 +425,67 @@ const USUARIOS = {
   "reginaldo2026": "Reginaldo Bocafoli"
 };
 
-
-/* LOGIN */
 window.login = () => {
   const senha = document.getElementById("senha").value;
+  if (!USUARIOS[senha]) return alert("Senha inválida");
 
-  if (!USUARIOS[senha]) {
-    alert("Senha inválida");
-    return;
-  }
+  localStorage.setItem("admin","true");
+  localStorage.setItem("usuario_nome",USUARIOS[senha]);
 
-  localStorage.setItem("admin", "true");
-  localStorage.setItem("usuario_nome", USUARIOS[senha]);
-
-  loginBox.style.display = "none";
-  painel.style.display = "block";
+  loginBox.style.display="none";
+  painel.style.display="block";
   carregarPedidos();
 };
 
-window.logout=()=>{localStorage.clear();location.reload()}
+window.logout = ()=>{
+  localStorage.clear();
+  location.reload();
+};
 
-/* PUSH NOTIFICATIONS */
-let swRegistration = null;
+/* =========================================================
+   NORMALIZAÇÃO
+========================================================= */
+const norm = t =>
+  t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 
-(async () => {
-  if ("serviceWorker" in navigator) {
-    swRegistration = await navigator.serviceWorker.register(
-      "/PedidosCMCApp/firebase-messaging-sw.js",
-      { scope: "/PedidosCMCApp/" }
-    );
-  }
-})();
+/* =========================================================
+   PEDIDOS
+========================================================= */
+async function carregarPedidos(){
+  lista.innerHTML="";
 
-async function salvarTokenPush(tipo) {
-  if (!swRegistration) {
-    alert("Service Worker não pronto");
-    return;
-  }
-
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    alert("Permissão negada");
-    return;
-  }
-
-  const token = await getToken(messaging, {
-    vapidKey: "BFjRfkUJ8hXuoy7gWDDfUzSN28VQxTFrR2UrYgxLe_1oZehIdFVfNHdZba21LN9afSHWiKUppajQ2fQGeWR3-n0",
-    serviceWorkerRegistration: swRegistration
-  });
-
-  if (!token) {
-    alert("Token não gerado");
-    return;
-  }
-
-  // ✅ MODELO CORRETO: documento = TOKEN
-  const ref = doc(db, "admin_push_tokens", token);
-
-  await setDoc(ref, {
-    token,
-    tipo, // "novo" ou "status"
-    ativo: true,
-    perfil: "admin",
-    usuario: localStorage.getItem("usuario_nome"),
-    criadoEm: new Date()
-  });
-
-  alert("Notificação ativada com sucesso 📲");
-}
-
-window.salvarTokenPush = salvarTokenPush;
-
-//window.ativarPushNovo = salvarTokenPush;//
-//window.ativarPushStatus = salvarTokenPush;//
-
- /* ATUALIZAR PEDIDOS */
-  window.carregarPedidos = async function(){
-  lista.innerHTML = "";
-
-  const q = query(
-    collection(db,"admin_push_tokens"),
+  const q=query(
+    collection(db,"pedidos"),
     orderBy("criadoEm","desc"),
     limit(25)
   );
 
-  const snap = await getDocs(q);
+  const snap=await getDocs(q);
+  const pedidos=[];
 
-  snap.forEach(doc => {
-    renderPedido(doc.id, doc.data());
+  snap.forEach(d=>pedidos.push({id:d.id,...d.data()}));
+
+  pedidos.sort((a,b)=>{
+    if(a.status==="Pendente" && b.status!=="Pendente") return -1;
+    if(a.status!=="Pendente" && b.status==="Pendente") return 1;
+    return 0;
   });
-}; 
-  
-/* NORMALIZAR */
-const norm=t=>t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 
-/* CARREGAR */
-async function carregarPedidos(){
-  lista.innerHTML="";
-  const q = query(
-  collection(db,"pedidos"),
-  orderBy("criadoEm", "desc"),
-  limit(25)
-);
-  const snap = await getDocs(q);
+  pedidos.forEach(p=>{
+    const finalizado=p.status!=="Pendente";
+    const faltaNI=p.pecas.some(x=>!x.ni);
 
-// transforma em array
-const pedidos = [];
-snap.forEach(d => {
-  pedidos.push({ id: d.id, ...d.data() });
-});
-
-// ordena: Pendentes primeiro
-pedidos.sort((a, b) => {
-  if (a.status === "Pendente" && b.status !== "Pendente") return -1;
-  if (a.status !== "Pendente" && b.status === "Pendente") return 1;
-  return 0; // mantém ordem original (data)
-});
-
-// renderiza
-pedidos.forEach(p => {
-  const finalizado = p.status !== "Pendente";
-  const faltaNI = p.pecas.some(x => !x.ni);
-
-  lista.innerHTML += `
-<div class="card 
-card-${p.status.toLowerCase()} 
-${p.tipo === "DEVOLUCAO" ? "card-devolucao" : ""} 
-${p.separado ? "card-separado" : ""}">
-${p.status === "Pendente"
-  ? `<button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>`
-  : p.status === "Aprovado" && !p.separado
-    ? `<button class="btn-excluir" 
-        style="color:#2563eb" 
-        title="Confirmar que o pedido já foi reservado?"
-        onclick="confirmarSeparacao('${p.id}')">✔️</button>`
-    : ""
-}
+    lista.innerHTML+=`
+<div class="card card-${p.status.toLowerCase()} ${p.tipo==="DEVOLUCAO"?"card-devolucao":""}">
+${!finalizado?`<button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>`:""}
 
 <div class="status status-${p.status.toLowerCase()}">${p.status}</div>
-${p.tipo === "DEVOLUCAO"
-  ? `<div class="selo-devolucao">🔁 PEDIDO DE DEVOLUÇÃO</div>`
-  : ""}
+
+${p.tipo==="DEVOLUCAO"?`<div class="selo-devolucao">🔁 PEDIDO DE DEVOLUÇÃO</div>`:""}
 
 <div class="info"><b>Solicitante</b>${p.nome}</div>
 <div class="info"><b>Manutenção</b>${p.manutencao}</div>
-<div class="info"><b>GO</b>${p.go || "-"}</div>
+<div class="info"><b>GO</b>${p.go||"-"}</div>
 
 <div class="info"><b>Peças</b></div>
 
@@ -502,282 +497,164 @@ onchange="atualizarNI('${p.id}',${i},this.value)">
 </div>`).join("")}
 
 <div class="acoes">
-${finalizado
-?`
+${finalizado?`
 <div class="selo">
-✅ Pedido ${p.status} por 
- ${p.aprovadoPor || "-"}👷‍♂️
+✔ Pedido ${p.status}<br>
+👷‍♂️ ${p.aprovadoPor||"-"}
 </div>
-
-${p.separado ? `
-<div class="selo-separado">
-✔️ Reservado por ${p.separadoPor || "-"}
-</div>` : ""}
-`
-:`
-<button class="aprovar" ${faltaNI?"disabled":""}
-onclick="mudarStatus('${p.id}','Aprovado')">✅ Aprovar</button>
-<button class="reprovar"
-onclick="mudarStatus('${p.id}','Reprovado')">❌ Reprovar</button>`}
+`:`<button class="aprovar" ${faltaNI?"disabled":""} onclick="mudarStatus('${p.id}','Aprovado')">✅ Aprovar</button>
+<button class="reprovar" onclick="mudarStatus('${p.id}','Reprovado')">❌ Reprovar</button>`}
 </div>
-
 </div>`;
-});
+  });
 }
+window.carregarPedidos=carregarPedidos;
 
-/* NI */
-window.atualizarNI = async (id, i, ni) => {
-  const ref = doc(db, "pedidos", id);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
+/* =========================================================
+   NI
+========================================================= */
+window.atualizarNI=async(id,i,ni)=>{
+  const ref=doc(db,"pedidos",id);
+  const snap=await getDoc(ref);
+  if(!snap.exists())return;
 
-  const p = snap.data();
-  p.pecas[i].ni = ni.trim();
+  const p=snap.data();
+  p.pecas[i].ni=ni.trim();
 
-  await updateDoc(ref, { pecas: p.pecas });
-
-  // 🔄 Recarrega para recalcular faltaNI e liberar Aprovar
+  await updateDoc(ref,{pecas:p.pecas});
   carregarPedidos();
 };
 
-/* APRENDER */
+/* =========================================================
+   APRENDIZADO
+========================================================= */
 async function aprender(p){
   for(const x of p.pecas){
-    if(!x.ni) continue;
+    if(!x.ni)continue;
 
-    const descricaoNorm = norm(x.descricao);
-    const niLimpo = x.ni.trim();
-
-    // 🔍 verifica se já existe
-    const q = query(
-      collection(db, "aprendizado_ni"),
-      where("descricao", "==", descricaoNorm),
-      where("ni", "==", niLimpo)
+    const q=query(
+      collection(db,"aprendizado_ni"),
+      where("descricao","==",norm(x.descricao)),
+      where("ni","==",x.ni.trim())
     );
 
-    const snap = await getDocs(q);
+    const snap=await getDocs(q);
+    if(!snap.empty)continue;
 
-    // ❌ se já existe, NÃO salva de novo
-    if (!snap.empty) continue;
-
-    // ✅ se não existe, aprende
     await addDoc(collection(db,"aprendizado_ni"),{
-      descricao: descricaoNorm,
-      ni: niLimpo,
-      validadoEm: new Date()
+      descricao:norm(x.descricao),
+      ni:x.ni.trim(),
+      validadoEm:new Date()
     });
   }
 }
 
-
-/* STATUS + TELEGRAM */
+/* =========================================================
+   STATUS + TELEGRAM
+========================================================= */
 window.mudarStatus=async(id,status)=>{
   const ref=doc(db,"pedidos",id);
   const p=(await getDoc(ref)).data();
   if(p.status!=="Pendente")return;
 
-  await updateDoc(ref, {
-  status,
-  finalizadoEm: new Date(),
-  aprovadoPor: localStorage.getItem("usuario_nome") || "Não identificado"
-});
-  if(status==="Aprovado")await aprender(p);
+  await updateDoc(ref,{
+    status,
+    finalizadoEm:new Date(),
+    aprovadoPor:localStorage.getItem("usuario_nome")||"Não identificado"
+  });
 
-  const agora = new Date().toLocaleString("pt-BR");
+  if(status==="Aprovado") await aprender(p);
 
-const tituloTelegram =
-  p.tipo === "DEVOLUCAO"
-    ? "🔁 *PEDIDO DE DEVOLUÇÃO APROVADO*"
-    : "🧰 *PEDIDO DE PEÇAS APROVADO*";
+  const agora=new Date().toLocaleString("pt-BR");
 
-await enviarTelegram(
+  const tituloTelegram=
+    p.tipo==="DEVOLUCAO"
+    ?"🔁 *PEDIDO DE DEVOLUÇÃO APROVADO*"
+    :"🧰 *PEDIDO DE PEÇAS APROVADO*";
+
+  await enviarTelegram(
 `${tituloTelegram}
 
 👤 *Solicitante:* ${p.nome}
 🛠 *Manutenção:* ${p.manutencao}
-🚚 *GO:* ${p.go || "-"}
+🚚 *GO:* ${p.go||"-"}
 
 📦 *Peças:*
-${p.pecas.map(x => `• ${x.descricao} (${x.quantidade}) | NI: ${x.ni || "-"}`).join("\n")}
+${p.pecas.map(x=>`• ${x.descricao} (${x.quantidade}) | NI: ${x.ni||"-"}`).join("\n")}
 
-👷‍♂️ *Aprovado por:* ${localStorage.getItem("usuario_nome") || "Não identificado"}
+👷‍♂️ *Aprovado por:* ${localStorage.getItem("usuario_nome")}
 ⏰ *Data:* ${agora}`
-);
+  );
 
   carregarPedidos();
-}
+};
 
-/* EXCLUIR */
+/* =========================================================
+   EXCLUIR
+========================================================= */
 window.excluir=async(id)=>{
   if(confirm("Excluir pedido pendente?")){
     await deleteDoc(doc(db,"pedidos",id));
     carregarPedidos();
   }
-}
-
-/* SEPARAÇÃO */
-window.confirmarSeparacao = async (id) => {
-  if (!confirm("Confirmar que o pedido já foi separado?")) return;
-
-  await updateDoc(doc(db,"pedidos",id),{
-    separado: true,
-    separadoPor: localStorage.getItem("usuario_nome") || "Não identificado",
-    separadoEm: new Date()
-  });
-
-  carregarPedidos();
 };
 
+/* =========================================================
+   RELATÓRIOS
+========================================================= */
+window.toggleRelatorio=()=>{
+  const box=document.getElementById("relatorioBox");
+  box.style.display=box.style.display==="none"?"flex":"none";
+};
 
-/* RELATÓRIO */
-window.gerarRelatorioDia = () => {
-  const hoje = new Date().toISOString().split("T")[0];
-  document.getElementById("inicio").value = hoje;
-  document.getElementById("fim").value = hoje;
+window.gerarRelatorioDia=()=>{
+  const hoje=new Date().toISOString().split("T")[0];
+  inicio.value=hoje; fim.value=hoje;
   gerarRelatorioPeriodo();
 };
 
-window.gerarRelatorioPeriodo = async () => {
-  const inicio = document.getElementById("inicio").value;
-  const fim = document.getElementById("fim").value;
-
-  if (!inicio || !fim) {
-    alert("Selecione a data inicial e final");
-    return;
-  }
-
-  const dataInicio = new Date(inicio + "T00:00:00");
-  const dataFim = new Date(fim + "T23:59:59");
+window.gerarRelatorioPeriodo=async()=>{
+  const dataInicio=new Date(inicio.value+"T00:00:00");
+  const dataFim=new Date(fim.value+"T23:59:59");
 
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("landscape");
+  const pdf=new jsPDF("landscape");
 
-  const snap = await getDocs(collection(db, "pedidos"));
-  const rows = [];
+  const snap=await getDocs(collection(db,"pedidos"));
+  const rows=[];
 
-  snap.forEach(d => {
-    const p = d.data();
-    if (!p.criadoEm) return;
-
-    const criadoEm = p.criadoEm.toDate(); // 🔑 converte Timestamp
-
-    if (criadoEm >= dataInicio && criadoEm <= dataFim) {
+  snap.forEach(d=>{
+    const p=d.data();
+    if(!p.criadoEm)return;
+    const criado=p.criadoEm.toDate();
+    if(criado>=dataInicio && criado<=dataFim){
       rows.push([
-        p.nome,
-        p.manutencao,
-        p.go || "-",
-        p.pecas.map(x => `${x.descricao} (${x.quantidade})`).join("\n"),
-        p.status,
-        criadoEm.toLocaleString("pt-BR")
+        p.nome,p.manutencao,p.go||"-",
+        p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
+        p.status,criado.toLocaleString("pt-BR")
       ]);
     }
   });
 
-  if (rows.length === 0) {
-    alert("Nenhum pedido encontrado no período selecionado");
-    return;
-  }
-
   pdf.autoTable({
-    head: [[
-      "Solicitante",
-      "Manutenção",
-      "GO",
-      "Peças",
-      "Status",
-      "Criado em"
-    ]],
-    body: rows
+    head:[["Solicitante","Manutenção","GO","Peças","Status","Criado em"]],
+    body:rows
   });
 
   pdf.save("relatorio-pedidos.pdf");
 };
-
-const normalizarPeca = t =>
-  t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
-
-async function gerarRelatorioPecas(dataInicio, dataFim, titulo) {
-  const snap = await getDocs(collection(db, "pedidos"));
-  const contador = {};
-
-  snap.forEach(d => {
-    const p = d.data();
-    if (!p.criadoEm) return;
-    if (p.status !== "Aprovado") return;
-    if (p.tipo === "DEVOLUCAO") return;
-
-    const criadoEm = p.criadoEm.toDate();
-    if (criadoEm < dataInicio || criadoEm > dataFim) return;
-
-    p.pecas.forEach(x => {
-      const nome = normalizarPeca(x.descricao);
-      const qtd = Number(x.quantidade) || 0;
-
-      contador[nome] = (contador[nome] || 0) + qtd;
-    });
-  });
-
-  const linhas = Object.entries(contador)
-    .sort((a,b) => b[1] - a[1])
-    .map(([nome, qtd]) => [nome, qtd]);
-
-  if (linhas.length === 0) {
-    alert("Nenhuma peça encontrada no período");
-    return;
-  }
-
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-
-  pdf.setFontSize(14);
-  pdf.text(titulo, 14, 15);
-
-  pdf.autoTable({
-    startY: 20,
-    head: [["Peça", "Quantidade Total"]],
-    body: linhas
-  });
-
-  pdf.save(`${titulo}.pdf`);
-}
-
-window.relatorioPecasDia = () => {
-  const hoje = new Date();
-  const inicio = new Date(hoje.setHours(0,0,0,0));
-  const fim = new Date(hoje.setHours(23,59,59,999));
-
-  gerarRelatorioPecas(
-    inicio,
-    fim,
-    "Relatório diário – Peças mais usadas"
-  );
-};
-
-window.relatorioPecasSemana = () => {
-  const fim = new Date();
-  const inicio = new Date();
-  inicio.setDate(fim.getDate() - 6);
-  inicio.setHours(0,0,0,0);
-
-  gerarRelatorioPecas(
-    inicio,
-    fim,
-    "Relatório semanal – Peças mais usadas"
-  );
-};
-
 window.toggleNotificacaoBox = () => {
   const box = document.getElementById("notificacaoBox");
   box.style.display = box.style.display === "none" ? "flex" : "none";
 };
-
-/* AUTOLOGIN */
+/* =========================================================
+   AUTOLOGIN
+========================================================= */
 if(localStorage.getItem("admin")==="true"){
   loginBox.style.display="none";
   painel.style.display="block";
   carregarPedidos();
 }
-
 </script>
 
 </body>
