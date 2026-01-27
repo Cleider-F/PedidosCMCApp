@@ -400,28 +400,6 @@ async function salvarTokenPush(tipo) {
     return;
   }
 
-async function salvarTokenPush(tipo) {
-  if (!swRegistration) {
-    alert("Service Worker não pronto");
-    return;
-  }
-
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    alert("Permissão negada");
-    return;
-  }
-
-  const token = await getToken(messaging, {
-    vapidKey: "BFjRfkUJ8hXuoy7gWDDfUzSN28VQxTFrR2UrYgxLe_1oZehIdFVfNHdZba21LN9afSHWiKUppajQ2fQGeWR3-n0",
-    serviceWorkerRegistration: swRegistration
-  });
-
-  if (!token) {
-    alert("Token não gerado");
-    return;
-  }
-
   // ✅ MODELO CORRETO: documento = TOKEN
   const ref = doc(db, "admin_push_tokens", token);
 
