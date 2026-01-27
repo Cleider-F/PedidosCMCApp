@@ -298,11 +298,22 @@ const messaging = getMessaging(app);
 let swRegistration = null;
 
 (async () => {
-  if ("serviceWorker" in navigator) {
-    swRegistration = await navigator.serviceWorker.register(
-      "/PedidosCMCApp/firebase-messaging-sw.js",
-      { scope: "/PedidosCMCApp/" }
-    );
+  let swRegistration;
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/PedidosCMCApp/firebase-messaging-sw.js", {
+      scope: "/PedidosCMCApp/"
+    })
+    .then(reg => {
+      swRegistration = reg;
+      console.log("SW registrado:", reg.scope);
+    })
+    .catch(err => {
+      console.error("Erro ao registrar SW:", err);
+    });
+}
+
 
     // sincroniza botões
     ajustarBotaoNotificacao("novo", document.getElementById("btnNovo"));
