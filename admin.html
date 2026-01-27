@@ -312,15 +312,6 @@ const app=initializeApp({
 const db=getFirestore(app);
 const messaging = getMessaging(app);
 
-(async () => {
-  if ("serviceWorker" in navigator) {
-    swRegistration = await navigator.serviceWorker.register(
-      "/PedidosCMCApp/firebase-messaging-sw.js",
-      { scope: "/PedidosCMCApp/" }
-    );
-  }
-})();
-
 /* TELEGRAM */
 const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
 const TELEGRAM_CHAT_ID = "-1003646317990";
@@ -409,34 +400,43 @@ async function salvarTokenPush(tipo) {
     return;
   }
 
-  const nome = localStorage.getItem("usuario_nome");
-  const ref = doc(db, "admin_push_tokens", nome);
-
-  // 🔍 BUSCA O DOCUMENTO DO USUÁRIO
-  const snap = await getDoc(ref);
-  const dados = snap.exists() ? snap.data() : {};
-  const tokensAtuais = dados.fcmTokens || [];
-
-  // 🛑 EVITA TOKEN DUPLICADO
-  if (tokensAtuais.includes(token)) {
-    alert("Este celular já está registrado para receber notificações");
+async function salvarTokenPush(tipo) {
+  if (!swRegistration) {
+    alert("Service Worker não pronto");
     return;
   }
 
-  const payload = {
-    nome,
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    alert("Permissão negada");
+    return;
+  }
+
+  const token = await getToken(messaging, {
+    vapidKey: "BFjRfkUJ8hXuoy7gWDDfUzSN28VQxTFrR2UrYgxLe_1oZehIdFVfNHdZba21LN9afSHWiKUppajQ2fQGeWR3-n0",
+    serviceWorkerRegistration: swRegistration
+  });
+
+  if (!token) {
+    alert("Token não gerado");
+    return;
+  }
+
+  // ✅ MODELO CORRETO: documento = TOKEN
+  const ref = doc(db, "admin_push_tokens", token);
+
+  await setDoc(ref, {
+    token,
+    tipo, // "novo" ou "status"
+    ativo: true,
     perfil: "admin",
-    fcmTokens: arrayUnion(token),
-    atualizadoEm: new Date()
-  };
+    usuario: localStorage.getItem("usuario_nome"),
+    criadoEm: new Date()
+  });
 
-  if (tipo === "novo") payload.ativo_novo_pedido = true;
-  if (tipo === "status") payload.ativo_status_pedido = true;
-
-  await setDoc(ref, payload, { merge: true });
-
-  alert("Push ativado com sucesso neste dispositivo 📲");
+  alert("Notificação ativada com sucesso 📲");
 }
+
 window.salvarTokenPush = salvarTokenPush;
 
 //window.ativarPushNovo = salvarTokenPush;//
