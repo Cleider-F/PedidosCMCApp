@@ -300,26 +300,22 @@ let swRegistration = null;
 (async () => {
   let swRegistration;
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("/PedidosCMCApp/firebase-messaging-sw.js", {
-      scope: "/PedidosCMCApp/"
-    })
-    .then(reg => {
+  if ("serviceWorker" in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.register("/PedidosCMCApp/firebase-messaging-sw.js", {
+        scope: "/PedidosCMCApp/"
+      });
       swRegistration = reg;
       console.log("SW registrado:", reg.scope);
-    })
-    .catch(err => {
+    } catch (err) {
       console.error("Erro ao registrar SW:", err);
-    });
-}
+    }
+  } // Fecha o IF
 
-
-    // sincroniza botões
-    ajustarBotaoNotificacao("novo", document.getElementById("btnNovo"));
-    ajustarBotaoNotificacao("status", document.getElementById("btnStatus"));
-  }
-})();
+  // Agora estas funções estão dentro da IIFE e rodam após o registro
+  ajustarBotaoNotificacao("novo", document.getElementById("btnNovo"));
+  ajustarBotaoNotificacao("status", document.getElementById("btnStatus"));
+})(); // Fecha a IIFE corretamente
 
 /* =========================================================
    PUSH NOTIFICATIONS
