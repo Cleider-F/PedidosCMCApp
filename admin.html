@@ -663,25 +663,41 @@ window.gerarRelatorioPeriodo=async()=>{
   const pdf=new jsPDF("landscape");
 
   const snap=await getDocs(collection(db,"pedidos"));
-  const rows=[];
+  const rows = [];
 
-  snap.forEach(d=>{
-    const p=d.data();
-    if(!p.criadoEm)return;
-    const criado=p.criadoEm.toDate();
-    if(criado>=dataInicio && criado<=dataFim){
-      rows.push([
-        p.nome,p.manutencao,p.go||"-",
-        p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
-        p.status,criado.toLocaleString("pt-BR")
-      ]);
-    }
-  });
+snap.forEach(d => {
+  const p = d.data();
+  if (!p.criadoEm) return;
 
-  pdf.autoTable({
-    head:[["Solicitante","Manutenção","GO","Peças","Status","Criado em"]],
-    body:rows
-  });
+  const criado = p.criadoEm.toDate();
+
+  if (criado >= dataInicio && criado <= dataFim) {
+    rows.push({
+      criado,
+      dados: [
+        p.nome,
+        p.manutencao,
+        p.go || "-",
+        p.pecas.map(x => `${x.descricao} (${x.quantidade})`).join("\n"),
+        p.status,
+        criado.toLocaleString("pt-BR")
+      ]
+    });
+  }
+});
+
+/* 🔽 ORDENA DO MAIS NOVO PARA O MAIS ANTIGO */
+rows.sort((a, b) => b.criado - a.criado);
+
+/* 🔽 REMOVE A DATA AUXILIAR */
+const body = rows.map(r => r.dados);
+
+
+ pdf.autoTable({
+  head:[["Solicitante","Manutenção","GO","Peças","Status","Criado em"]],
+  body: rows
+});
+
 
   pdf.save("relatorio-pedidos.pdf");
 };
