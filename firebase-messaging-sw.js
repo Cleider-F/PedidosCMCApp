@@ -16,24 +16,34 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log("[SW] Push recebido:", payload);
 
-  const type  = payload.data?.type;
-  const total = Number(payload.data?.total || 0);
+  const type       = payload.data?.type;
+  const pendentes  = Number(payload.data?.pendentes || 0);
+  const aprovados  = Number(payload.data?.aprovados || 0);
 
   let title = "🔔 Atualização";
   let body  = "Há novas atualizações.";
 
   if (type === "NOVO_PEDIDO") {
     title = "📦 Pedidos pendentes";
-    body = total === 1
+
+    body = pendentes === 1
       ? "Você tem 1 pedido aguardando aprovação."
-      : `Você tem ${total} pedidos aguardando aprovação.`;
+      : `Você tem ${pendentes} pedidos aguardando aprovação.`;
   }
 
   if (type === "PEDIDO_APROVADO") {
-    title = "✅ Pedido aprovado";
-    body = total === 1
-      ? "Resta 1 pedido pendente."
-      : `Restam ${total} pedidos pendentes.`;
+    title = "📦 Pedidos aguardando reserva";
+
+    body = aprovados === 1
+      ? "Você tem 1 pedido aprovado aguardando reserva."
+      : `Você tem ${aprovados} pedidos aprovados aguardando reserva.`;
+  }
+
+  if (type === "PEDIDO_RESERVADO") {
+    title = "📦 Reserva confirmada";
+
+    body =
+      `Pendentes: ${pendentes} • Aguardando reserva: ${aprovados}`;
   }
 
   self.registration.showNotification(title, {
@@ -41,7 +51,6 @@ messaging.onBackgroundMessage((payload) => {
     icon: "/PedidosCMCApp/icon-192.png",
     badge: "/PedidosCMCApp/icon-192.png",
 
-    // 🔑 sempre UMA notificação
     tag: "pedidos",
     renotify: true,
 
