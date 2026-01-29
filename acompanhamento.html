@@ -388,39 +388,6 @@ async function enviarTelegram(msg){
 /* =========================================================
    USUÁRIOS / LOGIN
 ========================================================= */
-const USUARIOS = {
-  "cleider": "Cleider Filho",
-  "salles2026": "Douglas Salles",
-  "gleyson2026": "Gleyson Murça",
-  "robson2026": "Robson Jesus",
-  "otto2026": "Leonardo Otto",
-  "junior2026": "Geraldo Junior",
-  "cleiton2026": "Cleiton Castro",
-  "amanda2026": "Amanda",
-  "mariana2026": "Mariana",
-  "couto2026": "Grazy Couto",
-  "breno2026": "Breno",
-  "luiz2026": "Luiz",
-  "joaquim2026": "Joaquim Pereira",
-  "reginaldo2026": "Reginaldo Bocafoli"
-};
-
-window.login = () => {
-  const senha = document.getElementById("senha").value;
-  if (!USUARIOS[senha]) return alert("Senha inválida");
-
-  localStorage.setItem("admin","true");
-  localStorage.setItem("usuario_nome",USUARIOS[senha]);
-
-  loginBox.style.display="none";
-  painel.style.display="block";
-  carregarPedidos();
-};
-
-window.logout = ()=>{
-  localStorage.clear();
-  location.reload();
-};
 
 /* =========================================================
    NORMALIZAÇÃO
@@ -662,11 +629,6 @@ window.toggleNotificacaoBox = () => {
 /* =========================================================
    AUTOLOGIN
 ========================================================= */
-if(localStorage.getItem("admin")==="true"){
-  loginBox.style.display="none";
-  painel.style.display="block";
-  carregarPedidos();
-} 
 
 async function aprovarTodosPendentes() {
   if (!confirm("Tem certeza que deseja aprovar TODOS os pedidos pendentes?")) return;
