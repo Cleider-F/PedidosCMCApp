@@ -12,21 +12,43 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+/* 🔢 CONTADOR REAL DE PEDIDOS */
+async function contarPedidosPendentes() {
+  try {
+    const res = await fetch(
+      "https://firestore.googleapis.com/v1/projects/pedidos-almoxarifado/databases/(default)/documents/pedidos"
+    );
+
+    const data = await res.json();
+    if (!data.documents) return 0;
+
+    return data.documents.filter(doc =>
+      doc.fields?.status?.stringValue === "Pendente"
+    ).length;
+
+  } catch (e) {
+    console.error("[SW] Erro ao contar pedidos:", e);
+    return 0;
+  }
+}
+
 /* 🔔 PUSH EM BACKGROUND */
-messaging.onBackgroundMessage((payload) => {
+messaging.onBackgroundMessage(async (payload) => {
   console.log("[SW] Push recebido:", payload);
 
-  const type = payload.data?.type || "GENERICA";
+  let title = "📦 Pedidos";
+  let body  = "Há novos pedidos aguardando ação.";
 
-  let title = "🔔 Atualização";
-  let body  = "Há novas atualizações pendentes.";
+  if (payload.data?.type === "NOVO_PEDIDO") {
+    const total = await contarPedidosPendentes();
 
-  if (type === "NOVO_PEDIDO") {
-    title = "📦 Novos pedidos";
-    body  = "Existem pedidos aguardando aprovação.";
+    title = "📦 Pedidos pendentes";
+    body  = total === 1
+      ? "Você tem 1 pedido aguardando aprovação."
+      : `Você tem ${total} pedidos aguardando aprovação.`;
   }
 
-  if (type === "PEDIDO_APROVADO") {
+  if (payload.data?.type === "PEDIDO_APROVADO") {
     title = "✅ Pedido aprovado";
     body  = "Um pedido foi aprovado.";
   }
@@ -36,10 +58,8 @@ messaging.onBackgroundMessage((payload) => {
     icon: "/PedidosCMCApp/icon-192.png",
     badge: "/PedidosCMCApp/icon-192.png",
 
-    // 🔑 TODAS AS NOTIFICAÇÕES DE PEDIDO SE AGRUPAM
+    // 🔑 SEMPRE UMA ÚNICA NOTIFICAÇÃO
     tag: "pedidos",
-
-    // 🔔 atualiza a notificação existente
     renotify: true,
 
     data: {
@@ -62,10 +82,7 @@ self.addEventListener("notificationclick", event => {
             return client.focus();
           }
         }
-
-        if (clients.openWindow) {
-          return clients.openWindow(url);
-        }
+        return clients.openWindow(url);
       })
   );
 });
