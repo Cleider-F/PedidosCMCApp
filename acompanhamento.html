@@ -251,7 +251,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import {
   getFirestore, collection, getDocs, addDoc,
   doc, updateDoc, getDoc, query, orderBy,
-  deleteDoc, limit, where, setDoc, writeBatch, onSnapshot
+  deleteDoc, limit, where, setDoc, writeBatch, onSnapshot, increment
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
@@ -495,11 +495,33 @@ async function aprender(p){
 /* =========================================================
    EXCLUIR
 ========================================================= */
-window.excluir=async(id)=>{
-  if(confirm("Excluir pedido pendente?")){
-    await deleteDoc(doc(db,"pedidos",id));
-    carregarPedidos();
+window.excluir = async (id) => {
+  if (!confirm("Excluir pedido pendente?")) return;
+
+  const pedidoRef = doc(db, "pedidos", id);
+  const statsRef  = doc(db, "stats", "pedidos");
+
+  const snap = await getDoc(pedidoRef);
+  if (!snap.exists()) return;
+
+  const pedido = snap.data();
+
+  // 🔽 Se for pendente, subtrai 1
+  if (pedido.status === "Pendente") {
+    await updateDoc(statsRef, {
+      Pendente: increment(-1)
+    });
+ // 🔽 Se for aprovado, subtrai 1
+  if (pedido.status === "Aprovado") {
+    await updateDoc(statsRef, {
+      Aprovado: increment(-1)
+    });
   }
+
+  // ❌ Exclui o pedido
+  await deleteDoc(pedidoRef);
+
+  carregarPedidos();
 };
 
 /* =========================================================
