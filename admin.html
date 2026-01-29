@@ -649,58 +649,59 @@ window.toggleRelatorio=()=>{
   box.style.display=box.style.display==="none"?"flex":"none";
 };
 
-window.gerarRelatorioDia=()=>{
-  const hoje=new Date().toISOString().split("T")[0];
-  inicio.value=hoje; fim.value=hoje;
-  gerarRelatorioPeriodo();
-};
-
-window.gerarRelatorioPeriodo=async()=>{
-  const dataInicio=new Date(inicio.value+"T00:00:00");
-  const dataFim=new Date(fim.value+"T23:59:59");
+window.gerarRelatorioPeriodo = async () => {
+  const dataInicio = new Date(inicio.value + "T00:00:00");
+  const dataFim    = new Date(fim.value + "T23:59:59");
 
   const { jsPDF } = window.jspdf;
-  const pdf=new jsPDF("landscape");
+  const pdf = new jsPDF("landscape");
 
-  const snap=await getDocs(collection(db,"pedidos"));
+  const snap = await getDocs(collection(db, "pedidos"));
+
   const rows = [];
 
-snap.forEach(d => {
-  const p = d.data();
-  if (!p.criadoEm) return;
+  snap.forEach(d => {
+    const p = d.data();
+    if (!p.criadoEm) return;
 
-  const criado = p.criadoEm.toDate();
+    const criado = p.criadoEm.toDate();
 
-  if (criado >= dataInicio && criado <= dataFim) {
-    rows.push({
-      criado,
-      dados: [
-        p.nome,
-        p.manutencao,
-        p.go || "-",
-        p.pecas.map(x => `${x.descricao} (${x.quantidade})`).join("\n"),
-        p.status,
-        criado.toLocaleString("pt-BR")
-      ]
-    });
+    if (criado >= dataInicio && criado <= dataFim) {
+      rows.push({
+        criado,
+        dados: [
+          p.nome,
+          p.manutencao,
+          p.go || "-",
+          p.pecas.map(x => `${x.descricao} (${x.quantidade})`).join("\n"),
+          p.status,
+          criado.toLocaleString("pt-BR")
+        ]
+      });
+    }
+  });
+
+  /* 🔽 ORDENA DO MAIS RECENTE PARA O MAIS ANTIGO */
+  rows.sort((a, b) => b.criado - a.criado);
+
+  /* 🔽 EXTRAI APENAS OS DADOS */
+  const body = rows.map(r => r.dados);
+
+  if (body.length === 0) {
+    alert("Nenhum pedido encontrado no período selecionado.");
+    return;
   }
-});
 
-/* 🔽 ORDENA DO MAIS NOVO PARA O MAIS ANTIGO */
-rows.sort((a, b) => b.criado - a.criado);
-
-/* 🔽 REMOVE A DATA AUXILIAR */
-const body = rows.map(r => r.dados);
-
-
- pdf.autoTable({
-  head:[["Solicitante","Manutenção","GO","Peças","Status","Criado em"]],
-  body: rows
-});
-
+  pdf.autoTable({
+    head: [["Solicitante", "Manutenção", "GO", "Peças", "Status", "Criado em"]],
+    body
+  });
 
   pdf.save("relatorio-pedidos.pdf");
 };
+
+
+  
 window.toggleNotificacaoBox = () => {
   const box = document.getElementById("notificacaoBox");
   box.style.display = box.style.display === "none" ? "flex" : "none";
