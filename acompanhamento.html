@@ -509,12 +509,12 @@ window.excluir = async (id) => {
   // 🔽 Se for pendente, subtrai 1
   if (pedido.status === "Pendente") {
     await updateDoc(statsRef, {
-      pendentes: increment(-1)
+      Pendente: increment(-1)
     });
  // 🔽 Se for aprovado, subtrai 1
   if (pedido.status === "Aprovado") {
     await updateDoc(statsRef, {
-      aprovados: increment(-1)
+      Aprovado: increment(-1)
     });
   }
 
