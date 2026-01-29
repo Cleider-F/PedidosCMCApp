@@ -775,7 +775,7 @@ onSnapshot(statsRef, (snap) => {
 
   let prefix = [];
 
-  if (aprovados > 0) prefix.push(`${aprovados} Reserva`);
+  if (aprovados > 0) prefix.push(`${aprovados} Aguardando Reserva`);
 
   document.title = prefix.length
     ? `(${prefix.join(" | ")}) ${baseTitle}`
