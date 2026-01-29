@@ -269,12 +269,11 @@ const app = initializeApp({
   messagingSenderId: "443882865992",
   appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
 });
-
+localStorage.setItem("Cleider Filho", "Painel de Acompanhamento");
 const db = getFirestore(app);
 const messaging = getMessaging(app);
 
 
-localStorage.setItem("Cleider Filho", "Painel de Acompanhamento");
 /* =========================================================
    SERVICE WORKER
 ========================================================= */
