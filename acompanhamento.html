@@ -491,58 +491,6 @@ async function aprender(p){
 /* =========================================================
    STATUS + TELEGRAM
 ========================================================= */
-window.mudarStatus=async(id,status)=>{
-  const ref=doc(db,"pedidos",id);
-  const p=(await getDoc(ref)).data();
-  if(p.status!=="Pendente")return;
-
-  await updateDoc(ref,{
-    status,
-    finalizadoEm:new Date(),
-    aprovadoPor:localStorage.getItem("usuario_nome")||"Não identificado"
-  });
-
-  if(status==="Aprovado") await aprender(p);
-
-  const agora=new Date().toLocaleString("pt-BR");
-
-  const tituloTelegram=
-    p.tipo==="DEVOLUCAO"
-    ?"🚨🚨🚨 *DEVOLUÇÃO* 🚨🚨🚨"
-    :"🧰 *PEDIDO DE PEÇAS APROVADO*";
-
-  await enviarTelegram(
-`${tituloTelegram}
-
-👤 *Solicitante:* ${p.nome}
-🛠 *Manutenção:* ${p.manutencao}
-🚚 *GO:* ${p.go||"-"}
-
-📦 *Peças:*
-${p.pecas.map(x=>`• ${x.descricao} (${x.quantidade}) | NI: ${x.ni||"-"}`).join("\n")}
-
-👷‍♂️ *Aprovado por:* ${localStorage.getItem("usuario_nome")}
-⏰ *Data:* ${agora}`
-  );
-
-  carregarPedidos();
-};
-
-window.reservarPedido = async (id) => {
-  if (!confirm("Confirmar que este pedido foi reservado?")) return;
-
-  const ref = doc(db, "pedidos", id);
-
-  await updateDoc(ref, {
-    status: "Reservado",
-    reservadoPor: localStorage.getItem("usuario_nome") || "Não identificado",
-    reservadoEm: new Date()
-  });
-
-  carregarPedidos();
-};
-
-
 
 /* =========================================================
    EXCLUIR
