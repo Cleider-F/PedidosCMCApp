@@ -243,6 +243,7 @@ button{
   <div style="display:flex; gap:10px;">
     <button class="btn-sair" onclick="logout()">🚪 Sair</button>
     <button class="btn-refresh" onclick="toggleRelatorio()">📊 Relatórios</button>
+     <button style="background:#2563eb; color:white;" onclick="aprovarTodosPendentes()">✅ Reservar Todos</button>
     <button class="btn-notificacao" onclick="toggleNotificacaoBox()">🔔 Notificações</button>
     <button class="btn-atualizar" onclick="location.reload()">🔄 Atualizar</button>
 </div>
@@ -282,7 +283,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import {
   getFirestore, collection, getDocs, addDoc,
   doc, updateDoc, getDoc, query, orderBy,
-  deleteDoc, limit, where, setDoc
+  deleteDoc, limit, where, setDoc, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
@@ -524,9 +525,10 @@ ${p.status === "Pendente" ? `
   </div>
 ` : `
   <div class="selo">
-    ✔ Pedido ${p.status}<br>
-    👷‍♂️ ${p.aprovadoPor||"-"}
-  </div>
+✔ Pedido ${p.status}<br>
+👷‍♂️ Aprovado: ${p.aprovadoPor||"-"}<br>
+📦 Reservado: ${p.reservadoPor||"-"}
+</div>
 `}
 </div>
 
@@ -621,12 +623,13 @@ window.reservarPedido = async (id) => {
 
   await updateDoc(ref, {
     status: "Reservado",
-    reservadoEm: new Date(),
-    reservadoPor: localStorage.getItem("usuario_nome") || "Não identificado"
+    reservadoPor: localStorage.getItem("usuario_nome") || "Não identificado",
+    reservadoEm: new Date()
   });
 
   carregarPedidos();
 };
+
 
 
 /* =========================================================
@@ -695,6 +698,40 @@ if(localStorage.getItem("admin")==="true"){
   painel.style.display="block";
   carregarPedidos();
 } 
+
+async function aprovarTodosPendentes() {
+  if (!confirm("Tem certeza que deseja aprovar TODOS os pedidos pendentes?")) return;
+
+  try {
+    const batch = writeBatch(db);
+    const colRef = collection(db, "pedidos"); // Confirme se o nome da coleção é 'pedidos'
+    
+    // Busca apenas os que estão com status pendente
+    const q = query(colRef, where("status", "==", "Aprovado"));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      alert("Não há pedidos pendentes para aprovar.");
+      return;
+    }
+
+    querySnapshot.forEach((documento) => {
+      const docRef = doc(db, "pedidos", documento.id);
+      batch.update(docRef, { "status": "Reservado" });
+    });
+
+    await batch.commit();
+    alert("Sucesso! Todos os pedidos foram aprovados.");
+    location.reload(); // Recarrega a página para atualizar a lista
+    
+  } catch (error) {
+    console.error("Erro ao atualizar em lote:", error);
+    alert("Erro ao aprovar pedidos. Verifique o console.");
+  }
+}
+
+// IMPORTANTE: Como é type="module", precisamos exportar para o HTML
+window.aprovarTodosPendentes = aprovarTodosPendentes;
 </script>
 
 </body>
