@@ -16,15 +16,32 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log("[SW] Push recebido:", payload);
 
-  const title = payload.notification?.title || "Novo aviso";
-  const body  = payload.notification?.body || "";
+  const type = payload.data?.type || "GENERICA";
+
+  let title = "🔔 Atualização";
+  let body  = "Há novas atualizações pendentes.";
+
+  if (type === "NOVO_PEDIDO") {
+    title = "📦 Novos pedidos";
+    body  = "Existem pedidos aguardando aprovação.";
+  }
+
+  if (type === "PEDIDO_APROVADO") {
+    title = "✅ Pedido aprovado";
+    body  = "Um pedido foi aprovado.";
+  }
 
   self.registration.showNotification(title, {
     body,
     icon: "/PedidosCMCApp/icon-192.png",
     badge: "/PedidosCMCApp/icon-192.png",
 
-    // 🔑 ISSO É O MAIS IMPORTANTE
+    // 🔑 TODAS AS NOTIFICAÇÕES DE PEDIDO SE AGRUPAM
+    tag: "pedidos",
+
+    // 🔔 atualiza a notificação existente
+    renotify: true,
+
     data: {
       url: payload.data?.url || "/PedidosCMCApp/admin.html"
     }
@@ -40,15 +57,12 @@ self.addEventListener("notificationclick", event => {
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true })
       .then(clientList => {
-
-        // 🔹 Se já existir uma aba aberta, apenas foca
         for (const client of clientList) {
           if (client.url.includes(url) && "focus" in client) {
             return client.focus();
           }
         }
 
-        // 🔹 Senão, abre uma nova aba
         if (clients.openWindow) {
           return clients.openWindow(url);
         }
