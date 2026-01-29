@@ -243,11 +243,14 @@ button{
   <div style="display:flex; gap:10px;">
     <button class="btn-sair" onclick="logout()">🚪 Sair</button>
     <button class="btn-refresh" onclick="toggleRelatorio()">📊 Relatórios</button>
+  
     <button class="btn-notificacao" onclick="toggleNotificacaoBox()">🔔 Notificações</button>
     <button class="btn-atualizar" onclick="location.reload()">🔄 Atualizar</button>
 </div>
 
 <div class="relatorio-box" id="relatorioBox" style="display:none;">
+  <button onclick="gerarRelatorioDia()">📄 Relatório do dia</button>
+
   <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período</button>
 
   <br><input type="date" id="inicio">
@@ -280,7 +283,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import {
   getFirestore, collection, getDocs, addDoc,
   doc, updateDoc, getDoc, query, orderBy,
-  deleteDoc, limit, where, setDoc, writeBatch
+  deleteDoc, limit, where, setDoc, writeBatch, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
@@ -647,6 +650,12 @@ window.toggleRelatorio=()=>{
   box.style.display=box.style.display==="none"?"flex":"none";
 };
 
+window.gerarRelatorioDia=()=>{
+  const hoje=new Date().toISOString().split("T")[0];
+  inicio.value=hoje; fim.value=hoje;
+  gerarRelatorioPeriodo();
+};
+
 window.gerarRelatorioPeriodo = async () => {
   const dataInicio = new Date(inicio.value + "T00:00:00");
   const dataFim    = new Date(fim.value + "T23:59:59");
@@ -699,7 +708,6 @@ window.gerarRelatorioPeriodo = async () => {
 };
 
 
-  
 window.toggleNotificacaoBox = () => {
   const box = document.getElementById("notificacaoBox");
   box.style.display = box.style.display === "none" ? "flex" : "none";
@@ -721,7 +729,7 @@ async function aprovarTodosPendentes() {
     const colRef = collection(db, "pedidos"); // Confirme se o nome da coleção é 'pedidos'
     
     // Busca apenas os que estão com status pendente
-    const q = query(colRef, where("status", "==", "Aprovado"));
+    const q = query(colRef, where("status", "==", "pendente"));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
@@ -731,7 +739,7 @@ async function aprovarTodosPendentes() {
 
     querySnapshot.forEach((documento) => {
       const docRef = doc(db, "pedidos", documento.id);
-      batch.update(docRef, { "status": "Reservado" });
+      batch.update(docRef, { "status": "Aprovado" });
     });
 
     await batch.commit();
@@ -746,6 +754,34 @@ async function aprovarTodosPendentes() {
 
 // IMPORTANTE: Como é type="module", precisamos exportar para o HTML
 window.aprovarTodosPendentes = aprovarTodosPendentes;
+
+/* =========================================================
+   BADGE NO TÍTULO DA GUIA (CHROME / DESKTOP)
+========================================================= */
+const baseTitle = "Área de Técnicos CMC";
+const statsRef  = doc(db, "stats/pedidos");
+
+onSnapshot(statsRef, (snap) => {
+  if (!snap.exists()) {
+    document.title = baseTitle;
+    return;
+  }
+
+  const {
+    Pendente = 0,
+    aprovados = 0
+  } = snap.data();
+
+  let prefix = [];
+
+  if (aprovados > 3) prefix.push(`Aguardando reserva`);
+
+  document.title = prefix.length
+    ? `(${prefix.join(" | ")}) ${baseTitle}`
+    : baseTitle;
+});
+
+
 </script>
 
 </body>
