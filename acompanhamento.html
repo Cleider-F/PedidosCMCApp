@@ -493,10 +493,8 @@ async function aprender(p){
 ========================================================= */
 
 /* =========================================================
-   EXCLUIR
-========================================================= */
-window.excluir = async (id) => {
-  if (!confirm("Excluir pedido?")) return;
+   window.excluir = async (id) => {
+  if (!confirm("Excluir pedido pendente?")) return;
 
   const pedidoRef = doc(db, "pedidos", id);
   const statsRef  = doc(db, "stats", "pedidos");
@@ -510,11 +508,6 @@ window.excluir = async (id) => {
   if (pedido.status === "Pendente") {
     await updateDoc(statsRef, {
       Pendente: increment(-1)
-    });
- // 🔽 Se for aprovado, subtrai 1
-  if (pedido.status === "Aprovado") {
-    await updateDoc(statsRef, {
-      Aprovado: increment(-1)
     });
   }
 
