@@ -12,45 +12,28 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-/* 🔢 CONTADOR REAL DE PEDIDOS */
-async function contarPedidosPendentes() {
-  try {
-    const res = await fetch(
-      "https://firestore.googleapis.com/v1/projects/pedidos-almoxarifado/databases/(default)/documents/pedidos"
-    );
-
-    const data = await res.json();
-    if (!data.documents) return 0;
-
-    return data.documents.filter(doc =>
-      doc.fields?.status?.stringValue === "Pendente"
-    ).length;
-
-  } catch (e) {
-    console.error("[SW] Erro ao contar pedidos:", e);
-    return 0;
-  }
-}
-
 /* 🔔 PUSH EM BACKGROUND */
-messaging.onBackgroundMessage(async (payload) => {
+messaging.onBackgroundMessage((payload) => {
   console.log("[SW] Push recebido:", payload);
 
-  let title = "📦 Pedidos";
-  let body  = "Há novos pedidos aguardando ação.";
+  const type  = payload.data?.type;
+  const total = Number(payload.data?.total || 0);
 
-  if (payload.data?.type === "NOVO_PEDIDO") {
-    const total = await contarPedidosPendentes();
+  let title = "🔔 Atualização";
+  let body  = "Há novas atualizações.";
 
+  if (type === "NOVO_PEDIDO") {
     title = "📦 Pedidos pendentes";
-    body  = total === 1
+    body = total === 1
       ? "Você tem 1 pedido aguardando aprovação."
       : `Você tem ${total} pedidos aguardando aprovação.`;
   }
 
-  if (payload.data?.type === "PEDIDO_APROVADO") {
+  if (type === "PEDIDO_APROVADO") {
     title = "✅ Pedido aprovado";
-    body  = "Um pedido foi aprovado.";
+    body = total === 1
+      ? "Resta 1 pedido pendente."
+      : `Restam ${total} pedidos pendentes.`;
   }
 
   self.registration.showNotification(title, {
@@ -58,7 +41,7 @@ messaging.onBackgroundMessage(async (payload) => {
     icon: "/PedidosCMCApp/icon-192.png",
     badge: "/PedidosCMCApp/icon-192.png",
 
-    // 🔑 SEMPRE UMA ÚNICA NOTIFICAÇÃO
+    // 🔑 sempre UMA notificação
     tag: "pedidos",
     renotify: true,
 
