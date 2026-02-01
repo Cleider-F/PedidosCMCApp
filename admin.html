@@ -222,11 +222,12 @@ button{
 
 <body>
 
-<div class="logo">
+
+<div class="login" id="loginBox">
+  <div class="logo">
   <img src="suzano-logo.png">
 </div>
 <footer>Criado e Desenvolvido por Cleider Filho</footer>
-<div class="login" id="loginBox">
   <h2>🔐 Área de Técnicos</h2>
   <input type="password" id="senha" placeholder="Senha">
   <button onclick="login()">Entrar</button>
@@ -236,6 +237,7 @@ button{
  <div class="header-admin">
   <a href="index.html" class="btn-home" title="Voltar ao início">🏠</a>
   <h2>📦 Pedidos Recebidos</h2>
+  <a href="admin-epi.html" class="btn-home" title="EPI's e Uniformes">🦺</a>
 </div>
 
 
@@ -460,52 +462,99 @@ const norm = t =>
    PEDIDOS
 ========================================================= */
 async function carregarPedidos(){
-  lista.innerHTML="";
+  lista.innerHTML = "";
 
-  const q=query(
+  const q = query(
     collection(db,"pedidos"),
-    orderBy("criadoEm","desc"),
+    orderBy("criadoEm", "desc"), // mais recente → mais antigo
     limit(25)
   );
 
-  const snap=await getDocs(q);
-  const pedidos=[];
+  const snap = await getDocs(q);
+  const pedidos = [];
 
-  snap.forEach(d=>pedidos.push({id:d.id,...d.data()}));
+  snap.forEach(d => pedidos.push({ id: d.id, ...d.data() }));
 
+  // Pendentes primeiro
   pedidos.sort((a,b)=>{
     if(a.status==="Pendente" && b.status!=="Pendente") return -1;
     if(a.status!=="Pendente" && b.status==="Pendente") return 1;
     return 0;
   });
 
-  pedidos.forEach(p=>{
-const finalizado = p.status === "Reprovado" || p.status === "Reservado";
-    const faltaNI=p.pecas.some(x=>!x.ni);
+  for (const p of pedidos) {
 
-    lista.innerHTML+=`
-<div class="card card-${p.status.toLowerCase()} ${p.tipo==="DEVOLUCAO"?"card-devolucao":""}">
-${!finalizado?`<button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>`:""}
+    const finalizado = p.status !== "Pendente";
+    const faltaNI = p.pecas.some(x => !x.ni);
 
-<div class="status status-${p.status.toLowerCase()}">${p.status}</div>
+    /* ============================
+       MONTA PEÇAS + HISTÓRICO
+    ============================ */
+    let pecasHTML = "";
 
-${p.tipo==="DEVOLUCAO"?`<div class="selo-devolucao">🔁 PEDIDO DE DEVOLUÇÃO</div>`:""}
+    for (let i = 0; i < p.pecas.length; i++) {
+      const x = p.pecas[i];
 
-<div class="info"><b>Solicitante</b>${p.nome}</div>
-<div class="info"><b>Manutenção</b>${p.manutencao}</div>
-<div class="info"><b>GO</b>${p.go||"-"}</div>
+      let ultimaTxt = "Primeira solicitação";
 
-<div class="info"><b>Peças</b></div>
+// 🔒 SÓ BUSCA HISTÓRICO SE FOR EPI
+if (p.categoria === "EPI" && x.ni) {
 
-${p.pecas.map((x,i)=>`
-<div class="peca">
-<b>${x.descricao} (${x.quantidade})</b>
-<input value="${x.ni||""}" ${finalizado?"disabled":""}
-onchange="atualizarNI('${p.id}',${i},this.value)">
-</div>`).join("")}
+  const ultima = await buscarUltimaSolicitacaoEPI({
+    nome: p.nome,
+    ni: x.ni,
+    pedidoAtualId: p.id
+  });
+
+  if (ultima) {
+    ultimaTxt = ultima.toLocaleDateString("pt-BR");
+  }
+}
 
 
-<div class="acoes">
+      pecasHTML += `
+        <div class="peca">
+          <b>${x.descricao} (${x.quantidade})</b>
+
+          <input
+            value="${x.ni || ""}"
+            ${finalizado ? "disabled" : ""}
+            onchange="atualizarNI('${p.id}', ${i}, this.value)"
+          >
+
+          ${p.categoria === "EPI" ? `
+          <div style="font-size:12px;color:#065f46;margin-top:4px">
+          📅 Última solicitação: <b>${ultimaTxt}</b>
+          </div>
+`         : ""}
+        </div>
+      `;
+    }
+
+    /* ============================
+       CARD
+    ============================ */
+    lista.innerHTML += `
+      <div class="card card-${p.status.toLowerCase()} card-epi ${p.tipo==="DEVOLUCAO"?"card-devolucao":""}">
+        ${!finalizado ? `
+          <button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>
+        ` : ""}
+
+        <div class="status status-${p.status.toLowerCase()}">${p.status}</div>
+
+        ${p.tipo==="DEVOLUCAO" ? `
+          <div class="selo-devolucao">🔁 PEDIDO DE DEVOLUÇÃO</div>
+        ` : ""}
+
+        <div class="info"><b>Solicitante</b>${p.nome}</div>
+        <div class="info"><b>Manutenção</b>${p.manutencao}</div>
+        <div class="info"><b>GO</b>${p.go || "-"}</div>
+
+        <div class="info"><b>Peças</b></div>
+
+        ${pecasHTML}
+
+       <div class="acoes">
 ${p.status === "Pendente" ? `
   <button class="aprovar" ${faltaNI?"disabled":""}
     onclick="mudarStatus('${p.id}','Aprovado')">✅ Aprovar</button>
@@ -532,9 +581,12 @@ ${p.status === "Pendente" ? `
 </div>
 
 </div>`;
-  });
+  }
 }
-window.carregarPedidos=carregarPedidos;
+
+window.carregarPedidos = carregarPedidos;
+
+
 
 /* =========================================================
    NI
@@ -575,6 +627,42 @@ async function aprender(p){
   }
 }
 
+  /* =========================================================
+   BUSCAR ÚLTIMA SOLICITAÇÃO EPI
+========================================================= */
+async function buscarUltimaSolicitacaoEPI({ nome, ni, pedidoAtualId }) {
+
+  const q = query(
+    collection(db, "pedidos"),
+    where("categoria", "==", "EPI")
+  );
+
+  const snap = await getDocs(q);
+
+  let ultimaData = null;
+
+  snap.forEach(docSnap => {
+    const p = docSnap.data();
+
+    // ignora o pedido atual
+    if (docSnap.id === pedidoAtualId) return;
+    if (!p.criadoEm) return;
+    if (p.nome !== nome) return;
+
+    for (const peca of p.pecas || []) {
+      if (peca.ni && peca.ni === ni) {
+
+        const data = p.criadoEm.toDate();
+
+        if (!ultimaData || data > ultimaData) {
+          ultimaData = data;
+        }
+      }
+    }
+  });
+
+  return ultimaData;
+}
 /* =========================================================
    STATUS + TELEGRAM
 ========================================================= */
@@ -726,7 +814,7 @@ async function aprovarTodosPendentes() {
   try {
     const batch = writeBatch(db);
     const colRef = collection(db, "pedidos"); // Confirme se o nome da coleção é 'pedidos'
-    
+
     // Busca apenas os que estão com status pendente
     const q = query(colRef, where("status", "==", "pendente"));
     const querySnapshot = await getDocs(q);
@@ -744,7 +832,7 @@ async function aprovarTodosPendentes() {
     await batch.commit();
     alert("Sucesso! Todos os pedidos foram aprovados.");
     location.reload(); // Recarrega a página para atualizar a lista
-    
+
   } catch (error) {
     console.error("Erro ao atualizar em lote:", error);
     alert("Erro ao aprovar pedidos. Verifique o console.");
