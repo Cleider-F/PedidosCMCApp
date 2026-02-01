@@ -488,6 +488,16 @@ async function aprender(p){
   }
 }
 
+  /* =========================================================
+   EXCLUIR
+========================================================= */
+window.excluir=async(id)=>{
+  if(confirm("Excluir pedido pendente?")){
+    await deleteDoc(doc(db,"pedidos",id));
+    carregarPedidos();
+  }
+};
+
 /* =========================================================
    STATUS + TELEGRAM
 ========================================================= */
