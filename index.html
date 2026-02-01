@@ -106,6 +106,16 @@ input:disabled {
 .sugestoes div:hover {
   background:#e5e7eb;
 }
+
+.bloqueio {
+  color:#b91c1c;
+  background:#fee2e2;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
+  font-size:14px;
+}
+
 </style>
 </head>
 
@@ -182,6 +192,9 @@ input:disabled {
 <a href="acompanhamento.html">
     <button class="admin-btn">📦 Acompanhamento de Pedidos 🔩 </button>
   </a>
+  <a href="painel-almoxarife.html">
+    <button class="admin-btn">🖥️ Painel do Almoxarife ⚙️</button>
+  </a>
 </div>
 
 </div>
@@ -192,7 +205,7 @@ input:disabled {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
    apiKey: "AIzaSyCAJPyQ7-a4Efxxh5yTXQ_326hn22OYAuc",
@@ -371,23 +384,51 @@ ${pedido.pecas.map(p => `- ${p.descricao} | NI: ${p.ni || "NÃO INFORMADO"} | Qt
   });
 }
 
+async function verificarBloqueios(nis) {
+  const bloqueados = [];
+
+  for (const ni of nis) {
+    if (!ni) continue;
+
+    const snap = await getDoc(doc(db, "ni_bloqueados", ni));
+    if (snap.exists()) {
+      bloqueados.push(ni);
+    }
+  }
+
+  return bloqueados;
+}
+
 form.addEventListener("submit", async e => {
   e.preventDefault();
   try {
-    const pecas = [];
-    document.querySelectorAll(".peca").forEach(p => {
-      const desc = p.querySelector(".descricao").value;
-      const niManual = p.querySelector(".ni-manual").value.trim();
-      const niAuto =
-        aprendizadoNI.find(a => a.descricao === normalizar(desc))?.ni
-        || window.LISTA_NI?.find(i => normalizar(i.produto) === normalizar(desc))?.ni;
+  const pecas = [];
+  document.querySelectorAll(".peca").forEach(p => {
+    const desc = p.querySelector(".descricao").value;
+    const niManual = p.querySelector(".ni-manual").value.trim();
+    const niAuto =
+      aprendizadoNI.find(a => a.descricao === normalizar(desc))?.ni
+      || window.LISTA_NI?.find(i => normalizar(i.produto) === normalizar(desc))?.ni;
 
-      pecas.push({
-        descricao: desc,
-        quantidade: p.querySelector(".quantidade").value,
-        ni: niManual || niAuto || null
-      });
+    pecas.push({
+      descricao: desc,
+      quantidade: p.querySelector(".quantidade").value,
+      ni: niManual || niAuto || null
     });
+  });
+
+  // 🔒 VERIFICA BLOQUEIOS
+  const nisPedido = pecas.map(p => p.ni).filter(Boolean);
+  const nisBloqueados = await verificarBloqueios(nisPedido);
+
+  if (nisBloqueados.length) {
+    mensagem.innerHTML = `
+      ❌ Pedido não permitido<br>
+      NI sem saldo: <strong>${nisBloqueados.join(", ")}</strong><br>
+    `;
+    mensagem.className = "mensagem bloqueio";
+    return;
+  }
 
     const tipoPedido = document.getElementById("isDevolucao").checked
       ? "DEVOLUCAO"
