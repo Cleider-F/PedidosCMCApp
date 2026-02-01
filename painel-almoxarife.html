@@ -113,12 +113,33 @@ button:hover{opacity:.9}
   transition:.3s;
 }
 
-.toast.show{
-  opacity:1;
-}
-
+.toast.show{opacity:1}
 .toast.success{background:#16a34a}
 .toast.warn{background:#f59e0b}
+
+/* Sugestões */
+.sugestoes{
+  position:absolute;
+  background:#fff;
+  border:1px solid #d1d5db;
+  border-radius:10px;
+  width:100%;
+  max-height:180px;
+  overflow-y:auto;
+  z-index:1000;
+  margin-top:6px;
+  display:none;
+}
+
+.sugestoes div{
+  padding:10px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+.sugestoes div:hover{
+  background:#e5e7eb;
+}
 </style>
 </head>
 
@@ -127,11 +148,17 @@ button:hover{opacity:.9}
 <div class="container">
 
   <div class="card">
+    <div class="header-admin">
+    <a href="index.html" class="btn-home" title="Voltar ao início">🏠</a>
+    </div>
     <h1>🔒 Bloqueio de NI</h1>
 
-    <div class="input-group">
-      <input id="niInput" placeholder="Digite o NI sem saldo">
-      <button onclick="bloquearNI()">Bloquear</button>
+    <div style="position:relative;width:100%">
+      <div class="input-group">
+        <input id="niInput" placeholder="Digite o NI ou descrição da peça">
+        <button onclick="bloquearNI()">Bloquear</button>
+      </div>
+      <div id="sugestoes" class="sugestoes"></div>
     </div>
   </div>
 
@@ -146,6 +173,7 @@ button:hover{opacity:.9}
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="lista_NI.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -159,27 +187,106 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const toast = document.getElementById("toast");
+const niInput = document.getElementById("niInput");
+const sugestoesBox = document.getElementById("sugestoes");
+const listaNI = document.getElementById("listaNI");
 
+let baseNI = [];
+
+function normalizar(txt){
+  return txt.toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .trim();
+}
+
+/* 🔎 Base de NI */
+function carregarListaNI(){
+  if(!window.LISTA_NI) return;
+  window.LISTA_NI.forEach(i=>{
+  baseNI.push({
+    descricao: normalizar(i.produto),
+    ni: String(i.ni) // 🔥 converte número → string
+  });
+});
+}
+carregarListaNI();
+
+function carregarAprendizadoNI(){
+  return db.collection("aprendizado_ni").get().then(snapshot=>{
+    snapshot.forEach(doc=>{
+      const d = doc.data();
+      if(d.descricao && d.ni){
+        baseNI.push({
+          descricao: normalizar(d.descricao),
+          ni: String(d.ni)
+        });
+      }
+    });
+  });
+}
+
+Promise.all([
+  carregarAprendizadoNI()
+]).then(()=>{
+  carregarListaNI();
+  console.log("✅ Base NI carregada:", baseNI.length);
+});
+
+/* 🔔 Toast */
 function showToast(msg, type="success"){
   toast.textContent = msg;
   toast.className = `toast show ${type}`;
   setTimeout(()=> toast.className="toast", 2500);
 }
 
+/* ⌨️ Enter */
 niInput.addEventListener("keydown", e=>{
-  if(e.key === "Enter") bloquearNI();
+  if(e.key==="Enter") bloquearNI();
 });
 
-/**
- * 🔒 Bloquear NI
- */
+/* 🔍 Autocomplete */
+niInput.addEventListener("input", ()=>{
+  const termo = normalizar(niInput.value);
+  if(termo.length < 2){
+    sugestoesBox.style.display="none";
+    return;
+  }
+
+  const resultados = baseNI
+    .filter(i => i.descricao.includes(termo) || i.ni.includes(termo))
+    .slice(0,6);
+
+  if(!resultados.length){
+    sugestoesBox.style.display="none";
+    return;
+  }
+
+  sugestoesBox.innerHTML = resultados.map(r=>`
+    <div onclick="selecionarSugestao('${r.ni}')">
+      ${r.descricao}
+      <span style="font-size:11px;color:#6b7280">
+        | NI ${r.ni}
+      </span>
+    </div>
+  `).join("");
+
+  sugestoesBox.style.display="block";
+});
+
+window.selecionarSugestao = ni =>{
+  niInput.value = ni;
+  sugestoesBox.style.display="none";
+};
+
+/* 🔒 Bloquear NI */
 function bloquearNI(){
   const ni = niInput.value.trim();
   if(!ni) return;
 
   db.collection("ni_bloqueados").doc(ni).get().then(doc=>{
     if(doc.exists){
-      showToast("NI já está bloqueado", "warn");
+      showToast("NI já está bloqueado","warn");
       return;
     }
 
@@ -192,9 +299,7 @@ function bloquearNI(){
   });
 }
 
-/**
- * 📋 Listar bloqueios
- */
+/* 📋 Lista */
 db.collection("ni_bloqueados")
 .orderBy("bloqueadoEm","desc")
 .onSnapshot(snapshot=>{
@@ -203,37 +308,32 @@ db.collection("ni_bloqueados")
   if(snapshot.empty){
     listaNI.innerHTML = `
       <div class="empty">
-        ✅ Nenhum NI bloqueado no momento<br>
-        O estoque está liberado para pedidos.
+        ✅ Nenhum NI bloqueado no momento
       </div>`;
     return;
   }
 
   snapshot.forEach(doc=>{
     const data = doc.data().bloqueadoEm?.toDate();
-    const dataFmt = data ? data.toLocaleDateString("pt-BR") : "";
+    const fmt = data ? data.toLocaleDateString("pt-BR") : "";
 
-    const div = document.createElement("div");
-    div.className="item";
-    div.innerHTML = `
-      <div>
-        <strong>🔴 NI ${doc.id}</strong><br>
-        <small>Bloqueado em: ${dataFmt}</small>
+    listaNI.innerHTML += `
+      <div class="item">
+        <div>
+          <strong>🔴 NI ${doc.id}</strong><br>
+          <small>Bloqueado em: ${fmt}</small>
+        </div>
+        <button class="desbloquear" onclick="confirmarRemocao('${doc.id}')">
+          Desbloquear
+        </button>
       </div>
-      <button class="desbloquear" onclick="confirmarRemocao('${doc.id}')">
-        Desbloquear
-      </button>
     `;
-    listaNI.appendChild(div);
   });
 });
 
-/**
- * 🗑️ Confirmação amigável
- */
+/* 🗑️ Remover */
 function confirmarRemocao(ni){
-  if(!confirm(`Remover bloqueio do NI ${ni}?\nEste item poderá ser solicitado novamente.`)) return;
-
+  if(!confirm(`Remover bloqueio do NI ${ni}?`)) return;
   db.collection("ni_bloqueados").doc(ni).delete()
     .then(()=> showToast(`NI ${ni} desbloqueado`));
 }
