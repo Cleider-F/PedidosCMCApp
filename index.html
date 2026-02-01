@@ -112,6 +112,7 @@ input:disabled {
 <body>
 
 <script src="lista_NI.js"></script>
+<script src="lista_solicitantes.js"></script>
 
 <div class="container">
   <div class="logo">
@@ -159,13 +160,17 @@ input:disabled {
       <option>CNP</option>
       <option>SOS</option>
       <option>Uso Geral</option>
+      <option>EPI/Uniforme</option>
     </select>
 
     <label>GO do Equipamento</label>
     <input id="go" required>
 
     <label>Nome do solicitante</label>
-    <input id="nome" required>
+<div class="autocomplete-box">
+  <input id="nome" required oninput="sugerirSolicitante(this)">
+  <div class="sugestoes" style="display:none"></div>
+</div>
 
     <button type="submit">📦 Enviar Pedido</button>
     <div id="mensagem" class="mensagem"></div>
@@ -211,9 +216,12 @@ const manutencaoSelect = document.getElementById("manutencao");
 const goInput = document.getElementById("go");
 
 manutencaoSelect.addEventListener("change", () => {
-  goInput.required = manutencaoSelect.value !== "Uso Geral";
-  goInput.disabled = manutencaoSelect.value === "Uso Geral";
-  if (goInput.disabled) goInput.value = "";
+  const semGO = ["Uso Geral", "EPI/Uniforme"].includes(manutencaoSelect.value);
+
+  goInput.required = !semGO;
+  goInput.disabled = semGO;
+
+  if (semGO) goInput.value = "";
 });
 
 window.adicionarPeca = () => {
@@ -268,6 +276,7 @@ window.sugerirPecas = (textarea) => {
 
   let resultados = [];
 
+
   aprendizadoNI.forEach(i => {
     if (i.descricao.includes(termo)) {
       resultados.push({ produto: i.descricao, ni: i.ni });
@@ -294,6 +303,38 @@ window.sugerirPecas = (textarea) => {
   `).join("");
 
   box.style.display="block";
+};
+
+window.sugerirSolicitante = (input) => {
+  const termo = normalizar(input.value);
+  const box = input.parentElement.querySelector(".sugestoes");
+
+  if (!termo || termo.length < 2) {
+    box.style.display = "none";
+    return;
+  }
+
+  const resultados = (window.LISTA_SOLICITANTES || [])
+    .filter(n => normalizar(n).includes(termo))
+    .slice(0,6);
+
+  if (!resultados.length) {
+    box.style.display = "none";
+    return;
+  }
+
+  box.innerHTML = resultados
+    .map(n => `<div onclick="selecionarSolicitante(this,'${n}')">${n}</div>`)
+    .join("");
+
+  box.style.display = "block";
+};
+
+window.selecionarSolicitante = (el, nome) => {
+  const box = el.parentElement;
+  const input = box.previousElementSibling;
+  input.value = nome;
+  box.style.display = "none";
 };
 
 window.selecionarPeca = (el, produto, ni) => {
@@ -353,14 +394,17 @@ form.addEventListener("submit", async e => {
       : "PEDIDO";
 
     await addDoc(collection(db,"pedidos"),{
-      manutencao: manutencaoSelect.value,
-      go: goInput.value,
-      nome: document.getElementById("nome").value,
-      pecas,
-      tipo: tipoPedido,
-      status:"Pendente",
-      criadoEm:new Date()
-    });
+  manutencao: manutencaoSelect.value,
+  go: goInput.value,
+  nome: document.getElementById("nome").value,
+  pecas,
+  nis: pecas.map(p => p.ni).filter(Boolean),
+  tipo: tipoPedido,
+  categoria: manutencaoSelect.value === "EPI/Uniforme" ? "EPI" : "CONVENCIONAL",
+  status:"Pendente",
+  criadoEm:new Date()
+});
+
 
     notificarTelegram({
       nome: document.getElementById("nome").value,
