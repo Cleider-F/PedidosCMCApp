@@ -555,7 +555,10 @@ const USUARIOS = {
   "breno2026": "Breno",
   "luiz2026": "Luiz",
   "joaquim2026": "Joaquim Pereira",
-  "reginaldo2026": "Reginaldo Bocafoli"
+  "reginaldo2026": "Reginaldo Bocafoli",
+  "brito2026": "Thaís Brito",
+  "andrade2026": "Quemili Andrade"
+
 };
 
 window.login = () => {
@@ -897,6 +900,54 @@ document.querySelectorAll(".sidebar nav a").forEach(a=>{
     a.classList.add("ativo");
   }
 });
+
+/* =========================================================
+   RESERVAR PEDIDO
+========================================================= */
+window.reservarPedido = async (id) => {
+  if (!confirm("Deseja reservar este pedido?")) return;
+
+  const ref = doc(db, "pedidos", id);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    alert("Pedido não encontrado");
+    return;
+  }
+
+  const p = snap.data();
+
+  // só pode reservar se estiver aprovado
+  if (p.status !== "Aprovado") {
+    alert("Somente pedidos aprovados podem ser reservados");
+    return;
+  }
+
+  await updateDoc(ref, {
+    status: "Reservado",
+    reservadoEm: new Date(),
+    reservadoPor: localStorage.getItem("usuario_nome") || "Não identificado"
+  });
+
+  // aviso no Telegram (opcional, mas recomendo)
+  const agora = new Date().toLocaleString("pt-BR");
+
+  await enviarTelegram(
+`📦 *PEDIDO RESERVADO*
+
+👤 *Solicitante:* ${p.nome}
+🛠 *Manutenção:* ${p.manutencao}
+🚚 *GO:* ${p.go || "-"}
+
+📦 *Peças:*
+${p.pecas.map(x => `• ${x.descricao} (${x.quantidade}) | NI: ${x.ni || "-"}`).join("\n")}
+
+👷‍♂️ *Reservado por:* ${localStorage.getItem("usuario_nome")}
+⏰ *Data:* ${agora}`
+  );
+
+  carregarPedidos();
+};
 </script>
 
 </body>
