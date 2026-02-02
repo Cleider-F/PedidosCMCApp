@@ -120,7 +120,7 @@ window.LISTA_NI = [
 { produto: "PARALAMA", ni: 27172628 },
 { produto: "PERFIL 100 X 400 (26,54 KG)", ni: 27084781 },
 { produto: "PINO DE CENTRO MENOR", ni: 27019813 },
-{ produto: "PINO DO GAVIAO", ni: 27017875 },
+{ produto: "PINO DO GAVIAO", ni: 27036783 },
 { produto: "PLACA TEKNIL TECNIL", ni: 27172628 },
 { produto: "PORCA DE 16", ni: 27033358 },
 { produto: "PORCA DE 18", ni: 27025456 },
