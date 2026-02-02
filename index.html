@@ -292,7 +292,10 @@ input:disabled {
   transition: 0.3s;
   box-shadow: 0 1px 4px rgba(0,0,0,.2);
 }
-
+.toggle-container {
+  gap: 10px;
+  justify-content: flex-start;
+}
 /* LIGADO */
 .switch input:checked + .slider {
   background-color: #22c55e;
@@ -373,9 +376,9 @@ input:disabled {
   <label class="switch">
     <input type="checkbox" id="isDevolucao">
     <span class="slider"></span>
-    <span class="toggle-label">Pedido de devolução de peças</span>
   </label>
 
+  <span class="toggle-label">Pedido de devolução de peças</span>
 </div>
 
   
