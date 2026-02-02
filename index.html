@@ -8,6 +8,96 @@
 <meta name="theme-color" content="#1f2937">
 
 <style>
+/* BOTÃO HAMBURGER */
+.menu-btn{
+  position:fixed;
+  top:12px;
+  left:12px;
+  z-index:1001;
+  background:#111827;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-size:22px;
+
+  /* 🔑 correção */
+  width:auto;
+  height:auto;
+  padding:8px 12px;
+  margin:0;
+}
+
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;
+  top:0;
+  left:0;
+  height:100%;
+  width:260px;
+  background:#111827;
+  color:#fff;
+  transform:translateX(-100%);
+  transition:.3s;
+  z-index:1002;
+  display:flex;
+  flex-direction:column;
+}
+
+/* SIDEBAR ATIVA */
+.sidebar.active{
+  transform:translateX(0);
+}
+
+/* HEADER */
+.sidebar-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px;
+  border-bottom:1px solid #1f2937;
+}
+
+.sidebar-header button{
+  background:none;
+  border:none;
+  color:#fff;
+  font-size:18px;
+}
+
+/* LINKS */
+.sidebar nav{
+  display:flex;
+  flex-direction:column;
+  padding:10px;
+}
+
+.sidebar nav a{
+  padding:14px;
+  border-radius:10px;
+  color:#fff;
+  text-decoration:none;
+  margin-bottom:6px;
+}
+
+.sidebar nav a:hover{
+  background:#1f2937;
+}
+
+/* OVERLAY */
+.menu-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  z-index:1000;
+  display:none;
+}
+
+.menu-overlay.active{
+  display:block;
+}
+
+
 .logo { text-align:center; margin-bottom:15px; }
 .logo img { max-width:180px; width:100%; }
 
@@ -45,10 +135,24 @@ textarea { min-height:50px; }
 
 .peca {
   border:1px solid #e5e7eb;
-  padding:10px;
-  border-radius:8px;
-  margin-top:10px;
+  padding:14px;
+  border-radius:12px;
+  margin-top:12px;
+  background:#fafafa;
+  position:relative;
 }
+
+.peca::before {
+  content:"Peças";
+  position:absolute;
+  top:-10px;
+  left:12px;
+  background:#fff;
+  padding:0 6px;
+  font-size:12px;
+  color:#6b7280;
+}
+
 
 .ni-info { font-size:12px; color:#6b7280; }
 
@@ -115,6 +219,31 @@ input:disabled {
   margin-top:10px;
   font-size:14px;
 }
+@media(max-width:480px){
+  .secundario {
+    position:sticky;
+    bottom:10px;
+    z-index:10;
+  }
+}
+
+.secao {
+  margin-top:16px;
+  padding-top:10px;
+  border-top:1px dashed #e5e7eb;
+}
+
+.secao h3 {
+  font-size:14px;
+  color:#374151;
+}
+
+.sidebar nav a.ativo{
+  background:#2563eb;
+}
+
+
+
 
 </style>
 </head>
@@ -125,6 +254,29 @@ input:disabled {
 <script src="lista_solicitantes.js"></script>
 
 <div class="container">
+ 
+ <!-- BOTÃO HAMBURGER -->
+<button class="menu-btn" onclick="abrirMenu()">☰</button>
+
+<!-- OVERLAY -->
+<div class="menu-overlay" onclick="fecharMenu()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <strong>📦 Pedido de Peças</strong>
+    <button onclick="fecharMenu()">✖</button>
+  </div>
+
+  <nav>
+    <a href="index.html">📝 Pedido de Peças</a>
+    <a href="admin.html">🔐 Área de Técnicos 🛠️</a>
+    <a href="admin-epi.html">🦺 EPI's e Uniformes</a>
+    <a href="acompanhamento.html">📦 Acompanhamento de Pedidos 🔩</a>
+    <a href="painel-almoxarife.html">🖥️ Painel do Almoxarife ⚙️</a>
+  </nav>
+</aside>
+
   <div class="logo">
     <img src="suzano-logo.png">
   </div>
@@ -160,6 +312,7 @@ input:disabled {
     <strong>Pedido de devolução de peças</strong>
   </label>
 </div>
+
 
 
     <label>Tipo de Manutenção</label>
@@ -228,6 +381,17 @@ const lista = document.getElementById("listaPecas");
 const manutencaoSelect = document.getElementById("manutencao");
 const goInput = document.getElementById("go");
 
+let nisBloqueadosCache = new Set();
+
+async function carregarNisBloqueados(){
+  const snap = await getDocs(collection(db, "ni_bloqueados"));
+  snap.forEach(doc=>{
+    nisBloqueadosCache.add(doc.id);
+  });
+
+  console.log("🚫 NIs bloqueados carregados:", nisBloqueadosCache.size);
+}
+
 manutencaoSelect.addEventListener("change", () => {
   const semGO = ["Uso Geral", "EPI/Uniforme"].includes(manutencaoSelect.value);
 
@@ -277,6 +441,8 @@ async function carregarAprendizadoNI() {
   }));
 }
 await carregarAprendizadoNI();
+await carregarNisBloqueados();
+
 
 window.sugerirPecas = (textarea) => {
   const termo = normalizar(textarea.value);
@@ -309,11 +475,27 @@ window.sugerirPecas = (textarea) => {
   resultados = resultados.slice(0,6);
   if (!resultados.length) { box.style.display="none"; return; }
 
-  box.innerHTML = resultados.map(r => `
-    <div onclick="selecionarPeca(this,'${r.produto}','${r.ni}')">
-      ${r.produto} <span style="color:#6b7280;font-size:11px">| NI ${r.ni}</span>
+ box.innerHTML = resultados.map(r => {
+  const bloqueado = r.ni && nisBloqueadosCache.has(String(r.ni));
+
+  return `
+    <div 
+      onclick="${bloqueado ? "" : `selecionarPeca(this,'${r.produto}','${r.ni}')`}"
+      style="${bloqueado ? "opacity:.6; cursor:not-allowed;" : ""}"
+    >
+      ${r.produto}
+      <span style="font-size:11px;color:#6b7280">
+        | NI ${r.ni}
+      </span>
+      ${
+        bloqueado
+          ? `<span style="color:#b91c1c;font-size:11px;font-weight:bold"> 🚫 Sem saldo</span>`
+          : ""
+      }
     </div>
-  `).join("");
+  `;
+}).join("");
+
 
   box.style.display="block";
 };
@@ -463,6 +645,24 @@ form.addEventListener("submit", async e => {
     mensagem.className = "mensagem erro";
   }
 });
+
+window.abrirMenu = () => {
+  document.querySelector(".sidebar").classList.add("active");
+  document.querySelector(".menu-overlay").classList.add("active");
+};
+
+window.fecharMenu = () => {
+  document.querySelector(".sidebar").classList.remove("active");
+  document.querySelector(".menu-overlay").classList.remove("active");
+};
+
+
+document.querySelectorAll(".sidebar nav a").forEach(a=>{
+  if(a.href === window.location.href){
+    a.classList.add("ativo");
+  }
+});
+
 </script>
 
 </body>

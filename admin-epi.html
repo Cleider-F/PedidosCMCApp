@@ -232,13 +232,120 @@ button{
   margin-bottom:6px;
 }
 
+/* BOTÃO HAMBURGER */
+.menu-btn{
+  position:fixed;
+  top:12px;
+  left:12px;
+  z-index:1001;
+  background:#111827;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-size:22px;
+  width:auto;
+  height:auto;
+  padding:8px 12px;
+  margin:0;
+}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;
+  top:0;
+  left:0;
+  height:100%;
+  width:260px;
+  background:#111827;
+  color:#fff;
+  transform:translateX(-100%);
+  transition:.3s;
+  z-index:1002;
+  display:flex;
+  flex-direction:column;
+}
+
+.sidebar.active{
+  transform:translateX(0);
+}
+
+/* HEADER */
+.sidebar-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px;
+  border-bottom:1px solid #1f2937;
+}
+
+.sidebar-header button{
+  background:none;
+  border:none;
+  color:#fff;
+  font-size:18px;
+}
+
+/* LINKS */
+.sidebar nav{
+  display:flex;
+  flex-direction:column;
+  padding:10px;
+}
+
+.sidebar nav a{
+  padding:14px;
+  border-radius:10px;
+  color:#fff;
+  text-decoration:none;
+  margin-bottom:6px;
+}
+
+.sidebar nav a:hover{
+  background:#1f2937;
+}
+
+.sidebar nav a.ativo{
+  background:#2563eb;
+}
+
+/* OVERLAY */
+.menu-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  z-index:1000;
+  display:none;
+}
+
+.menu-overlay.active{
+  display:block;
+}
+
 </style>
 </head>
 
 <body>
+<!-- BOTÃO HAMBURGER -->
+<button class="menu-btn" onclick="abrirMenu()">☰</button>
 
+<!-- OVERLAY -->
+<div class="menu-overlay" onclick="fecharMenu()"></div>
 
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <strong>📦 Almoxarifado CMC</strong>
+    <button onclick="fecharMenu()">✖</button>
+  </div>
 
+  <nav>
+    <a href="index.html">📝 Pedido de Peças</a>
+    <a href="admin.html">🔐 Área de Técnicos 🛠️</a>
+    <a href="admin-epi.html">🦺 EPI's e Uniformes</a>
+    <a href="acompanhamento.html">📦 Acompanhamento de Pedidos 🔩</a>
+    <a href="painel-almoxarife.html">🖥️ Painel do Almoxarife ⚙️</a>
+  </nav>
+</aside>
 
 <div class="logo">
   <img src="suzano-logo.png">
@@ -772,6 +879,22 @@ if(localStorage.getItem("admin")==="true"){
   painel.style.display="block";
   carregarPedidos();
 }
+window.abrirMenu = () => {
+  document.querySelector(".sidebar").classList.add("active");
+  document.querySelector(".menu-overlay").classList.add("active");
+};
+
+window.fecharMenu = () => {
+  document.querySelector(".sidebar").classList.remove("active");
+  document.querySelector(".menu-overlay").classList.remove("active");
+};
+
+/* destaca página atual */
+document.querySelectorAll(".sidebar nav a").forEach(a=>{
+  if(a.href === window.location.href){
+    a.classList.add("ativo");
+  }
+});
 </script>
 
 </body>
