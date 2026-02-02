@@ -242,8 +242,65 @@ input:disabled {
   background:#2563eb;
 }
 
+/* TOGGLE DEVOLUÇÃO */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
 
+.toggle-label {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
 
+/* SWITCH */
+.switch {
+  position: relative;
+  width: 46px;
+  height: 26px;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background-color: #d1d5db;
+  border-radius: 999px;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  top: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+
+/* LIGADO */
+.switch input:checked + .slider {
+  background-color: #22c55e;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(20px);
+}
 
 </style>
 </head>
@@ -254,7 +311,7 @@ input:disabled {
 <script src="lista_solicitantes.js"></script>
 
 <div class="container">
- 
+
  <!-- BOTÃO HAMBURGER -->
 <button class="menu-btn" onclick="abrirMenu()">☰</button>
 
@@ -304,12 +361,12 @@ input:disabled {
       </div>
     </div>
 
-    <button type="button" class="secundario" onclick="adicionarPeca()">➕ Adicionar peça</button>
+    <div class="toggle-container">
+  <span class="toggle-label">Pedido de devolução de peças</span>
 
-    <div class="form-group">
-  <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
-    <input type="checkbox" id="isDevolucao" style="width:auto; margin:0;">
-    <strong>Pedido de devolução de peças</strong>
+  <label class="switch">
+    <input type="checkbox" id="isDevolucao">
+    <span class="slider"></span>
   </label>
 </div>
 
