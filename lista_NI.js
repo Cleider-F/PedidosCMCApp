@@ -110,7 +110,6 @@ window.LISTA_NI = [
 { produto: "PARAFUSO 16 X 150", ni: 27019724 },
 { produto: "PARAFUSO 16 X 60", ni: 27037015 },
 { produto: "PARAFUSO 16 X 70 MM", ni: 27019662 },
-{ produto: "PARAFUSO 18 X 120", ni: 27036723 },
 { produto: "PARAFUSO 6 X 40", ni: 27033804 },
 { produto: "PARAFUSO 8 X 25", ni: 27019685 },
 { produto: "PARAFUSO 8 X 30", ni: 27036751 },
