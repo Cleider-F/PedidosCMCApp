@@ -199,7 +199,7 @@ window.LISTA_NI = [
 { produto: "FILTRO SELCOM 200" , ni: 25576892 },
 { produto: "FILTRO SELCOM 100" , ni: 25576891 },
 { produto: "PARAFUSO 12X25 (ROSCA GROSSA)" , ni: 27036995 },
-{ produto: "PARAFUSO 12X30 (ROSCA GROSSA)" , ni: 27033800 },
+{ produto: "PARAFUSO 12X30 ALLEN (ROSCA GROSSA)" , ni: 27033800 },
 { produto: "PARAFUSO 12X40 (ROSCA GROSSA)" , ni: 27033336 },
 { produto: "PARAFUSO 12X40 (ROSCA GROSSA)" , ni: 27036735 },
 { produto: "PARAFUSO 12X50 (ROSCA GROSSA)" , ni: 27033782 },
