@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Bloqueio de NI – Almoxarifado</title>
+<title>Painel do Almoxarife – Gestão de NI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -111,11 +111,13 @@ button:hover{opacity:.9}
   opacity:0;
   pointer-events:none;
   transition:.3s;
+  z-index:2000;
 }
 
 .toast.show{opacity:1}
 .toast.success{background:#16a34a}
 .toast.warn{background:#f59e0b}
+.toast.danger{background:#dc2626}
 
 /* Sugestões */
 .sugestoes{
@@ -230,6 +232,62 @@ button:hover{opacity:.9}
   display:block;
 }
 
+/* ====== Seções colapsáveis ====== */
+.section-btn{
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#111827;
+  color:#fff;
+  border-radius:12px;
+  padding:12px 14px;
+  font-size:14px;
+  margin-top:10px;
+}
+
+.section-btn span{opacity:.9}
+.section-content{
+  display:none;
+  margin-top:10px;
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px;
+}
+
+.section-content.active{display:block}
+
+label{
+  display:block;
+  font-size:13px;
+  color:#374151;
+  margin:8px 0 6px;
+}
+
+.input-stack{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.btn-row{
+  display:flex;
+  gap:10px;
+}
+
+.btn-row button{flex:1}
+
+.btn-green{background:#059669}
+.btn-red{background:#dc2626}
+.btn-gray{background:#6b7280}
+
+.helper{
+  font-size:12px;
+  color:#6b7280;
+  margin-top:8px;
+  line-height:1.3;
+}
 </style>
 </head>
 
@@ -243,12 +301,12 @@ button:hover{opacity:.9}
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-header">
-        <strong>📦 Pedido de Peças</strong>
+    <strong>📦 Pedido de Peças</strong>
     <button onclick="fecharMenu()">✖</button>
   </div>
 
   <nav>
-    <a href="index.html">📝 Pedido de Peças</a>    
+    <a href="index.html">📝 Pedido de Peças</a>
     <a href="acompanhamento.html">📦 Acompanhamento de Pedidos 🔩</a>
     <a href="admin.html">🔐 Área de Técnicos 🛠️</a>
     <a href="admin-epi.html">🦺 EPI's e Uniformes</a>
@@ -256,40 +314,114 @@ button:hover{opacity:.9}
   </nav>
 </aside>
 
-
 <div class="container">
 
   <div class="card">
-    <div class="header-admin">
-    <a href="index.html" class="btn-home" title="Voltar ao início">🏠</a>
+    <div class="header-admin" style="display:flex;justify-content:center;margin-bottom:8px;">
+      <a href="index.html" class="btn-home" title="Voltar ao início">🏠</a>
     </div>
-    <h1>🔒 Bloqueio de NI</h1>
 
-    <div style="position:relative;width:100%">
-      <div class="input-group">
-        <input id="niInput" placeholder="Digite o NI ou descrição da peça">
-        <button onclick="bloquearNI()">Bloquear</button>
+    <h1>🧩 Gestão de NI</h1>
+
+    <!-- 1) ADD/UPDATE -->
+    <button class="section-btn" type="button" onclick="toggleSection('secAdd')">
+      <div>➕ Adicionar / Atualizar (aprendizado_ni)</div>
+      <span id="icon-secAdd">▼</span>
+    </button>
+
+    <div id="secAdd" class="section-content">
+      <div class="input-stack">
+        <div>
+          <label>Nome da peça (descrição)</label>
+          <input id="aprDesc" placeholder="Ex: EMENDA RÁPIDA DE PLÁSTICO 8X8">
+        </div>
+
+        <div style="position:relative;">
+          <label>NI</label>
+          <input id="aprNi" placeholder="Ex: 27033747" inputmode="numeric">
+          <div id="aprSugAdd" class="sugestoes"></div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-green" onclick="salvarAprendizado()">Salvar</button>
+          <button class="btn-gray" onclick="limparAprendizadoAdd()">Limpar</button>
+        </div>
+
+        <div class="helper">
+          Salva em <b>aprendizado_ni/{NI}</b> com <b>descricao</b>, <b>ni</b>, <b>validadoEm</b>.
+        </div>
       </div>
-      <div id="sugestoes" class="sugestoes"></div>
     </div>
-  </div>
 
-  <div class="card">
-    <div id="listaNI" class="lista"></div>
+    <!-- 2) DELETE -->
+    <button class="section-btn" type="button" onclick="toggleSection('secDel')">
+      <div>🗑️ Excluir (aprendizado_ni)</div>
+      <span id="icon-secDel">▼</span>
+    </button>
+
+    <div id="secDel" class="section-content">
+      <div class="input-stack">
+        <div style="position:relative;">
+          <label>NI para excluir</label>
+          <input id="delNi" placeholder="Digite o NI (com sugestão)" inputmode="numeric">
+          <div id="aprSugDel" class="sugestoes"></div>
+        </div>
+
+        <div class="helper" style="margin-top:6px;">
+          <b>Peça:</b> <span id="delNomePeca">—</span>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-red" onclick="excluirAprendizado()">Excluir</button>
+          <button class="btn-gray" onclick="limparAprendizadoDel()">Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3) BLOQUEAR -->
+    <button class="section-btn" type="button" onclick="toggleSection('secBlock')">
+      <div>🔒 Bloquear NI (ni_bloqueados)</div>
+      <span id="icon-secBlock">▼</span>
+    </button>
+
+    <div id="secBlock" class="section-content">
+      <div style="position:relative;width:100%">
+        <div class="input-group">
+          <input id="niInput" placeholder="Digite o NI ou descrição da peça">
+          <button onclick="bloquearNI()">Bloquear</button>
+        </div>
+        <div id="sugestoes" class="sugestoes"></div>
+
+        <div class="helper">
+          Usa sugestão de <b>aprendizado_ni</b> + sua lista local (lista_NI.js).
+        </div>
+      </div>
+    </div>
+
+    <!-- 4) LISTA BLOQUEADOS -->
+    <button class="section-btn" type="button" onclick="toggleSection('secListBlock')">
+      <div>📋 NIs bloqueados</div>
+      <span id="icon-secListBlock">▼</span>
+    </button>
+
+    <div id="secListBlock" class="section-content">
+      <div id="listaNI" class="lista"></div>
+    </div>
+
   </div>
 
 </div>
 
 <div id="toast" class="toast"></div>
 
-<!-- Firebase -->
+<!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="lista_NI.js"></script>
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyCAJPyQ7-a4Efxh5yTXQ_326hn22OYAUc",
+  apiKey: "AIzaSyCAJPyQ7-a4Efxxh5yTXQ_326hn22OYAuc",
   authDomain: "pedidos-almoxarifado.firebaseapp.com",
   projectId: "pedidos-almoxarifado",
   storageBucket: "pedidos-almoxarifado.appspot.com",
@@ -299,51 +431,27 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const toast = document.getElementById("toast");
+
+const aprDesc = document.getElementById("aprDesc");
+const aprNi = document.getElementById("aprNi");
+const delNi = document.getElementById("delNi");
+const delNomePeca = document.getElementById("delNomePeca");
+const aprSugAdd = document.getElementById("aprSugAdd");
+const aprSugDel = document.getElementById("aprSugDel");
+
 const niInput = document.getElementById("niInput");
 const sugestoesBox = document.getElementById("sugestoes");
 const listaNI = document.getElementById("listaNI");
 
-let baseNI = [];
+let baseNI = [];  // base geral (lista_NI + aprendizado_ni)
+let baseApr = []; // base SOMENTE aprendizado_ni (para sugestão add/del e preview)
 
 function normalizar(txt){
-  return txt.toUpperCase()
+  return String(txt || "").toUpperCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g,"")
     .trim();
 }
-
-/* 🔎 Base de NI */
-function carregarListaNI(){
-  if(!window.LISTA_NI) return;
-  window.LISTA_NI.forEach(i=>{
-  baseNI.push({
-    descricao: normalizar(i.produto),
-    ni: String(i.ni) // 🔥 converte número → string
-  });
-});
-}
-carregarListaNI();
-
-function carregarAprendizadoNI(){
-  return db.collection("aprendizado_ni").get().then(snapshot=>{
-    snapshot.forEach(doc=>{
-      const d = doc.data();
-      if(d.descricao && d.ni){
-        baseNI.push({
-          descricao: normalizar(d.descricao),
-          ni: String(d.ni)
-        });
-      }
-    });
-  });
-}
-
-Promise.all([
-  carregarAprendizadoNI()
-]).then(()=>{
-  carregarListaNI();
-  console.log("✅ Base NI carregada:", baseNI.length);
-});
 
 /* 🔔 Toast */
 function showToast(msg, type="success"){
@@ -352,12 +460,237 @@ function showToast(msg, type="success"){
   setTimeout(()=> toast.className="toast", 2500);
 }
 
+/* ======== MENU ======== */
+window.abrirMenu = () => {
+  document.querySelector(".sidebar").classList.add("active");
+  document.querySelector(".menu-overlay").classList.add("active");
+};
+window.fecharMenu = () => {
+  document.querySelector(".sidebar").classList.remove("active");
+  document.querySelector(".menu-overlay").classList.remove("active");
+};
+/* destaca página atual */
+document.querySelectorAll(".sidebar nav a").forEach(a=>{
+  if(a.href === window.location.href){
+    a.classList.add("ativo");
+  }
+});
+
+/* ======== COLAPSÁVEL ======== */
+window.toggleSection = (id) => {
+  const el = document.getElementById(id);
+  const icon = document.getElementById("icon-"+id);
+  const active = el.classList.toggle("active");
+  icon.textContent = active ? "▲" : "▼";
+};
+
+/* 🔎 Base de NI (lista local) */
+function carregarListaNI(){
+  if(!window.LISTA_NI) return;
+  window.LISTA_NI.forEach(i=>{
+    baseNI.push({
+      descricao: normalizar(i.produto),
+      ni: String(i.ni)
+    });
+  });
+}
+
+/* 🔎 Base do aprendizado_ni */
+function carregarAprendizadoNI(){
+  baseApr = [];
+  return db.collection("aprendizado_ni").get().then(snapshot=>{
+    snapshot.forEach(doc=>{
+      const d = doc.data() || {};
+      const ni = String(d.ni ? d.ni : doc.id);
+      const desc = d.descricao ? d.descricao : "";
+      if(ni){
+        baseNI.push({ descricao: normalizar(desc), ni });
+        baseApr.push({ descricao: normalizar(desc), ni, rawDesc: desc });
+      }
+    });
+  });
+}
+
+/* Carrega bases */
+Promise.all([carregarAprendizadoNI()]).then(()=>{
+  carregarListaNI();
+  console.log("✅ Base NI:", baseNI.length, "| baseApr:", baseApr.length);
+});
+
+/* ===== PREVIEW EXCLUSÃO ===== */
+function atualizarPreviewExclusao(){
+  const ni = delNi.value.trim();
+  if(!ni){
+    delNomePeca.textContent = "—";
+    return;
+  }
+  const found = baseApr.find(x => String(x.ni) === String(ni));
+  delNomePeca.textContent = (found && found.rawDesc) ? found.rawDesc : "Não encontrado na coleção";
+}
+
+/* ===========================
+   APRENDIZADO_NI (ADD/DEL)
+=========================== */
+
+/* Autocomplete NI (ADD) */
+aprNi.addEventListener("input", ()=>{
+  const termo = normalizar(aprNi.value);
+  if(termo.length < 2){ aprSugAdd.style.display="none"; return; }
+
+  const resultados = baseApr
+    .filter(i => i.ni.includes(termo) || i.descricao.includes(termo))
+    .slice(0,6);
+
+  if(!resultados.length){ aprSugAdd.style.display="none"; return; }
+
+  aprSugAdd.innerHTML = resultados.map(r=>`
+    <div onclick="selecionarAprAdd('${r.ni}')">
+      ${r.descricao}
+      <span style="font-size:11px;color:#6b7280"> | NI ${r.ni}</span>
+    </div>
+  `).join("");
+  aprSugAdd.style.display="block";
+});
+
+window.selecionarAprAdd = (ni) => {
+  aprNi.value = ni;
+  const found = baseApr.find(x=>x.ni===ni);
+  if(found && found.rawDesc && !aprDesc.value.trim()){
+    aprDesc.value = found.rawDesc;
+  }
+  aprSugAdd.style.display="none";
+};
+
+/* Autocomplete NI (DEL) */
+delNi.addEventListener("input", ()=>{
+  const termo = normalizar(delNi.value);
+  atualizarPreviewExclusao();
+
+  if(termo.length < 2){ aprSugDel.style.display="none"; return; }
+
+  const resultados = baseApr
+    .filter(i => i.ni.includes(termo) || i.descricao.includes(termo))
+    .slice(0,6);
+
+  if(!resultados.length){ aprSugDel.style.display="none"; return; }
+
+  aprSugDel.innerHTML = resultados.map(r=>`
+    <div onclick="selecionarAprDel('${r.ni}')">
+      ${r.descricao}
+      <span style="font-size:11px;color:#6b7280"> | NI ${r.ni}</span>
+    </div>
+  `).join("");
+  aprSugDel.style.display="block";
+});
+
+window.selecionarAprDel = (ni) => {
+  delNi.value = ni;
+  aprSugDel.style.display="none";
+  atualizarPreviewExclusao();
+};
+
+/* Salvar no aprendizado_ni: docId = NI */
+window.salvarAprendizado = async () => {
+  try{
+    const descricao = aprDesc.value.trim();
+    const ni = aprNi.value.trim();
+
+    if(!descricao){
+      showToast("Informe o nome da peça (descrição).","warn");
+      return;
+    }
+    if(!ni || ni.length < 3){
+      showToast("Informe um NI válido.","warn");
+      return;
+    }
+    if(/^0+$/.test(ni)){
+      showToast("NI não pode ser 0000...","warn");
+      return;
+    }
+
+    await db.collection("aprendizado_ni").doc(ni).set({
+      descricao,
+      ni,
+      validadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true });
+
+    showToast(`Salvo no aprendizado_ni: NI ${ni}`,"success");
+
+    // Recarrega bases
+    baseNI = [];
+    await carregarAprendizadoNI();
+    carregarListaNI();
+
+    aprDesc.value = "";
+    aprNi.value = "";
+    aprSugAdd.style.display="none";
+  }catch(e){
+    console.error(e);
+    showToast("Erro ao salvar: "+(e.message||e),"danger");
+  }
+};
+
+window.limparAprendizadoAdd = () => {
+  aprDesc.value = "";
+  aprNi.value = "";
+  aprSugAdd.style.display="none";
+};
+
+/* Excluir do aprendizado_ni: docId = NI */
+window.excluirAprendizado = async () => {
+  try{
+    const ni = delNi.value.trim();
+    if(!ni){
+      showToast("Digite o NI para excluir.","warn");
+      return;
+    }
+
+    const ref = db.collection("aprendizado_ni").doc(ni);
+    const snap = await ref.get();
+
+    if(!snap.exists){
+      showToast("NI não encontrado no aprendizado_ni.","warn");
+      atualizarPreviewExclusao();
+      return;
+    }
+
+    const desc = snap.data()?.descricao || "";
+    if(!confirm(`Excluir do aprendizado_ni?\n\nNI: ${ni}\nPeça: ${desc}`)) return;
+
+    await ref.delete();
+
+    showToast(`Excluído: NI ${ni}`,"success");
+
+    // Recarrega bases
+    baseNI = [];
+    await carregarAprendizadoNI();
+    carregarListaNI();
+
+    delNi.value = "";
+    aprSugDel.style.display="none";
+    delNomePeca.textContent = "—";
+  }catch(e){
+    console.error(e);
+    showToast("Erro ao excluir: "+(e.message||e),"danger");
+  }
+};
+
+window.limparAprendizadoDel = () => {
+  delNi.value = "";
+  aprSugDel.style.display="none";
+  delNomePeca.textContent = "—";
+};
+
+/* ===========================
+   BLOQUEIO DE NI (AGORA DENTRO DO COLAPSE)
+=========================== */
+
 /* ⌨️ Enter */
 niInput.addEventListener("keydown", e=>{
   if(e.key==="Enter") bloquearNI();
 });
 
-/* 🔍 Autocomplete */
+/* 🔍 Autocomplete do bloqueio */
 niInput.addEventListener("input", ()=>{
   const termo = normalizar(niInput.value);
   if(termo.length < 2){
@@ -411,7 +744,7 @@ function bloquearNI(){
   });
 }
 
-/* 📋 Lista */
+/* 📋 Lista de bloqueados */
 db.collection("ni_bloqueados")
 .orderBy("bloqueadoEm","desc")
 .onSnapshot(snapshot=>{
@@ -443,30 +776,13 @@ db.collection("ni_bloqueados")
   });
 });
 
-/* 🗑️ Remover */
+/* 🗑️ Remover bloqueio */
 function confirmarRemocao(ni){
   if(!confirm(`Remover bloqueio do NI ${ni}?`)) return;
   db.collection("ni_bloqueados").doc(ni).delete()
     .then(()=> showToast(`NI ${ni} desbloqueado`));
 }
-window.abrirMenu = () => {
-  document.querySelector(".sidebar").classList.add("active");
-  document.querySelector(".menu-overlay").classList.add("active");
-};
-
-window.fecharMenu = () => {
-  document.querySelector(".sidebar").classList.remove("active");
-  document.querySelector(".menu-overlay").classList.remove("active");
-};
-
-/* destaca página atual */
-document.querySelectorAll(".sidebar nav a").forEach(a=>{
-  if(a.href === window.location.href){
-    a.classList.add("ativo");
-  }
-});
 </script>
 
 </body>
 </html>
-
