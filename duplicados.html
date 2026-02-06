@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Duplicados de NI - aprendizado_ni</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 16px; background:#f3f4f6; }
+    .box { background:#fff; border-radius: 12px; padding: 14px; box-shadow: 0 4px 10px rgba(0,0,0,.08); max-width: 900px; margin:auto; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    button { cursor:pointer; border:none; padding:10px 12px; border-radius:10px; font-size:14px; }
+    .btn { background:#111827; color:#fff; }
+    .btn-danger { background:#ef4444; color:#fff; }
+    .btn-ok { background:#059669; color:#fff; }
+    .muted { color:#6b7280; font-size: 13px; margin-top: 8px; }
+    .status { margin-top:10px; font-size: 13px; white-space: pre-wrap; }
+    .ok { color:#059669; }
+    .err { color:#dc2626; }
+    .group {
+      margin-top:14px; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden;
+    }
+    .group-header {
+      background:#f9fafb; padding:10px 12px; display:flex; justify-content:space-between; gap:10px; align-items:center;
+      border-bottom:1px solid #e5e7eb;
+    }
+    .docs { padding: 10px 12px; }
+    .doc {
+      display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #e5e7eb; border-radius:12px;
+      margin-top:10px; background:#fff;
+    }
+    .doc b { display:block; }
+    .doc small { display:block; color:#6b7280; margin-top:4px; }
+    .doc input[type="checkbox"] { transform: scale(1.15); margin-top:3px; }
+    code { background:#f3f4f6; padding:2px 6px; border-radius:6px; }
+    .pill { padding:4px 8px; border-radius:999px; background:#111827; color:#fff; font-size:12px; }
+    .pill2 { padding:4px 8px; border-radius:999px; background:#7c3aed; color:#fff; font-size:12px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h3 style="margin:0 0 6px 0;">Verificador de NI repetidos — coleção <code>aprendizado_ni</code></h3>
+    <div class="muted">
+      Ele considera duplicado quando <b>o campo <code>ni</code> é igual em mais de um documento</b>.  
+      Se algum doc não tiver campo <code>ni</code>, o sistema usa o <b>ID do documento</b> como fallback.
+    </div>
+
+    <div class="row" style="margin-top:12px;">
+      <button class="btn" id="btnLoad">Recarregar</button>
+      <button class="btn-ok" id="btnSelectAll">Marcar todos</button>
+      <button class="btn-ok" id="btnUnselectAll">Desmarcar todos</button>
+      <button class="btn-danger" id="btnDelete">Excluir selecionados</button>
+      <span class="pill" id="totDocs">Docs: 0</span>
+      <span class="pill2" id="totDup">Grupos duplicados: 0</span>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div id="resultado"></div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    doc,
+    deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // ======= SEU CONFIG =======
+  const firebaseConfig = {
+    apiKey: "AIzaSyCAJPyQ7-a4Efxxh5yTXQ_326hn22OYAuc",
+    authDomain: "pedidos-almoxarifado.firebaseapp.com",
+    projectId: "pedidos-almoxarifado",
+    storageBucket: "pedidos-almoxarifado.firebasestorage.app",
+    messagingSenderId: "443882865992",
+    appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const COL = "aprendizado_ni";
+
+  const statusEl = document.getElementById("status");
+  const resultadoEl = document.getElementById("resultado");
+  const totDocsEl = document.getElementById("totDocs");
+  const totDupEl = document.getElementById("totDup");
+
+  function setStatus(msg, type="") {
+    statusEl.className = "status " + (type === "ok" ? "ok" : type === "err" ? "err" : "");
+    statusEl.textContent = msg || "";
+  }
+
+  // Guarda a última leitura para re-render/seleção
+  let ultimo = {
+    docs: [],         // [{id, ni, descricao, validadoEm, refPath}]
+    dupGroups: []     // [{ni, docs:[...] }]
+  };
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    })[c]);
+  }
+
+  async function carregar() {
+    setStatus("Carregando documentos...", "");
+    resultadoEl.innerHTML = "";
+
+    try {
+      const snap = await getDocs(collection(db, COL));
+
+      const docs = [];
+      snap.forEach(d => {
+        const data = d.data() || {};
+        // Duplicidade por CAMPO ni; se não existir, usa ID como fallback
+        const ni = (data.ni ?? d.id);
+        docs.push({
+          id: d.id,
+          ni: String(ni),
+          descricao: data.descricao ?? "",
+          validadoEm: data.validadoEm ?? null,
+          refPath: `${COL}/${d.id}`
+        });
+      });
+
+      // Agrupar por ni
+      const map = new Map();
+      for (const it of docs) {
+        const key = it.ni.trim();
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(it);
+      }
+
+      // Filtra só grupos com mais de 1 (duplicados)
+      const dupGroups = [];
+      for (const [ni, arr] of map.entries()) {
+        if (arr.length > 1) {
+          // ordena por id só pra ficar estável
+          arr.sort((a,b) => a.id.localeCompare(b.id));
+          dupGroups.push({ ni, docs: arr });
+        }
+      }
+      dupGroups.sort((a,b) => a.ni.localeCompare(b.ni));
+
+      ultimo = { docs, dupGroups };
+      totDocsEl.textContent = `Docs: ${docs.length}`;
+      totDupEl.textContent = `Grupos duplicados: ${dupGroups.length}`;
+
+      renderDuplicados();
+
+      if (dupGroups.length === 0) {
+        setStatus("Nenhum NI repetido encontrado.", "ok");
+      } else {
+        setStatus(
+          `Encontrados ${dupGroups.length} grupos de NI repetido.\nMarque os documentos que deseja excluir e clique em “Excluir selecionados”.`,
+          ""
+        );
+      }
+    } catch (e) {
+      setStatus("Erro ao carregar: " + (e?.message || e), "err");
+    }
+  }
+
+  function renderDuplicados() {
+    const { dupGroups } = ultimo;
+    resultadoEl.innerHTML = "";
+
+    if (!dupGroups.length) return;
+
+    for (const group of dupGroups) {
+      const wrap = document.createElement("div");
+      wrap.className = "group";
+
+      wrap.innerHTML = `
+        <div class="group-header">
+          <div>
+            <b>NI: ${escapeHtml(group.ni)}</b>
+            <div class="muted" style="margin:4px 0 0 0;">${group.docs.length} documentos com o mesmo NI</div>
+          </div>
+          <div class="row" style="gap:8px;">
+            <button class="btn-ok btnMarkGroup" data-ni="${escapeHtml(group.ni)}" style="padding:8px 10px;">Marcar grupo</button>
+            <button class="btn-ok btnUnmarkGroup" data-ni="${escapeHtml(group.ni)}" style="padding:8px 10px;">Desmarcar grupo</button>
+          </div>
+        </div>
+        <div class="docs" id="docs-${CSS.escape(group.ni)}"></div>
+      `;
+
+      resultadoEl.appendChild(wrap);
+
+      const docsEl = wrap.querySelector(`#docs-${CSS.escape(group.ni)}`);
+
+      group.docs.forEach(d => {
+        const item = document.createElement("div");
+        item.className = "doc";
+        item.innerHTML = `
+          <input type="checkbox" class="chkDel" data-ref="${escapeHtml(d.refPath)}" />
+          <div>
+            <b>${escapeHtml(d.descricao || "(sem descricao)")}</b>
+            <small><b>Doc ID:</b> ${escapeHtml(d.id)}</small>
+            <small><b>Campo ni:</b> ${escapeHtml(d.ni)}</small>
+          </div>
+        `;
+        docsEl.appendChild(item);
+      });
+    }
+
+    // Botões marcar/desmarcar por grupo
+    document.querySelectorAll(".btnMarkGroup").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const ni = btn.getAttribute("data-ni");
+        document
+          .querySelectorAll(`.group .group-header b`)
+        ;
+        // marca checks dentro do grupo
+        const container = document.getElementById(`docs-${CSS.escape(ni)}`);
+        container?.querySelectorAll(".chkDel").forEach(chk => chk.checked = true);
+      });
+    });
+
+    document.querySelectorAll(".btnUnmarkGroup").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const ni = btn.getAttribute("data-ni");
+        const container = document.getElementById(`docs-${CSS.escape(ni)}`);
+        container?.querySelectorAll(".chkDel").forEach(chk => chk.checked = false);
+      });
+    });
+  }
+
+  function marcarTodos(v) {
+    document.querySelectorAll(".chkDel").forEach(chk => chk.checked = v);
+  }
+
+  function getSelecionados() {
+    return Array.from(document.querySelectorAll(".chkDel"))
+      .filter(chk => chk.checked)
+      .map(chk => chk.getAttribute("data-ref"))
+      .filter(Boolean);
+  }
+
+  async function excluirSelecionados() {
+    setStatus("");
+    const refs = getSelecionados();
+    if (refs.length === 0) { setStatus("Nenhum documento marcado para exclusão.", "err"); return; }
+
+    const ok = confirm(`Você vai excluir ${refs.length} documento(s) do Firestore. Confirmar?`);
+    if (!ok) return;
+
+    setStatus(`Excluindo ${refs.length} documento(s)...`, "");
+
+    try {
+      // delete sequencial (mais simples e confiável)
+      let count = 0;
+      for (const refPath of refs) {
+        const [col, id] = refPath.split("/");
+        await deleteDoc(doc(db, col, id));
+        count++;
+      }
+
+      setStatus(`Exclusão concluída: ${count} documento(s) removido(s). Recarregando...`, "ok");
+      await carregar();
+    } catch (e) {
+      setStatus("Erro ao excluir: " + (e?.message || e), "err");
+    }
+  }
+
+  // Bind
+  document.getElementById("btnLoad").addEventListener("click", carregar);
+  document.getElementById("btnSelectAll").addEventListener("click", () => marcarTodos(true));
+  document.getElementById("btnUnselectAll").addEventListener("click", () => marcarTodos(false));
+  document.getElementById("btnDelete").addEventListener("click", excluirSelecionados);
+
+  // Load inicial
+  carregar();
+</script>
+</body>
+</html>
