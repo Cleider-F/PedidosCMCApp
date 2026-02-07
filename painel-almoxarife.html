@@ -2,434 +2,116 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel do Almoxarife – Gestão de NI e Peças</title>
+<title>Painel do Almoxarife – Gestão de NI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-  body{
-    font-family: Arial, Helvetica, sans-serif;
-    background:#f3f4f6;
-    padding:16px;
-  }
+  body{font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;padding:16px;}
+  .container{max-width:980px;margin:auto;}
+  .card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 4px 10px rgba(0,0,0,.08);margin-bottom:16px;}
+  h1{font-size:20px;text-align:center;margin:0;}
 
-  .container{ max-width:980px; margin:auto; }
+  .topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .topbar-left{display:flex;flex-direction:column;gap:4px;}
+  .sub{font-size:12px;color:#6b7280;}
 
-  .card{
-    background:#fff;
-    border-radius:14px;
-    padding:16px;
-    box-shadow:0 4px 10px rgba(0,0,0,.08);
-    margin-bottom:16px;
-  }
+  .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;}
 
-  h1{
-    font-size:20px;
-    text-align:center;
-    margin:0;
-  }
-
-  .topbar{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:12px;
-  }
-
-  .topbar-left{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-  }
-  .sub{
-    font-size:12px;
-    color:#6b7280;
-  }
-
-  .actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-    justify-content:flex-end;
-  }
-
-  .btn{
-    padding:10px 14px;
-    border:none;
-    border-radius:10px;
-    background:#111827;
-    color:#fff;
-    font-size:14px;
-    cursor:pointer;
-    white-space:nowrap;
-  }
+  .btn{padding:10px 14px;border:none;border-radius:10px;background:#111827;color:#fff;font-size:14px;cursor:pointer;white-space:nowrap;}
   .btn:hover{opacity:.92}
+  .btn-green{background:#059669;}
+  .btn-red{background:#dc2626;}
+  .btn-gray{background:#6b7280;}
+  .btn-ghost{background:#e5e7eb;color:#111827;}
 
-  .btn-green{ background:#059669; }
-  .btn-red{ background:#dc2626; }
-  .btn-gray{ background:#6b7280; }
-  .btn-ghost{
-    background:#e5e7eb;
-    color:#111827;
-  }
+  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+  .chip{padding:8px 12px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;color:#111827;font-size:13px;cursor:pointer;}
+  .chip:hover{background:#f9fafb;}
+  .chip.active{background:#111827;color:#fff;border-color:#111827;}
 
-  /* filtros */
-  .filters{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    align-items:center;
-    margin-top:10px;
-  }
-  .chip{
-    padding:8px 12px;
-    border-radius:999px;
-    border:1px solid #e5e7eb;
-    background:#fff;
-    color:#111827;
-    font-size:13px;
-    cursor:pointer;
-  }
-  .chip:hover{ background:#f9fafb; }
-  .chip.active{
-    background:#111827;
-    color:#fff;
-    border-color:#111827;
-  }
+  input{padding:12px;border-radius:10px;border:1px solid #d1d5db;font-size:16px;width:100%;box-sizing:border-box;}
+  .search-wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0 0;}
+  .search-wrap input{flex:1;min-width:240px;}
 
-  input{
-    padding:12px;
-    border-radius:10px;
-    border:1px solid #d1d5db;
-    font-size:16px;
-    width:100%;
-    box-sizing:border-box;
-  }
+  .stats{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;margin-left:auto;font-size:12px;color:#6b7280;}
+  .stats b{color:#111827;}
 
-  .search-wrap{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-    margin:10px 0 0;
-  }
-  .search-wrap input{ flex:1; min-width:240px; }
+  .table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:12px;margin-top:12px;}
+  table{width:100%;border-collapse:collapse;min-width:760px;}
+  thead th{text-align:left;font-size:12px;color:#6b7280;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:12px;position:sticky;top:0;z-index:1;}
+  tbody td{padding:12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
 
-  .stats{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-    justify-content:flex-end;
-    margin-left:auto;
-    font-size:12px;
-    color:#6b7280;
-  }
-  .stats b{ color:#111827; }
+  .ni{font-weight:bold;color:#111827;white-space:nowrap;}
+  .badge{display:inline-block;font-size:11px;padding:4px 8px;border-radius:999px;margin-left:8px;white-space:nowrap;}
+  .badge.block{background:#fee2e2;color:#991b1b;}
+  .badge.ok{background:#dcfce7;color:#166534;}
 
-  .table-wrap{
-    overflow:auto;
-    border:1px solid #e5e7eb;
-    border-radius:12px;
-    margin-top:12px;
-  }
+  .desc{color:#111827;}
+  .muted{font-size:12px;color:#6b7280;}
 
-  table{
-    width:100%;
-    border-collapse:collapse;
-    min-width:760px;
-  }
-  thead th{
-    text-align:left;
-    font-size:12px;
-    color:#6b7280;
-    background:#f9fafb;
-    border-bottom:1px solid #e5e7eb;
-    padding:12px;
-    position:sticky;
-    top:0;
-    z-index:1;
-  }
-  tbody td{
-    padding:12px;
-    border-bottom:1px solid #f1f5f9;
-    vertical-align:middle;
-  }
+  .cell-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .btn-sm{padding:8px 10px;font-size:12px;border-radius:10px;}
 
-  .ni{
-    font-weight:bold;
-    color:#111827;
-    white-space:nowrap;
-  }
+  .empty{text-align:center;color:#6b7280;font-size:14px;padding:18px;}
 
-  .badge{
-    display:inline-block;
-    font-size:11px;
-    padding:4px 8px;
-    border-radius:999px;
-    margin-left:8px;
-    white-space:nowrap;
-  }
-  .badge.block{ background:#fee2e2; color:#991b1b; }
-  .badge.ok{ background:#dcfce7; color:#166534; }
-
-  .desc{ color:#111827; }
-  .muted{
-    font-size:12px;
-    color:#6b7280;
-  }
-
-  .cell-actions{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    justify-content:flex-end;
-  }
-
-  .btn-sm{
-    padding:8px 10px;
-    font-size:12px;
-    border-radius:10px;
-  }
-
-  .empty{
-    text-align:center;
-    color:#6b7280;
-    font-size:14px;
-    padding:18px;
-  }
-
-  /* Toast */
-  .toast{
-    position:fixed;
-    bottom:20px;
-    left:50%;
-    transform:translateX(-50%);
-    background:#111827;
-    color:#fff;
-    padding:12px 18px;
-    border-radius:12px;
-    font-size:14px;
-    opacity:0;
-    pointer-events:none;
-    transition:.3s;
-    z-index:2000;
-  }
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:2000;}
   .toast.show{opacity:1}
   .toast.success{background:#16a34a}
   .toast.warn{background:#f59e0b}
   .toast.danger{background:#dc2626}
 
-  /* Modal */
-  .modal{
-    position:fixed;
-    inset:0;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:16px;
-    z-index:2100;
-  }
-  .modal.show{ display:flex; }
-  .modal-overlay{
-    position:absolute;
-    inset:0;
-    background:rgba(0,0,0,.55);
-  }
-  .modal-box{
-    position:relative;
-    width:100%;
-    max-width:620px;
-    background:#fff;
-    border-radius:14px;
-    box-shadow:0 20px 60px rgba(0,0,0,.25);
-    overflow:hidden;
-  }
-  .modal-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:14px 16px;
-    border-bottom:1px solid #e5e7eb;
-  }
-  .modal-head strong{ font-size:15px; }
-  .modal-body{ padding:16px; }
-  .grid{
-    display:grid;
-    grid-template-columns: 1fr 220px;
-    gap:12px;
-  }
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;z-index:2100;}
+  .modal.show{display:flex;}
+  .modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);}
+  .modal-box{position:relative;width:100%;max-width:620px;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e5e7eb;}
+  .modal-head strong{font-size:15px;}
+  .modal-body{padding:16px;}
+  .grid{display:grid;grid-template-columns:1fr 220px;gap:12px;}
+  @media (max-width:720px){.grid{grid-template-columns:1fr;}}
+  label{display:block;font-size:13px;color:#374151;margin:0 0 6px;}
+  .hint{margin-top:6px;font-size:12px;color:#6b7280;line-height:1.3;}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;padding:14px 16px;border-top:1px solid #e5e7eb;flex-wrap:wrap;}
+
+  .menu-btn{position:fixed;top:12px;left:12px;z-index:1001;background:#111827;color:#fff;border:none;border-radius:10px;font-size:22px;width:auto;height:auto;padding:8px 12px;margin:0;cursor:pointer;}
+  .sidebar{position:fixed;top:0;left:0;height:100%;width:260px;background:#111827;color:#fff;transform:translateX(-100%);transition:.3s;z-index:1002;display:flex;flex-direction:column;}
+  .sidebar.active{transform:translateX(0);}
+  .sidebar-header{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid #1f2937;}
+  .sidebar-header button{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;}
+  .sidebar nav{display:flex;flex-direction:column;padding:10px;}
+  .sidebar nav a{padding:14px;border-radius:10px;color:#fff;text-decoration:none;margin-bottom:6px;}
+  .sidebar nav a:hover{background:#1f2937;}
+  .sidebar nav a.ativo{background:#2563eb;}
+  .menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:none;}
+  .menu-overlay.active{display:block;}
+
+  /* Mobile cards */
+  .mobile-cards{display:none;}
   @media (max-width:720px){
-    .grid{ grid-template-columns: 1fr; }
-  }
-  label{
-    display:block;
-    font-size:13px;
-    color:#374151;
-    margin:0 0 6px;
-  }
-  .hint{
-    margin-top:6px;
-    font-size:12px;
-    color:#6b7280;
-    line-height:1.3;
-  }
-  .modal-actions{
-    display:flex;
-    gap:10px;
-    justify-content:flex-end;
-    padding:14px 16px;
-    border-top:1px solid #e5e7eb;
-    flex-wrap:wrap;
-  }
-
-  /* BOTÃO HAMBURGER */
-  .menu-btn{
-    position:fixed;
-    top:12px;
-    left:12px;
-    z-index:1001;
-    background:#111827;
-    color:#fff;
-    border:none;
-    border-radius:10px;
-    font-size:22px;
-    width:auto;
-    height:auto;
-    padding:8px 12px;
-    margin:0;
-    cursor:pointer;
-  }
-
-  /* SIDEBAR */
-  .sidebar{
-    position:fixed;
-    top:0;
-    left:0;
-    height:100%;
-    width:260px;
-    background:#111827;
-    color:#fff;
-    transform:translateX(-100%);
-    transition:.3s;
-    z-index:1002;
-    display:flex;
-    flex-direction:column;
-  }
-  .sidebar.active{ transform:translateX(0); }
-
-  .sidebar-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:16px;
-    border-bottom:1px solid #1f2937;
-  }
-  .sidebar-header button{
-    background:none;
-    border:none;
-    color:#fff;
-    font-size:18px;
-    cursor:pointer;
-  }
-
-  .sidebar nav{
-    display:flex;
-    flex-direction:column;
-    padding:10px;
-  }
-  .sidebar nav a{
-    padding:14px;
-    border-radius:10px;
-    color:#fff;
-    text-decoration:none;
-    margin-bottom:6px;
-  }
-  .sidebar nav a:hover{ background:#1f2937; }
-  .sidebar nav a.ativo{ background:#2563eb; }
-
-  .menu-overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.4);
-    z-index:1000;
-    display:none;
-  }
-  .menu-overlay.active{ display:block; }
-
-  /* ===== Mobile UI: tabela vira cards ===== */
-  .mobile-cards{ display:none; }
-
-  @media (max-width: 720px){
-    body{ padding:12px; }
-    .container{ max-width: 100%; }
-
-    .card{ padding:12px; }
-
-    /* Topo mais compacto */
-    .topbar{ gap:8px; }
-    .actions{ width:100%; justify-content:space-between; }
-    .actions .btn{ flex:1; padding:10px 10px; font-size:13px; }
-
-    /* Busca e filtros */
-    .search-wrap{ gap:8px; }
-    .search-wrap input{ min-width: 0; }
-    .btn-gray{ padding:10px 10px; font-size:13px; }
-
-    .filters{ gap:6px; }
-    .chip{ padding:7px 10px; font-size:12px; }
-
-    .stats{ width:100%; justify-content:flex-start; gap:8px; }
-    .stats{ font-size:11px; }
-
-    /* Esconde tabela e mostra cards */
-    .table-wrap{ display:none; }
-    .mobile-cards{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
-
-    .mcard{
-      background:#f9fafb;
-      border:1px solid #e5e7eb;
-      border-radius:14px;
-      padding:12px;
-    }
-
-    .mcard-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:8px;
-    }
-
-    .mni{ font-weight:bold; color:#111827; font-size:15px; }
-    .mbadges{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-
-    .mbadge{
-      font-size:11px;
-      padding:4px 8px;
-      border-radius:999px;
-      white-space:nowrap;
-    }
-    .mbadge.block{ background:#fee2e2; color:#991b1b; }
-    .mbadge.ok{ background:#dcfce7; color:#166534; }
-
-    .mdesc{ color:#111827; font-size:13px; line-height:1.25; }
-
-    /* Botões coladinhos, 3 colunas */
-    .m-actions{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap:8px;
-      margin-top:10px;
-    }
-
-    .m-actions .btn{
-      padding:10px 8px;
-      font-size:12px;
-      border-radius:12px;
-    }
+    body{padding:12px;}
+    .container{max-width:100%;}
+    .card{padding:12px;}
+    .topbar{gap:8px;}
+    .actions{width:100%;justify-content:space-between;}
+    .actions .btn{flex:1;padding:10px 10px;font-size:13px;}
+    .search-wrap{gap:8px;}
+    .search-wrap input{min-width:0;}
+    .btn-gray{padding:10px 10px;font-size:13px;}
+    .filters{gap:6px;}
+    .chip{padding:7px 10px;font-size:12px;}
+    .stats{width:100%;justify-content:flex-start;gap:8px;font-size:11px;}
+    .table-wrap{display:none;}
+    .mobile-cards{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+    .mcard{background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:12px;}
+    .mcard-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+    .mni{font-weight:bold;color:#111827;font-size:15px;}
+    .mbadges{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+    .mbadge{font-size:11px;padding:4px 8px;border-radius:999px;white-space:nowrap;}
+    .mbadge.block{background:#fee2e2;color:#991b1b;}
+    .mbadge.ok{background:#dcfce7;color:#166534;}
+    .mdesc{color:#111827;font-size:13px;line-height:1.25;}
+    .m-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
+    .m-actions .btn{padding:10px 8px;font-size:12px;border-radius:12px;}
   }
 </style>
 </head>
@@ -453,11 +135,11 @@
 </aside>
 
 <div class="container">
-  <div class="topbar">
-    <div class="topbar-center">
-  <h1 class="titulo-centro">🧩 Gestão de NI e Peças</h1>
-</div>
-       
+  <div class="card">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>🧩 Gestão de NI</h1>
+        <div class="sub">Coleção: <b>aprendizado_ni</b> (docId aleatório) • Bloqueio: <b>ni_bloqueados/{NI}</b></div>
       </div>
 
       <div class="actions">
@@ -466,7 +148,6 @@
       </div>
     </div>
 
-    <!-- filtros + contadores -->
     <div class="filters">
       <button id="fTodos" class="chip active" onclick="setFiltro('todos')">Todos</button>
       <button id="fAtivos" class="chip" onclick="setFiltro('ativos')">Ativos</button>
@@ -485,7 +166,6 @@
       <button class="btn btn-gray" onclick="limparBusca()">Limpar</button>
     </div>
 
-    <!-- Desktop: tabela -->
     <div class="table-wrap">
       <table>
         <thead>
@@ -500,12 +180,10 @@
       <div id="empty" class="empty" style="display:none;">Nenhum item encontrado.</div>
     </div>
 
-    <!-- Mobile: cards -->
     <div id="cards" class="mobile-cards"></div>
   </div>
 </div>
 
-<!-- Modal Novo/Editar -->
 <div id="modal" class="modal" role="dialog" aria-modal="true">
   <div class="modal-overlay" onclick="fecharModal()"></div>
   <div class="modal-box">
@@ -518,19 +196,19 @@
       <div class="grid">
         <div>
           <label>Descrição</label>
-          <input id="mDesc" placeholder="Ex: EMENDA RÁPIDA DE PLÁSTICO 8X8" />
+          <input id="mDesc" placeholder="Ex: ABRAÇADEIRA PLÁSTICA G" />
         </div>
         <div>
           <label>NI</label>
-          <input id="mNi" placeholder="Ex: 27033747" inputmode="numeric" />
-          <div class="hint" id="mNiHint">O NI será o ID do documento.</div>
+          <input id="mNi" placeholder="Ex: 27033816" inputmode="numeric" />
+          <div class="hint" id="mNiHint">Neste projeto, NI é um campo editável dentro do documento.</div>
         </div>
       </div>
 
       <div style="margin-top:12px;">
         <label style="display:flex; gap:10px; align-items:center; cursor:pointer;">
           <input type="checkbox" id="mBloqueado" />
-          Já deixar este NI bloqueado (cria/atualiza em ni_bloqueados)
+          Marcar como “Sem saldo” (cria/atualiza em ni_bloqueados/{NI})
         </label>
       </div>
 
@@ -570,9 +248,7 @@ window.fecharMenu = () => {
   document.querySelector(".menu-overlay").classList.remove("active");
 };
 document.querySelectorAll(".sidebar nav a").forEach(a=>{
-  if(a.href === window.location.href){
-    a.classList.add("ativo");
-  }
+  if(a.href === window.location.href) a.classList.add("ativo");
 });
 
 /* UTIL */
@@ -609,9 +285,9 @@ const countAtivos = document.getElementById("countAtivos");
 const countBloqueados = document.getElementById("countBloqueados");
 const countView  = document.getElementById("countView");
 
-let cacheApr = [];             // [{ni, descricao}]
-let bloqueadosSet = new Set(); // ids de ni_bloqueados
-let filtroStatus = "todos";    // "todos" | "ativos" | "bloqueados"
+let cacheApr = []; // [{idDoc, ni, descricao}]
+let bloqueadosSet = new Set(); // docId = NI em ni_bloqueados
+let filtroStatus = "todos";
 
 let unsubApr = null;
 let unsubBlock = null;
@@ -623,54 +299,89 @@ const modalErro = document.getElementById("modalErro");
 const mDesc = document.getElementById("mDesc");
 const mNi = document.getElementById("mNi");
 const mBloqueado = document.getElementById("mBloqueado");
-const mNiHint = document.getElementById("mNiHint");
 
-let modalModo = "novo";
-let modalNiOriginal = "";
+let modalModo = "novo";   // "novo" | "editar"
+let editDocId = "";       // docId real do aprendizado_ni
+let niOriginal = "";      // NI original (p/ migrar bloqueio se mudar)
 
 function abrirModalNovo(){
   modalModo = "novo";
-  modalNiOriginal = "";
+  editDocId = "";
+  niOriginal = "";
+
   modalTitulo.textContent = "Nova peça";
   modalErro.style.display = "none";
   modalErro.textContent = "";
+
   mDesc.value = "";
   mNi.value = "";
   mNi.disabled = false;
   mNi.style.background = "";
-  mNiHint.textContent = "O NI será o ID do documento.";
   mBloqueado.checked = false;
+
   modal.classList.add("show");
   setTimeout(()=> mNi.focus(), 30);
 }
-function abrirModalEditar(ni){
-  const item = cacheApr.find(x => String(x.ni) === String(ni));
+
+function abrirModalEditar(docId){
+  const item = cacheApr.find(x => x.idDoc === docId);
   if(!item){ showToast("Item não encontrado.","warn"); return; }
 
   modalModo = "editar";
-  modalNiOriginal = String(ni);
+  editDocId = docId;
+  niOriginal = String(item.ni || "");
 
   modalTitulo.textContent = "Editar peça";
   modalErro.style.display = "none";
   modalErro.textContent = "";
 
   mDesc.value = item.descricao || "";
-  mNi.value = String(item.ni || ni);
+  mNi.value = String(item.ni || "");
+  mNi.disabled = false; // ✅ agora pode editar
+  mNi.style.background = "";
 
-  mNi.disabled = true;
-  mNi.style.background = "#f9fafb";
-  mNiHint.textContent = "NI não é editável (docId = NI).";
-
-  mBloqueado.checked = bloqueadosSet.has(String(ni));
+  mBloqueado.checked = bloqueadosSet.has(String(item.ni || ""));
 
   modal.classList.add("show");
   setTimeout(()=> mDesc.focus(), 30);
 }
+
 function fecharModal(){ modal.classList.remove("show"); }
 function erroModal(msg){
   modalErro.textContent = msg;
   modalErro.style.display = "block";
 }
+
+/* valida NI duplicado no aprendizado_ni (campo ni) */
+async function niJaExisteEmOutroDoc(ni, docIdAtual){
+  const snap = await db.collection("aprendizado_ni").where("ni","==", String(ni)).get();
+  if(snap.empty) return false;
+
+  let existeOutro = false;
+  snap.forEach(d=>{
+    if(d.id !== docIdAtual) existeOutro = true;
+  });
+  return existeOutro;
+}
+
+/* MIGRAR BLOQUEIO se NI foi alterado e estava bloqueado */
+async function migrarBloqueioSePreciso(niAntigo, niNovo, descricaoNova){
+  const antigo = String(niAntigo || "");
+  const novo = String(niNovo || "");
+  if(!antigo || !novo || antigo === novo) return;
+
+  const estavaBloqueado = bloqueadosSet.has(antigo);
+  if(!estavaBloqueado) return;
+
+  // cria novo bloqueio e remove antigo
+  await db.collection("ni_bloqueados").doc(novo).set({
+    descricao: descricaoNova || "",
+    bloqueadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge:true });
+
+  await db.collection("ni_bloqueados").doc(antigo).delete();
+}
+
 async function salvarModal(){
   try{
     const desc = (mDesc.value || "").trim();
@@ -681,26 +392,60 @@ async function salvarModal(){
     if(!ni || ni.length < 3) return erroModal("Informe um NI válido.");
     if(/^0+$/.test(ni)) return erroModal("NI não pode ser 0000...");
 
-    const niFinal = (modalModo === "editar") ? modalNiOriginal : ni;
+    if(modalModo === "novo"){
+      // impede duplicar NI na coleção
+      const existe = await niJaExisteEmOutroDoc(ni, "");
+      if(existe) return erroModal("Já existe outro documento com esse NI. Use outro ou edite o existente.");
 
-    await db.collection("aprendizado_ni").doc(niFinal).set({
+      const ref = await db.collection("aprendizado_ni").add({
+        descricao: desc,
+        ni: String(ni),
+        validadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      if(mBloqueado.checked){
+        await db.collection("ni_bloqueados").doc(String(ni)).set({
+          descricao: desc,
+          bloqueadoEm: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+      }
+
+      showToast("Salvo com sucesso.", "success");
+      fecharModal();
+      return;
+    }
+
+    // editar
+    const docId = editDocId;
+    if(!docId) return erroModal("docId inválido (edição).");
+
+    // evita NI duplicado em outro doc
+    const existeOutro = await niJaExisteEmOutroDoc(ni, docId);
+    if(existeOutro) return erroModal("Esse NI já está em outro item. Não posso salvar duplicado.");
+
+    // atualiza doc
+    await db.collection("aprendizado_ni").doc(docId).set({
       descricao: desc,
-      ni: niFinal,
+      ni: String(ni),
       validadoEm: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
 
+    // se mudou NI e estava bloqueado, migra
+    await migrarBloqueioSePreciso(niOriginal, ni, desc);
+
+    // checkbox define estado final do bloqueio
     if(mBloqueado.checked){
-      await db.collection("ni_bloqueados").doc(niFinal).set({
+      await db.collection("ni_bloqueados").doc(String(ni)).set({
         descricao: desc,
         bloqueadoEm: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge:true });
     } else {
-      if(bloqueadosSet.has(String(niFinal))){
-        await db.collection("ni_bloqueados").doc(niFinal).delete();
+      if(bloqueadosSet.has(String(ni))){
+        await db.collection("ni_bloqueados").doc(String(ni)).delete();
       }
     }
 
-    showToast(`Salvo: NI ${niFinal}`, "success");
+    showToast("Atualizado com sucesso.", "success");
     fecharModal();
   }catch(e){
     console.error(e);
@@ -709,37 +454,37 @@ async function salvarModal(){
 }
 
 /* ações linha */
-async function toggleBloqueio(ni){
+async function toggleBloqueio(ni, descricao){
   const niStr = String(ni);
   const isBlocked = bloqueadosSet.has(niStr);
 
   try{
     if(isBlocked){
       await db.collection("ni_bloqueados").doc(niStr).delete();
-      showToast(`NI ${niStr} desbloqueado`, "success");
+      showToast(`NI ${niStr} marcado como COM saldo`, "success");
     } else {
-      const item = cacheApr.find(x => String(x.ni) === niStr);
-      const desc = item?.descricao || "";
       await db.collection("ni_bloqueados").doc(niStr).set({
-        descricao: desc,
+        descricao: descricao || "",
         bloqueadoEm: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge:true });
-      showToast(`NI ${niStr} bloqueado`, "success");
+      showToast(`NI ${niStr} marcado como SEM saldo`, "success");
     }
   }catch(e){
     console.error(e);
     showToast("Erro no bloqueio: " + (e.message || e), "danger");
   }
 }
-async function removerItem(ni){
-  const niStr = String(ni);
-  const item = cacheApr.find(x => String(x.ni) === niStr);
-  const desc = item?.descricao || "";
+
+async function removerItem(docId, ni, descricao){
+  const docIdStr = String(docId);
+  const niStr = String(ni || "");
+  const desc = descricao || "";
+
   if(!confirm(`Remover do aprendizado_ni?\n\nNI: ${niStr}\nPeça: ${desc}\n\nObs: Não remove automaticamente do ni_bloqueados.`)) return;
 
   try{
-    await db.collection("aprendizado_ni").doc(niStr).delete();
-    showToast(`Removido: ${niStr}`, "success");
+    await db.collection("aprendizado_ni").doc(docIdStr).delete();
+    showToast("Removido com sucesso.", "success");
   }catch(e){
     console.error(e);
     showToast("Erro ao remover: " + (e.message || e), "danger");
@@ -749,11 +494,9 @@ async function removerItem(ni){
 /* FILTRO (status) */
 function setFiltro(tipo){
   filtroStatus = tipo;
-
   document.getElementById("fTodos").classList.toggle("active", tipo==="todos");
   document.getElementById("fAtivos").classList.toggle("active", tipo==="ativos");
   document.getElementById("fBloqueados").classList.toggle("active", tipo==="bloqueados");
-
   aplicarFiltro();
 }
 
@@ -768,14 +511,13 @@ function atualizarContadores(){
   countAtivos.textContent = String(ativos);
 }
 
-/* RENDER + filtro por busca + status */
+/* RENDER */
 function aplicarFiltro(){
   atualizarContadores();
 
   const q = normalizar(busca.value || "");
   let lista = cacheApr.slice();
 
-  // filtro status
   if(filtroStatus === "ativos"){
     lista = lista.filter(it => !bloqueadosSet.has(String(it.ni)));
   }
@@ -783,7 +525,6 @@ function aplicarFiltro(){
     lista = lista.filter(it => bloqueadosSet.has(String(it.ni)));
   }
 
-  // filtro busca
   if(q){
     lista = lista.filter(it => {
       const ni = String(it.ni || "");
@@ -799,85 +540,84 @@ function aplicarFiltro(){
 
   if(!lista.length){
     empty.style.display = "block";
-    cards.innerHTML = "";
     return;
   }
   empty.style.display = "none";
 
   for(const it of lista){
+    const docId = it.idDoc;
     const ni = String(it.ni || "");
     const desc = String(it.descricao || "");
     const blocked = bloqueadosSet.has(ni);
 
-    // ===== Desktop row =====
+    // Desktop row
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>
         <div class="ni">${escapeHtml(ni)}
-          ${blocked ? `<span class="badge block">BLOQUEADO</span>` : `<span class="badge ok">ATIVO</span>`}
+          ${blocked ? `<span class="badge block">SEM SALDO</span>` : `<span class="badge ok">COM SALDO</span>`}
         </div>
-        <div class="muted">docId: ${escapeHtml(ni)}</div>
+        <div class="muted">docId: ${escapeHtml(docId)}</div>
       </td>
       <td><div class="desc">${escapeHtml(desc)}</div></td>
       <td>
         <div class="cell-actions">
-          <button class="btn btn-sm btn-ghost" onclick="abrirModalEditar('${escapeHtml(ni)}')">✏️ Editar</button>
+          <button class="btn btn-sm btn-ghost" onclick="abrirModalEditar('${escapeHtml(docId)}')">✏️ Editar</button>
           <button class="btn btn-sm ${blocked ? 'btn-ghost' : ''}"
             style="${blocked ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca' : ''}"
-            onclick="toggleBloqueio('${escapeHtml(ni)}')">
-            ${blocked ? "🔓 Desbloquear" : "🔒 Bloquear"}
+            onclick="toggleBloqueio('${escapeHtml(ni)}','${escapeHtml(desc)}')">
+            ${blocked ? "✅ Com saldo" : "🚫 Sem saldo"}
           </button>
-          <button class="btn btn-sm btn-red" onclick="removerItem('${escapeHtml(ni)}')">🗑️ Remover</button>
+          <button class="btn btn-sm btn-red" onclick="removerItem('${escapeHtml(docId)}','${escapeHtml(ni)}','${escapeHtml(desc)}')">🗑️ Remover</button>
         </div>
       </td>
     `;
     tbody.appendChild(tr);
 
-    // ===== Mobile card =====
+    // Mobile card
     const card = document.createElement("div");
     card.className = "mcard";
     card.innerHTML = `
       <div class="mcard-top">
         <div class="mni">${escapeHtml(ni)}</div>
         <div class="mbadges">
-          ${blocked ? `<span class="mbadge block">BLOQUEADO</span>` : `<span class="mbadge ok">ATIVO</span>`}
+          ${blocked ? `<span class="mbadge block">SEM SALDO</span>` : `<span class="mbadge ok">COM SALDO</span>`}
         </div>
       </div>
 
       <div class="mdesc">${escapeHtml(desc)}</div>
 
       <div class="m-actions">
-        <button class="btn btn-ghost" onclick="abrirModalEditar('${escapeHtml(ni)}')">✏️ Editar</button>
+        <button class="btn btn-ghost" onclick="abrirModalEditar('${escapeHtml(docId)}')">✏️ Editar</button>
         <button class="btn ${blocked ? 'btn-ghost' : ''}"
           style="${blocked ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca' : ''}"
-          onclick="toggleBloqueio('${escapeHtml(ni)}')">
-          ${blocked ? "🔓 Desbloquear" : "🔒 Bloquear"}
+          onclick="toggleBloqueio('${escapeHtml(ni)}','${escapeHtml(desc)}')">
+          ${blocked ? "✅ Com saldo" : "🚫 Sem saldo"}
         </button>
-        <button class="btn btn-red" onclick="removerItem('${escapeHtml(ni)}')">🗑️ Remover</button>
+        <button class="btn btn-red" onclick="removerItem('${escapeHtml(docId)}','${escapeHtml(ni)}','${escapeHtml(desc)}')">🗑️ Remover</button>
       </div>
     `;
     cards.appendChild(card);
   }
 }
 
-function limparBusca(){
-  busca.value = "";
-  aplicarFiltro();
-}
+function limparBusca(){ busca.value = ""; aplicarFiltro(); }
 busca.addEventListener("input", aplicarFiltro);
 
 /* LISTENERS */
 function iniciarListeners(){
   if(unsubApr) unsubApr();
   unsubApr = db.collection("aprendizado_ni")
-    .orderBy("ni")
+    .orderBy("validadoEm","desc")
     .onSnapshot(snap=>{
       cacheApr = [];
       snap.forEach(doc=>{
         const d = doc.data() || {};
-        const ni = String(d.ni ? d.ni : doc.id);
-        const descricao = d.descricao ? d.descricao : "";
-        cacheApr.push({ ni, descricao });
+        cacheApr.push({
+          idDoc: doc.id,
+          ni: String(d.ni || ""),
+          descricao: String(d.descricao || "")
+        });
       });
       aplicarFiltro();
     }, err=>{
