@@ -2,309 +2,447 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel do Almoxarife – Gestão de NI</title>
+<title>Painel do Almoxarife – Gestão de NI e Peças</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
-  font-family: Arial, Helvetica, sans-serif;
-  background:#f3f4f6;
-  padding:16px;
-}
+  body{
+    font-family: Arial, Helvetica, sans-serif;
+    background:#f3f4f6;
+    padding:16px;
+  }
 
-.container{
-  max-width:650px;
-  margin:auto;
-}
+  .container{ max-width:980px; margin:auto; }
 
-.card{
-  background:#fff;
-  border-radius:14px;
-  padding:18px;
-  box-shadow:0 4px 10px rgba(0,0,0,.08);
-  margin-bottom:16px;
-}
+  .card{
+    background:#fff;
+    border-radius:14px;
+    padding:16px;
+    box-shadow:0 4px 10px rgba(0,0,0,.08);
+    margin-bottom:16px;
+  }
 
-h1{
-  font-size:20px;
-  text-align:center;
-  margin-bottom:14px;
-}
+  h1{
+    font-size:20px;
+    text-align:center;
+    margin:0;
+  }
 
-.input-group{
-  display:flex;
-  gap:10px;
-}
+  .topbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:12px;
+  }
 
-input{
-  flex:1;
-  padding:12px;
-  border-radius:10px;
-  border:1px solid #d1d5db;
-  font-size:16px;
-}
+  .topbar-left{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .sub{
+    font-size:12px;
+    color:#6b7280;
+  }
 
-button{
-  padding:12px 16px;
-  border:none;
-  border-radius:10px;
-  background:#111827;
-  color:#fff;
-  font-size:14px;
-  cursor:pointer;
-}
+  .actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:flex-end;
+  }
 
-button:hover{opacity:.9}
+  .btn{
+    padding:10px 14px;
+    border:none;
+    border-radius:10px;
+    background:#111827;
+    color:#fff;
+    font-size:14px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn:hover{opacity:.92}
 
-.lista{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
+  .btn-green{ background:#059669; }
+  .btn-red{ background:#dc2626; }
+  .btn-gray{ background:#6b7280; }
+  .btn-ghost{
+    background:#e5e7eb;
+    color:#111827;
+  }
 
-.item{
-  border-left:6px solid #dc2626;
-  padding:12px 14px;
-  background:#f9fafb;
-  border-radius:12px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+  /* filtros */
+  .filters{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-top:10px;
+  }
+  .chip{
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid #e5e7eb;
+    background:#fff;
+    color:#111827;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .chip:hover{ background:#f9fafb; }
+  .chip.active{
+    background:#111827;
+    color:#fff;
+    border-color:#111827;
+  }
 
-.item small{
-  color:#6b7280;
-  font-size:12px;
-}
+  input{
+    padding:12px;
+    border-radius:10px;
+    border:1px solid #d1d5db;
+    font-size:16px;
+    width:100%;
+    box-sizing:border-box;
+  }
 
-.desbloquear{
-  background:#e5e7eb;
-  color:#111827;
-  font-size:12px;
-  padding:8px 10px;
-  border-radius:8px;
-}
+  .search-wrap{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin:10px 0 0;
+  }
+  .search-wrap input{ flex:1; min-width:240px; }
 
-.desbloquear:hover{
-  background:#dc2626;
-  color:#fff;
-}
+  .stats{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:flex-end;
+    margin-left:auto;
+    font-size:12px;
+    color:#6b7280;
+  }
+  .stats b{ color:#111827; }
 
-.empty{
-  text-align:center;
-  color:#6b7280;
-  font-size:14px;
-  padding:20px;
-}
+  .table-wrap{
+    overflow:auto;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    margin-top:12px;
+  }
 
-/* Toast */
-.toast{
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#111827;
-  color:#fff;
-  padding:12px 18px;
-  border-radius:12px;
-  font-size:14px;
-  opacity:0;
-  pointer-events:none;
-  transition:.3s;
-  z-index:2000;
-}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:760px;
+  }
+  thead th{
+    text-align:left;
+    font-size:12px;
+    color:#6b7280;
+    background:#f9fafb;
+    border-bottom:1px solid #e5e7eb;
+    padding:12px;
+    position:sticky;
+    top:0;
+    z-index:1;
+  }
+  tbody td{
+    padding:12px;
+    border-bottom:1px solid #f1f5f9;
+    vertical-align:middle;
+  }
 
-.toast.show{opacity:1}
-.toast.success{background:#16a34a}
-.toast.warn{background:#f59e0b}
-.toast.danger{background:#dc2626}
+  .ni{
+    font-weight:bold;
+    color:#111827;
+    white-space:nowrap;
+  }
 
-/* Sugestões */
-.sugestoes{
-  position:absolute;
-  background:#fff;
-  border:1px solid #d1d5db;
-  border-radius:10px;
-  width:100%;
-  max-height:180px;
-  overflow-y:auto;
-  z-index:1000;
-  margin-top:6px;
-  display:none;
-}
+  .badge{
+    display:inline-block;
+    font-size:11px;
+    padding:4px 8px;
+    border-radius:999px;
+    margin-left:8px;
+    white-space:nowrap;
+  }
+  .badge.block{ background:#fee2e2; color:#991b1b; }
+  .badge.ok{ background:#dcfce7; color:#166534; }
 
-.sugestoes div{
-  padding:10px;
-  cursor:pointer;
-  font-size:14px;
-}
+  .desc{ color:#111827; }
+  .muted{
+    font-size:12px;
+    color:#6b7280;
+  }
 
-.sugestoes div:hover{
-  background:#e5e7eb;
-}
+  .cell-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
 
-/* BOTÃO HAMBURGER */
-.menu-btn{
-  position:fixed;
-  top:12px;
-  left:12px;
-  z-index:1001;
-  background:#111827;
-  color:#fff;
-  border:none;
-  border-radius:10px;
-  font-size:22px;
-  width:auto;
-  height:auto;
-  padding:8px 12px;
-  margin:0;
-}
+  .btn-sm{
+    padding:8px 10px;
+    font-size:12px;
+    border-radius:10px;
+  }
 
-/* SIDEBAR */
-.sidebar{
-  position:fixed;
-  top:0;
-  left:0;
-  height:100%;
-  width:260px;
-  background:#111827;
-  color:#fff;
-  transform:translateX(-100%);
-  transition:.3s;
-  z-index:1002;
-  display:flex;
-  flex-direction:column;
-}
+  .empty{
+    text-align:center;
+    color:#6b7280;
+    font-size:14px;
+    padding:18px;
+  }
 
-.sidebar.active{
-  transform:translateX(0);
-}
+  /* Toast */
+  .toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#111827;
+    color:#fff;
+    padding:12px 18px;
+    border-radius:12px;
+    font-size:14px;
+    opacity:0;
+    pointer-events:none;
+    transition:.3s;
+    z-index:2000;
+  }
+  .toast.show{opacity:1}
+  .toast.success{background:#16a34a}
+  .toast.warn{background:#f59e0b}
+  .toast.danger{background:#dc2626}
 
-/* HEADER */
-.sidebar-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:16px;
-  border-bottom:1px solid #1f2937;
-}
+  /* Modal */
+  .modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    z-index:2100;
+  }
+  .modal.show{ display:flex; }
+  .modal-overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.55);
+  }
+  .modal-box{
+    position:relative;
+    width:100%;
+    max-width:620px;
+    background:#fff;
+    border-radius:14px;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);
+    overflow:hidden;
+  }
+  .modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    border-bottom:1px solid #e5e7eb;
+  }
+  .modal-head strong{ font-size:15px; }
+  .modal-body{ padding:16px; }
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 220px;
+    gap:12px;
+  }
+  @media (max-width:720px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+  label{
+    display:block;
+    font-size:13px;
+    color:#374151;
+    margin:0 0 6px;
+  }
+  .hint{
+    margin-top:6px;
+    font-size:12px;
+    color:#6b7280;
+    line-height:1.3;
+  }
+  .modal-actions{
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    padding:14px 16px;
+    border-top:1px solid #e5e7eb;
+    flex-wrap:wrap;
+  }
 
-.sidebar-header button{
-  background:none;
-  border:none;
-  color:#fff;
-  font-size:18px;
-}
+  /* BOTÃO HAMBURGER */
+  .menu-btn{
+    position:fixed;
+    top:12px;
+    left:12px;
+    z-index:1001;
+    background:#111827;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:22px;
+    width:auto;
+    height:auto;
+    padding:8px 12px;
+    margin:0;
+    cursor:pointer;
+  }
 
-/* LINKS */
-.sidebar nav{
-  display:flex;
-  flex-direction:column;
-  padding:10px;
-}
+  /* SIDEBAR */
+  .sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    height:100%;
+    width:260px;
+    background:#111827;
+    color:#fff;
+    transform:translateX(-100%);
+    transition:.3s;
+    z-index:1002;
+    display:flex;
+    flex-direction:column;
+  }
+  .sidebar.active{ transform:translateX(0); }
 
-.sidebar nav a{
-  padding:14px;
-  border-radius:10px;
-  color:#fff;
-  text-decoration:none;
-  margin-bottom:6px;
-}
+  .sidebar-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px;
+    border-bottom:1px solid #1f2937;
+  }
+  .sidebar-header button{
+    background:none;
+    border:none;
+    color:#fff;
+    font-size:18px;
+    cursor:pointer;
+  }
 
-.sidebar nav a:hover{
-  background:#1f2937;
-}
+  .sidebar nav{
+    display:flex;
+    flex-direction:column;
+    padding:10px;
+  }
+  .sidebar nav a{
+    padding:14px;
+    border-radius:10px;
+    color:#fff;
+    text-decoration:none;
+    margin-bottom:6px;
+  }
+  .sidebar nav a:hover{ background:#1f2937; }
+  .sidebar nav a.ativo{ background:#2563eb; }
 
-.sidebar nav a.ativo{
-  background:#2563eb;
-}
+  .menu-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.4);
+    z-index:1000;
+    display:none;
+  }
+  .menu-overlay.active{ display:block; }
 
-/* OVERLAY */
-.menu-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.4);
-  z-index:1000;
-  display:none;
-}
+  /* ===== Mobile UI: tabela vira cards ===== */
+  .mobile-cards{ display:none; }
 
-.menu-overlay.active{
-  display:block;
-}
+  @media (max-width: 720px){
+    body{ padding:12px; }
+    .container{ max-width: 100%; }
 
-/* ====== Seções colapsáveis ====== */
-.section-btn{
-  width:100%;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#111827;
-  color:#fff;
-  border-radius:12px;
-  padding:12px 14px;
-  font-size:14px;
-  margin-top:10px;
-}
+    .card{ padding:12px; }
 
-.section-btn span{opacity:.9}
-.section-content{
-  display:none;
-  margin-top:10px;
-  background:#f9fafb;
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  padding:12px;
-}
+    /* Topo mais compacto */
+    .topbar{ gap:8px; }
+    .actions{ width:100%; justify-content:space-between; }
+    .actions .btn{ flex:1; padding:10px 10px; font-size:13px; }
 
-.section-content.active{display:block}
+    /* Busca e filtros */
+    .search-wrap{ gap:8px; }
+    .search-wrap input{ min-width: 0; }
+    .btn-gray{ padding:10px 10px; font-size:13px; }
 
-label{
-  display:block;
-  font-size:13px;
-  color:#374151;
-  margin:8px 0 6px;
-}
+    .filters{ gap:6px; }
+    .chip{ padding:7px 10px; font-size:12px; }
 
-.input-stack{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
+    .stats{ width:100%; justify-content:flex-start; gap:8px; }
+    .stats{ font-size:11px; }
 
-.btn-row{
-  display:flex;
-  gap:10px;
-}
+    /* Esconde tabela e mostra cards */
+    .table-wrap{ display:none; }
+    .mobile-cards{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
 
-.btn-row button{flex:1}
+    .mcard{
+      background:#f9fafb;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:12px;
+    }
 
-.btn-green{background:#059669}
-.btn-red{background:#dc2626}
-.btn-gray{background:#6b7280}
+    .mcard-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
 
-.helper{
-  font-size:12px;
-  color:#6b7280;
-  margin-top:8px;
-  line-height:1.3;
-}
+    .mni{ font-weight:bold; color:#111827; font-size:15px; }
+    .mbadges{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+
+    .mbadge{
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
+    .mbadge.block{ background:#fee2e2; color:#991b1b; }
+    .mbadge.ok{ background:#dcfce7; color:#166534; }
+
+    .mdesc{ color:#111827; font-size:13px; line-height:1.25; }
+
+    /* Botões coladinhos, 3 colunas */
+    .m-actions{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .m-actions .btn{
+      padding:10px 8px;
+      font-size:12px;
+      border-radius:12px;
+    }
+  }
 </style>
 </head>
 
 <body>
-<!-- BOTÃO HAMBURGER -->
 <button class="menu-btn" onclick="abrirMenu()">☰</button>
-
-<!-- OVERLAY -->
 <div class="menu-overlay" onclick="fecharMenu()"></div>
 
-<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-header">
     <strong>📦 Pedido de Peças</strong>
     <button onclick="fecharMenu()">✖</button>
   </div>
-
   <nav>
     <a href="index.html">📝 Pedido de Peças</a>
     <a href="acompanhamento.html">📦 Acompanhamento de Pedidos 🔩</a>
@@ -315,109 +453,101 @@ label{
 </aside>
 
 <div class="container">
+  <div class="topbar">
+    <div class="topbar-center">
+  <h1 class="titulo-centro">🧩 Gestão de NI e Peças</h1>
+</div>
+       
+      </div>
 
-  <div class="card">
-    <div class="header-admin" style="display:flex;justify-content:center;margin-bottom:8px;">
-      <a href="index.html" class="btn-home" title="Voltar ao início">🏠</a>
-    </div>
-
-    <h1>🧩 Gestão de NI</h1>
-
-    <!-- 1) ADD/UPDATE -->
-    <button class="section-btn" type="button" onclick="toggleSection('secAdd')">
-      <div>➕ Adicionar / Atualizar (aprendizado_ni)</div>
-      <span id="icon-secAdd">▼</span>
-    </button>
-
-    <div id="secAdd" class="section-content">
-      <div class="input-stack">
-        <div>
-          <label>Nome da peça (descrição)</label>
-          <input id="aprDesc" placeholder="Ex: EMENDA RÁPIDA DE PLÁSTICO 8X8">
-        </div>
-
-        <div style="position:relative;">
-          <label>NI</label>
-          <input id="aprNi" placeholder="Ex: 27033747" inputmode="numeric">
-          <div id="aprSugAdd" class="sugestoes"></div>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn-green" onclick="salvarAprendizado()">Salvar</button>
-          <button class="btn-gray" onclick="limparAprendizadoAdd()">Limpar</button>
-        </div>
-
-        <div class="helper">
-          Salva em <b>aprendizado_ni/{NI}</b> com <b>descricao</b>, <b>ni</b>, <b>validadoEm</b>.
-        </div>
+      <div class="actions">
+        <button class="btn btn-green" onclick="abrirModalNovo()">➕ Nova peça</button>
+        <button class="btn btn-ghost" onclick="recarregarBases()">🔄 Recarregar</button>
       </div>
     </div>
 
-    <!-- 2) DELETE -->
-    <button class="section-btn" type="button" onclick="toggleSection('secDel')">
-      <div>🗑️ Excluir (aprendizado_ni)</div>
-      <span id="icon-secDel">▼</span>
-    </button>
+    <!-- filtros + contadores -->
+    <div class="filters">
+      <button id="fTodos" class="chip active" onclick="setFiltro('todos')">Todos</button>
+      <button id="fAtivos" class="chip" onclick="setFiltro('ativos')">Ativos</button>
+      <button id="fBloqueados" class="chip" onclick="setFiltro('bloqueados')">Bloqueados</button>
 
-    <div id="secDel" class="section-content">
-      <div class="input-stack">
-        <div style="position:relative;">
-          <label>NI para excluir</label>
-          <input id="delNi" placeholder="Digite o NI (com sugestão)" inputmode="numeric">
-          <div id="aprSugDel" class="sugestoes"></div>
-        </div>
-
-        <div class="helper" style="margin-top:6px;">
-          <b>Peça:</b> <span id="delNomePeca">—</span>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn-red" onclick="excluirAprendizado()">Excluir</button>
-          <button class="btn-gray" onclick="limparAprendizadoDel()">Limpar</button>
-        </div>
+      <div class="stats">
+        Total: <b id="countTotal">0</b> •
+        Ativos: <b id="countAtivos">0</b> •
+        Bloqueados: <b id="countBloqueados">0</b> •
+        Exibindo: <b id="countView">0</b>
       </div>
     </div>
 
-    <!-- 3) BLOQUEAR -->
-    <button class="section-btn" type="button" onclick="toggleSection('secBlock')">
-      <div>🔒 Bloquear NI (ni_bloqueados)</div>
-      <span id="icon-secBlock">▼</span>
-    </button>
-
-    <div id="secBlock" class="section-content">
-      <div style="position:relative;width:100%">
-        <div class="input-group">
-          <input id="niInput" placeholder="Digite o NI ou descrição da peça">
-          <button onclick="bloquearNI()">Bloquear</button>
-        </div>
-        <div id="sugestoes" class="sugestoes"></div>
-
-        <div class="helper">
-          Usa sugestão de <b>aprendizado_ni</b> + sua lista local (lista_NI.js).
-        </div>
-      </div>
+    <div class="search-wrap">
+      <input id="busca" placeholder="Buscar por NI ou descrição..." />
+      <button class="btn btn-gray" onclick="limparBusca()">Limpar</button>
     </div>
 
-    <!-- 4) LISTA BLOQUEADOS -->
-    <button class="section-btn" type="button" onclick="toggleSection('secListBlock')">
-      <div>📋 NIs bloqueados</div>
-      <span id="icon-secListBlock">▼</span>
-    </button>
-
-    <div id="secListBlock" class="section-content">
-      <div id="listaNI" class="lista"></div>
+    <!-- Desktop: tabela -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:170px;">NI</th>
+            <th>Descrição</th>
+            <th style="width:310px; text-align:right;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="empty" class="empty" style="display:none;">Nenhum item encontrado.</div>
     </div>
 
+    <!-- Mobile: cards -->
+    <div id="cards" class="mobile-cards"></div>
   </div>
+</div>
 
+<!-- Modal Novo/Editar -->
+<div id="modal" class="modal" role="dialog" aria-modal="true">
+  <div class="modal-overlay" onclick="fecharModal()"></div>
+  <div class="modal-box">
+    <div class="modal-head">
+      <strong id="modalTitulo">Nova peça</strong>
+      <button class="btn btn-ghost btn-sm" onclick="fecharModal()">✖ Fechar</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="grid">
+        <div>
+          <label>Descrição</label>
+          <input id="mDesc" placeholder="Ex: EMENDA RÁPIDA DE PLÁSTICO 8X8" />
+        </div>
+        <div>
+          <label>NI</label>
+          <input id="mNi" placeholder="Ex: 27033747" inputmode="numeric" />
+          <div class="hint" id="mNiHint">O NI será o ID do documento.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label style="display:flex; gap:10px; align-items:center; cursor:pointer;">
+          <input type="checkbox" id="mBloqueado" />
+          Já deixar este NI bloqueado (cria/atualiza em ni_bloqueados)
+        </label>
+      </div>
+
+      <p id="modalErro" class="hint" style="display:none; color:#b91c1c; font-weight:bold;"></p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-green" onclick="salvarModal()">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast" class="toast"></div>
 
-<!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="lista_NI.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -428,39 +558,9 @@ firebase.initializeApp({
   messagingSenderId: "443882865992",
   appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
 });
-
 const db = firebase.firestore();
-const toast = document.getElementById("toast");
 
-const aprDesc = document.getElementById("aprDesc");
-const aprNi = document.getElementById("aprNi");
-const delNi = document.getElementById("delNi");
-const delNomePeca = document.getElementById("delNomePeca");
-const aprSugAdd = document.getElementById("aprSugAdd");
-const aprSugDel = document.getElementById("aprSugDel");
-
-const niInput = document.getElementById("niInput");
-const sugestoesBox = document.getElementById("sugestoes");
-const listaNI = document.getElementById("listaNI");
-
-let baseNI = [];  // base geral (lista_NI + aprendizado_ni)  -> precisa ter rawDesc p/ descrição
-let baseApr = []; // base aprendizado_ni (para sugestão add/del e preview)
-
-function normalizar(txt){
-  return String(txt || "").toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .trim();
-}
-
-/* 🔔 Toast */
-function showToast(msg, type="success"){
-  toast.textContent = msg;
-  toast.className = `toast show ${type}`;
-  setTimeout(()=> toast.className="toast", 2500);
-}
-
-/* ======== MENU ======== */
+/* MENU */
 window.abrirMenu = () => {
   document.querySelector(".sidebar").classList.add("active");
   document.querySelector(".menu-overlay").classList.add("active");
@@ -469,366 +569,343 @@ window.fecharMenu = () => {
   document.querySelector(".sidebar").classList.remove("active");
   document.querySelector(".menu-overlay").classList.remove("active");
 };
-/* destaca página atual */
 document.querySelectorAll(".sidebar nav a").forEach(a=>{
   if(a.href === window.location.href){
     a.classList.add("ativo");
   }
 });
 
-/* ======== COLAPSÁVEL ======== */
-window.toggleSection = (id) => {
-  const el = document.getElementById(id);
-  const icon = document.getElementById("icon-"+id);
-  const active = el.classList.toggle("active");
-  icon.textContent = active ? "▲" : "▼";
-};
-
-/* 🔎 Base de NI (lista local) */
-function carregarListaNI(){
-  if(!window.LISTA_NI) return;
-  window.LISTA_NI.forEach(i=>{
-    baseNI.push({
-      descricao: normalizar(i.produto),
-      ni: String(i.ni),
-      rawDesc: i.produto // ✅ importante p/ mostrar descrição
-    });
-  });
+/* UTIL */
+const toast = document.getElementById("toast");
+function showToast(msg, type="success"){
+  toast.textContent = msg;
+  toast.className = `toast show ${type}`;
+  setTimeout(()=> toast.className="toast", 2500);
+}
+function normalizar(txt){
+  return String(txt || "").toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .trim();
+}
+function somenteNumeros(s){ return String(s||"").replace(/\D/g,""); }
+function escapeHtml(str=""){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
-/* 🔎 Base do aprendizado_ni */
-function carregarAprendizadoNI(){
-  baseApr = [];
-  return db.collection("aprendizado_ni").get().then(snapshot=>{
-    snapshot.forEach(doc=>{
-      const d = doc.data() || {};
-      const ni = String(d.ni ? d.ni : doc.id);
-      const desc = d.descricao ? d.descricao : "";
-      if(ni){
-        baseNI.push({ descricao: normalizar(desc), ni, rawDesc: desc }); // ✅ rawDesc aqui também
-        baseApr.push({ descricao: normalizar(desc), ni, rawDesc: desc });
-      }
-    });
-  });
+/* ESTADO */
+const tbody = document.getElementById("tbody");
+const empty = document.getElementById("empty");
+const cards = document.getElementById("cards");
+const busca = document.getElementById("busca");
+
+const countTotal = document.getElementById("countTotal");
+const countAtivos = document.getElementById("countAtivos");
+const countBloqueados = document.getElementById("countBloqueados");
+const countView  = document.getElementById("countView");
+
+let cacheApr = [];             // [{ni, descricao}]
+let bloqueadosSet = new Set(); // ids de ni_bloqueados
+let filtroStatus = "todos";    // "todos" | "ativos" | "bloqueados"
+
+let unsubApr = null;
+let unsubBlock = null;
+
+/* MODAL */
+const modal = document.getElementById("modal");
+const modalTitulo = document.getElementById("modalTitulo");
+const modalErro = document.getElementById("modalErro");
+const mDesc = document.getElementById("mDesc");
+const mNi = document.getElementById("mNi");
+const mBloqueado = document.getElementById("mBloqueado");
+const mNiHint = document.getElementById("mNiHint");
+
+let modalModo = "novo";
+let modalNiOriginal = "";
+
+function abrirModalNovo(){
+  modalModo = "novo";
+  modalNiOriginal = "";
+  modalTitulo.textContent = "Nova peça";
+  modalErro.style.display = "none";
+  modalErro.textContent = "";
+  mDesc.value = "";
+  mNi.value = "";
+  mNi.disabled = false;
+  mNi.style.background = "";
+  mNiHint.textContent = "O NI será o ID do documento.";
+  mBloqueado.checked = false;
+  modal.classList.add("show");
+  setTimeout(()=> mNi.focus(), 30);
 }
+function abrirModalEditar(ni){
+  const item = cacheApr.find(x => String(x.ni) === String(ni));
+  if(!item){ showToast("Item não encontrado.","warn"); return; }
 
-/* Carrega bases */
-Promise.all([carregarAprendizadoNI()]).then(()=>{
-  carregarListaNI();
-  console.log("✅ Base NI:", baseNI.length, "| baseApr:", baseApr.length);
-});
+  modalModo = "editar";
+  modalNiOriginal = String(ni);
 
-/* ===== Helpers ===== */
-function buscarDescPorNI(ni){
-  const found = baseNI.find(x => String(x.ni) === String(ni));
-  return (found && found.rawDesc) ? found.rawDesc : "";
+  modalTitulo.textContent = "Editar peça";
+  modalErro.style.display = "none";
+  modalErro.textContent = "";
+
+  mDesc.value = item.descricao || "";
+  mNi.value = String(item.ni || ni);
+
+  mNi.disabled = true;
+  mNi.style.background = "#f9fafb";
+  mNiHint.textContent = "NI não é editável (docId = NI).";
+
+  mBloqueado.checked = bloqueadosSet.has(String(ni));
+
+  modal.classList.add("show");
+  setTimeout(()=> mDesc.focus(), 30);
 }
-function buscarPorDescricao(termoNormalizado){
-  return baseNI.find(x => x.descricao.includes(termoNormalizado));
+function fecharModal(){ modal.classList.remove("show"); }
+function erroModal(msg){
+  modalErro.textContent = msg;
+  modalErro.style.display = "block";
 }
-
-/* ===== PREVIEW EXCLUSÃO ===== */
-function atualizarPreviewExclusao(){
-  const ni = delNi.value.trim();
-  if(!ni){
-    delNomePeca.textContent = "—";
-    return;
-  }
-  const found = baseApr.find(x => String(x.ni) === String(ni));
-  delNomePeca.textContent = (found && found.rawDesc) ? found.rawDesc : "Não encontrado na coleção";
-}
-
-/* ===========================
-   APRENDIZADO_NI (ADD/DEL)
-=========================== */
-
-/* Autocomplete NI (ADD) */
-aprNi.addEventListener("input", ()=>{
-  const termo = normalizar(aprNi.value);
-  if(termo.length < 2){ aprSugAdd.style.display="none"; return; }
-
-  const resultados = baseApr
-    .filter(i => i.ni.includes(termo) || i.descricao.includes(termo))
-    .slice(0,6);
-
-  if(!resultados.length){ aprSugAdd.style.display="none"; return; }
-
-  aprSugAdd.innerHTML = resultados.map(r=>`
-    <div onclick="selecionarAprAdd('${r.ni}')">
-      ${r.descricao}
-      <span style="font-size:11px;color:#6b7280"> | NI ${r.ni}</span>
-    </div>
-  `).join("");
-  aprSugAdd.style.display="block";
-});
-
-window.selecionarAprAdd = (ni) => {
-  aprNi.value = ni;
-  const found = baseApr.find(x=>x.ni===ni);
-  if(found && found.rawDesc && !aprDesc.value.trim()){
-    aprDesc.value = found.rawDesc;
-  }
-  aprSugAdd.style.display="none";
-};
-
-/* Autocomplete NI (DEL) */
-delNi.addEventListener("input", ()=>{
-  const termo = normalizar(delNi.value);
-  atualizarPreviewExclusao();
-
-  if(termo.length < 2){ aprSugDel.style.display="none"; return; }
-
-  const resultados = baseApr
-    .filter(i => i.ni.includes(termo) || i.descricao.includes(termo))
-    .slice(0,6);
-
-  if(!resultados.length){ aprSugDel.style.display="none"; return; }
-
-  aprSugDel.innerHTML = resultados.map(r=>`
-    <div onclick="selecionarAprDel('${r.ni}')">
-      ${r.descricao}
-      <span style="font-size:11px;color:#6b7280"> | NI ${r.ni}</span>
-    </div>
-  `).join("");
-  aprSugDel.style.display="block";
-});
-
-window.selecionarAprDel = (ni) => {
-  delNi.value = ni;
-  aprSugDel.style.display="none";
-  atualizarPreviewExclusao();
-};
-
-/* Salvar no aprendizado_ni: docId = NI */
-window.salvarAprendizado = async () => {
+async function salvarModal(){
   try{
-    const descricao = aprDesc.value.trim();
-    const ni = aprNi.value.trim();
+    const desc = (mDesc.value || "").trim();
+    const niDigitado = (mNi.value || "").trim();
+    const ni = somenteNumeros(niDigitado);
 
-    if(!descricao){
-      showToast("Informe o nome da peça (descrição).","warn");
-      return;
-    }
-    if(!ni || ni.length < 3){
-      showToast("Informe um NI válido.","warn");
-      return;
-    }
-    if(/^0+$/.test(ni)){
-      showToast("NI não pode ser 0000...","warn");
-      return;
-    }
+    if(!desc) return erroModal("Informe a descrição.");
+    if(!ni || ni.length < 3) return erroModal("Informe um NI válido.");
+    if(/^0+$/.test(ni)) return erroModal("NI não pode ser 0000...");
 
-    await db.collection("aprendizado_ni").doc(ni).set({
-      descricao,
-      ni,
+    const niFinal = (modalModo === "editar") ? modalNiOriginal : ni;
+
+    await db.collection("aprendizado_ni").doc(niFinal).set({
+      descricao: desc,
+      ni: niFinal,
       validadoEm: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
 
-    showToast(`Salvo no aprendizado_ni: NI ${ni}`,"success");
+    if(mBloqueado.checked){
+      await db.collection("ni_bloqueados").doc(niFinal).set({
+        descricao: desc,
+        bloqueadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+    } else {
+      if(bloqueadosSet.has(String(niFinal))){
+        await db.collection("ni_bloqueados").doc(niFinal).delete();
+      }
+    }
 
-    // Recarrega bases
-    baseNI = [];
-    await carregarAprendizadoNI();
-    carregarListaNI();
-
-    aprDesc.value = "";
-    aprNi.value = "";
-    aprSugAdd.style.display="none";
+    showToast(`Salvo: NI ${niFinal}`, "success");
+    fecharModal();
   }catch(e){
     console.error(e);
-    showToast("Erro ao salvar: "+(e.message||e),"danger");
-  }
-};
-
-window.limparAprendizadoAdd = () => {
-  aprDesc.value = "";
-  aprNi.value = "";
-  aprSugAdd.style.display="none";
-};
-
-/* Excluir do aprendizado_ni: docId = NI */
-window.excluirAprendizado = async () => {
-  try{
-    const ni = delNi.value.trim();
-    if(!ni){
-      showToast("Digite o NI para excluir.","warn");
-      return;
-    }
-
-    const ref = db.collection("aprendizado_ni").doc(ni);
-    const snap = await ref.get();
-
-    if(!snap.exists){
-      showToast("NI não encontrado no aprendizado_ni.","warn");
-      atualizarPreviewExclusao();
-      return;
-    }
-
-    const desc = snap.data()?.descricao || "";
-    if(!confirm(`Excluir do aprendizado_ni?\n\nNI: ${ni}\nPeça: ${desc}`)) return;
-
-    await ref.delete();
-
-    showToast(`Excluído: NI ${ni}`,"success");
-
-    // Recarrega bases
-    baseNI = [];
-    await carregarAprendizadoNI();
-    carregarListaNI();
-
-    delNi.value = "";
-    aprSugDel.style.display="none";
-    delNomePeca.textContent = "—";
-  }catch(e){
-    console.error(e);
-    showToast("Erro ao excluir: "+(e.message||e),"danger");
-  }
-};
-
-window.limparAprendizadoDel = () => {
-  delNi.value = "";
-  aprSugDel.style.display="none";
-  delNomePeca.textContent = "—";
-};
-
-/* ===========================
-   BLOQUEIO DE NI (COM DESCRIÇÃO)
-=========================== */
-
-/* ⌨️ Enter */
-niInput.addEventListener("keydown", e=>{
-  if(e.key==="Enter") bloquearNI();
-});
-
-/* 🔍 Autocomplete do bloqueio */
-niInput.addEventListener("input", ()=>{
-  const termo = normalizar(niInput.value);
-  if(termo.length < 2){
-    sugestoesBox.style.display="none";
-    return;
-  }
-
-  const resultados = baseNI
-    .filter(i => i.descricao.includes(termo) || i.ni.includes(termo))
-    .slice(0,6);
-
-  if(!resultados.length){
-    sugestoesBox.style.display="none";
-    return;
-  }
-
-  sugestoesBox.innerHTML = resultados.map(r=>`
-    <div onclick="selecionarSugestao('${r.ni}')">
-      ${r.descricao}
-      <span style="font-size:11px;color:#6b7280">
-        | NI ${r.ni}
-      </span>
-    </div>
-  `).join("");
-
-  sugestoesBox.style.display="block";
-});
-
-window.selecionarSugestao = ni =>{
-  niInput.value = ni;
-  sugestoesBox.style.display="none";
-};
-
-/* 🔒 Bloquear NI (corrigido: aceita NI OU descrição e salva descricao) */
-async function bloquearNI(){
-  const raw = niInput.value.trim();
-  if(!raw) return;
-
-  // Se o usuário digitou um NI puro (ou com caracteres), pega só números
-  const soNumeros = raw.replace(/\D/g,"");
-  let niFinal = "";
-  let descFinal = "";
-
-  if(soNumeros.length >= 3){
-    // veio NI
-    niFinal = soNumeros;
-    descFinal = buscarDescPorNI(niFinal);
-  } else {
-    // veio texto -> tenta achar na base e extrair o NI
-    const termo = normalizar(raw);
-    const found = buscarPorDescricao(termo);
-    if(found){
-      niFinal = String(found.ni);
-      descFinal = found.rawDesc || "";
-    }
-  }
-
-  if(!niFinal){
-    showToast("Não consegui identificar o NI. Selecione uma sugestão ou digite o NI.","warn");
-    return;
-  }
-
-  try{
-    const ref = db.collection("ni_bloqueados").doc(niFinal);
-    const snap = await ref.get();
-    if(snap.exists){
-      showToast("NI já está bloqueado","warn");
-      return;
-    }
-
-    await ref.set({
-      descricao: descFinal || "",
-      bloqueadoEm: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge:true });
-
-    niInput.value="";
-    showToast(`NI ${niFinal} bloqueado`,"success");
-  }catch(e){
-    console.error(e);
-    showToast("Erro ao bloquear: "+(e.message||e),"danger");
+    erroModal("Erro ao salvar: " + (e.message || e));
   }
 }
 
-/* 📋 Lista de bloqueados (mostra descrição) */
-db.collection("ni_bloqueados")
-.orderBy("bloqueadoEm","desc")
-.onSnapshot(snapshot=>{
-  listaNI.innerHTML="";
+/* ações linha */
+async function toggleBloqueio(ni){
+  const niStr = String(ni);
+  const isBlocked = bloqueadosSet.has(niStr);
 
-  if(snapshot.empty){
-    listaNI.innerHTML = `
-      <div class="empty">
-        ✅ Nenhum NI bloqueado no momento
-      </div>`;
-    return;
+  try{
+    if(isBlocked){
+      await db.collection("ni_bloqueados").doc(niStr).delete();
+      showToast(`NI ${niStr} desbloqueado`, "success");
+    } else {
+      const item = cacheApr.find(x => String(x.ni) === niStr);
+      const desc = item?.descricao || "";
+      await db.collection("ni_bloqueados").doc(niStr).set({
+        descricao: desc,
+        bloqueadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+      showToast(`NI ${niStr} bloqueado`, "success");
+    }
+  }catch(e){
+    console.error(e);
+    showToast("Erro no bloqueio: " + (e.message || e), "danger");
+  }
+}
+async function removerItem(ni){
+  const niStr = String(ni);
+  const item = cacheApr.find(x => String(x.ni) === niStr);
+  const desc = item?.descricao || "";
+  if(!confirm(`Remover do aprendizado_ni?\n\nNI: ${niStr}\nPeça: ${desc}\n\nObs: Não remove automaticamente do ni_bloqueados.`)) return;
+
+  try{
+    await db.collection("aprendizado_ni").doc(niStr).delete();
+    showToast(`Removido: ${niStr}`, "success");
+  }catch(e){
+    console.error(e);
+    showToast("Erro ao remover: " + (e.message || e), "danger");
+  }
+}
+
+/* FILTRO (status) */
+function setFiltro(tipo){
+  filtroStatus = tipo;
+
+  document.getElementById("fTodos").classList.toggle("active", tipo==="todos");
+  document.getElementById("fAtivos").classList.toggle("active", tipo==="ativos");
+  document.getElementById("fBloqueados").classList.toggle("active", tipo==="bloqueados");
+
+  aplicarFiltro();
+}
+
+/* CONTADORES */
+function atualizarContadores(){
+  const total = cacheApr.length;
+  const bloqueados = cacheApr.reduce((acc, it)=> acc + (bloqueadosSet.has(String(it.ni)) ? 1 : 0), 0);
+  const ativos = total - bloqueados;
+
+  countTotal.textContent = String(total);
+  countBloqueados.textContent = String(bloqueados);
+  countAtivos.textContent = String(ativos);
+}
+
+/* RENDER + filtro por busca + status */
+function aplicarFiltro(){
+  atualizarContadores();
+
+  const q = normalizar(busca.value || "");
+  let lista = cacheApr.slice();
+
+  // filtro status
+  if(filtroStatus === "ativos"){
+    lista = lista.filter(it => !bloqueadosSet.has(String(it.ni)));
+  }
+  if(filtroStatus === "bloqueados"){
+    lista = lista.filter(it => bloqueadosSet.has(String(it.ni)));
   }
 
-  snapshot.forEach(doc=>{
-    const dataObj = doc.data() || {};
-    const data = dataObj.bloqueadoEm?.toDate();
-    const fmt = data ? data.toLocaleDateString("pt-BR") : "";
+  // filtro busca
+  if(q){
+    lista = lista.filter(it => {
+      const ni = String(it.ni || "");
+      const descN = normalizar(it.descricao || "");
+      return ni.includes(q) || descN.includes(q);
+    });
+  }
 
-    // prioridade: descricao salva no doc; se vazio, tenta base; senão fallback
-    const desc = (dataObj.descricao && String(dataObj.descricao).trim())
-      ? dataObj.descricao
-      : (buscarDescPorNI(doc.id) || "(sem descrição)");
+  countView.textContent = String(lista.length);
 
-    listaNI.innerHTML += `
-      <div class="item">
-        <div>
-          <strong>🔴 ${desc}</strong><br>
-          <small>NI: ${doc.id} • Bloqueado em: ${fmt}</small>
+  tbody.innerHTML = "";
+  cards.innerHTML = "";
+
+  if(!lista.length){
+    empty.style.display = "block";
+    cards.innerHTML = "";
+    return;
+  }
+  empty.style.display = "none";
+
+  for(const it of lista){
+    const ni = String(it.ni || "");
+    const desc = String(it.descricao || "");
+    const blocked = bloqueadosSet.has(ni);
+
+    // ===== Desktop row =====
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <div class="ni">${escapeHtml(ni)}
+          ${blocked ? `<span class="badge block">BLOQUEADO</span>` : `<span class="badge ok">ATIVO</span>`}
         </div>
-        <button class="desbloquear" onclick="confirmarRemocao('${doc.id}')">
-          Desbloquear
+        <div class="muted">docId: ${escapeHtml(ni)}</div>
+      </td>
+      <td><div class="desc">${escapeHtml(desc)}</div></td>
+      <td>
+        <div class="cell-actions">
+          <button class="btn btn-sm btn-ghost" onclick="abrirModalEditar('${escapeHtml(ni)}')">✏️ Editar</button>
+          <button class="btn btn-sm ${blocked ? 'btn-ghost' : ''}"
+            style="${blocked ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca' : ''}"
+            onclick="toggleBloqueio('${escapeHtml(ni)}')">
+            ${blocked ? "🔓 Desbloquear" : "🔒 Bloquear"}
+          </button>
+          <button class="btn btn-sm btn-red" onclick="removerItem('${escapeHtml(ni)}')">🗑️ Remover</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    // ===== Mobile card =====
+    const card = document.createElement("div");
+    card.className = "mcard";
+    card.innerHTML = `
+      <div class="mcard-top">
+        <div class="mni">${escapeHtml(ni)}</div>
+        <div class="mbadges">
+          ${blocked ? `<span class="mbadge block">BLOQUEADO</span>` : `<span class="mbadge ok">ATIVO</span>`}
+        </div>
+      </div>
+
+      <div class="mdesc">${escapeHtml(desc)}</div>
+
+      <div class="m-actions">
+        <button class="btn btn-ghost" onclick="abrirModalEditar('${escapeHtml(ni)}')">✏️ Editar</button>
+        <button class="btn ${blocked ? 'btn-ghost' : ''}"
+          style="${blocked ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca' : ''}"
+          onclick="toggleBloqueio('${escapeHtml(ni)}')">
+          ${blocked ? "🔓 Desbloquear" : "🔒 Bloquear"}
         </button>
+        <button class="btn btn-red" onclick="removerItem('${escapeHtml(ni)}')">🗑️ Remover</button>
       </div>
     `;
-  });
-});
-
-/* 🗑️ Remover bloqueio */
-function confirmarRemocao(ni){
-  if(!confirm(`Remover bloqueio do NI ${ni}?`)) return;
-  db.collection("ni_bloqueados").doc(ni).delete()
-    .then(()=> showToast(`NI ${ni} desbloqueado`,"success"))
-    .catch(e=> showToast("Erro: "+(e.message||e),"danger"));
+    cards.appendChild(card);
+  }
 }
+
+function limparBusca(){
+  busca.value = "";
+  aplicarFiltro();
+}
+busca.addEventListener("input", aplicarFiltro);
+
+/* LISTENERS */
+function iniciarListeners(){
+  if(unsubApr) unsubApr();
+  unsubApr = db.collection("aprendizado_ni")
+    .orderBy("ni")
+    .onSnapshot(snap=>{
+      cacheApr = [];
+      snap.forEach(doc=>{
+        const d = doc.data() || {};
+        const ni = String(d.ni ? d.ni : doc.id);
+        const descricao = d.descricao ? d.descricao : "";
+        cacheApr.push({ ni, descricao });
+      });
+      aplicarFiltro();
+    }, err=>{
+      console.error(err);
+      showToast("Erro aprendizado_ni: " + (err.message||err), "danger");
+    });
+
+  if(unsubBlock) unsubBlock();
+  unsubBlock = db.collection("ni_bloqueados")
+    .onSnapshot(snap=>{
+      const set = new Set();
+      snap.forEach(doc => set.add(String(doc.id)));
+      bloqueadosSet = set;
+      aplicarFiltro();
+    }, err=>{
+      console.error(err);
+      showToast("Erro ni_bloqueados: " + (err.message||err), "danger");
+    });
+}
+
+function recarregarBases(){
+  iniciarListeners();
+  showToast("Recarregado.", "success");
+}
+
+/* start */
+iniciarListeners();
+setFiltro("todos");
 </script>
 
 </body>
