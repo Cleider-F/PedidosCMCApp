@@ -443,8 +443,8 @@ const niInput = document.getElementById("niInput");
 const sugestoesBox = document.getElementById("sugestoes");
 const listaNI = document.getElementById("listaNI");
 
-let baseNI = [];  // base geral (lista_NI + aprendizado_ni)
-let baseApr = []; // base SOMENTE aprendizado_ni (para sugestão add/del e preview)
+let baseNI = [];  // base geral (lista_NI + aprendizado_ni)  -> precisa ter rawDesc p/ descrição
+let baseApr = []; // base aprendizado_ni (para sugestão add/del e preview)
 
 function normalizar(txt){
   return String(txt || "").toUpperCase()
@@ -490,7 +490,8 @@ function carregarListaNI(){
   window.LISTA_NI.forEach(i=>{
     baseNI.push({
       descricao: normalizar(i.produto),
-      ni: String(i.ni)
+      ni: String(i.ni),
+      rawDesc: i.produto // ✅ importante p/ mostrar descrição
     });
   });
 }
@@ -504,7 +505,7 @@ function carregarAprendizadoNI(){
       const ni = String(d.ni ? d.ni : doc.id);
       const desc = d.descricao ? d.descricao : "";
       if(ni){
-        baseNI.push({ descricao: normalizar(desc), ni });
+        baseNI.push({ descricao: normalizar(desc), ni, rawDesc: desc }); // ✅ rawDesc aqui também
         baseApr.push({ descricao: normalizar(desc), ni, rawDesc: desc });
       }
     });
@@ -516,6 +517,15 @@ Promise.all([carregarAprendizadoNI()]).then(()=>{
   carregarListaNI();
   console.log("✅ Base NI:", baseNI.length, "| baseApr:", baseApr.length);
 });
+
+/* ===== Helpers ===== */
+function buscarDescPorNI(ni){
+  const found = baseNI.find(x => String(x.ni) === String(ni));
+  return (found && found.rawDesc) ? found.rawDesc : "";
+}
+function buscarPorDescricao(termoNormalizado){
+  return baseNI.find(x => x.descricao.includes(termoNormalizado));
+}
 
 /* ===== PREVIEW EXCLUSÃO ===== */
 function atualizarPreviewExclusao(){
@@ -682,7 +692,7 @@ window.limparAprendizadoDel = () => {
 };
 
 /* ===========================
-   BLOQUEIO DE NI (AGORA DENTRO DO COLAPSE)
+   BLOQUEIO DE NI (COM DESCRIÇÃO)
 =========================== */
 
 /* ⌨️ Enter */
@@ -724,27 +734,57 @@ window.selecionarSugestao = ni =>{
   sugestoesBox.style.display="none";
 };
 
-/* 🔒 Bloquear NI */
-function bloquearNI(){
-  const ni = niInput.value.trim();
-  if(!ni) return;
+/* 🔒 Bloquear NI (corrigido: aceita NI OU descrição e salva descricao) */
+async function bloquearNI(){
+  const raw = niInput.value.trim();
+  if(!raw) return;
 
-  db.collection("ni_bloqueados").doc(ni).get().then(doc=>{
-    if(doc.exists){
+  // Se o usuário digitou um NI puro (ou com caracteres), pega só números
+  const soNumeros = raw.replace(/\D/g,"");
+  let niFinal = "";
+  let descFinal = "";
+
+  if(soNumeros.length >= 3){
+    // veio NI
+    niFinal = soNumeros;
+    descFinal = buscarDescPorNI(niFinal);
+  } else {
+    // veio texto -> tenta achar na base e extrair o NI
+    const termo = normalizar(raw);
+    const found = buscarPorDescricao(termo);
+    if(found){
+      niFinal = String(found.ni);
+      descFinal = found.rawDesc || "";
+    }
+  }
+
+  if(!niFinal){
+    showToast("Não consegui identificar o NI. Selecione uma sugestão ou digite o NI.","warn");
+    return;
+  }
+
+  try{
+    const ref = db.collection("ni_bloqueados").doc(niFinal);
+    const snap = await ref.get();
+    if(snap.exists){
       showToast("NI já está bloqueado","warn");
       return;
     }
 
-    db.collection("ni_bloqueados").doc(ni).set({
+    await ref.set({
+      descricao: descFinal || "",
       bloqueadoEm: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(()=>{
-      niInput.value="";
-      showToast(`NI ${ni} bloqueado`);
-    });
-  });
+    }, { merge:true });
+
+    niInput.value="";
+    showToast(`NI ${niFinal} bloqueado`,"success");
+  }catch(e){
+    console.error(e);
+    showToast("Erro ao bloquear: "+(e.message||e),"danger");
+  }
 }
 
-/* 📋 Lista de bloqueados */
+/* 📋 Lista de bloqueados (mostra descrição) */
 db.collection("ni_bloqueados")
 .orderBy("bloqueadoEm","desc")
 .onSnapshot(snapshot=>{
@@ -759,14 +799,20 @@ db.collection("ni_bloqueados")
   }
 
   snapshot.forEach(doc=>{
-    const data = doc.data().bloqueadoEm?.toDate();
+    const dataObj = doc.data() || {};
+    const data = dataObj.bloqueadoEm?.toDate();
     const fmt = data ? data.toLocaleDateString("pt-BR") : "";
+
+    // prioridade: descricao salva no doc; se vazio, tenta base; senão fallback
+    const desc = (dataObj.descricao && String(dataObj.descricao).trim())
+      ? dataObj.descricao
+      : (buscarDescPorNI(doc.id) || "(sem descrição)");
 
     listaNI.innerHTML += `
       <div class="item">
         <div>
-          <strong>🔴 NI ${doc.id}</strong><br>
-          <small>Bloqueado em: ${fmt}</small>
+          <strong>🔴 ${desc}</strong><br>
+          <small>NI: ${doc.id} • Bloqueado em: ${fmt}</small>
         </div>
         <button class="desbloquear" onclick="confirmarRemocao('${doc.id}')">
           Desbloquear
@@ -780,7 +826,8 @@ db.collection("ni_bloqueados")
 function confirmarRemocao(ni){
   if(!confirm(`Remover bloqueio do NI ${ni}?`)) return;
   db.collection("ni_bloqueados").doc(ni).delete()
-    .then(()=> showToast(`NI ${ni} desbloqueado`));
+    .then(()=> showToast(`NI ${ni} desbloqueado`,"success"))
+    .catch(e=> showToast("Erro: "+(e.message||e),"danger"));
 }
 </script>
 
