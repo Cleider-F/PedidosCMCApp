@@ -320,7 +320,6 @@ button{
 .menu-overlay.active{
   display:block;
 }
-
 </style>
 </head>
 
@@ -334,12 +333,12 @@ button{
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-header">
-        <strong>📦 Pedido de Peças</strong>
+    <strong>📦 Pedido de Peças</strong>
     <button onclick="fecharMenu()">✖</button>
   </div>
 
   <nav>
-    <a href="index.html">📝 Pedido de Peças</a>    
+    <a href="index.html">📝 Pedido de Peças</a>
     <a href="acompanhamento.html">📦 Acompanhamento de Pedidos 🔩</a>
     <a href="admin.html">🔐 Área de Técnicos 🛠️</a>
     <a href="admin-epi.html">🦺 EPI's e Uniformes</a>
@@ -347,49 +346,46 @@ button{
   </nav>
 </aside>
 
-
 <div class="login" id="loginBox">
-
-<h2>🔐 Área de Técnicos - EPI & Uniformes</h2>
+  <h2>🔐 Área de Técnicos - EPI & Uniformes</h2>
   <input type="password" id="senha" placeholder="Senha">
   <button onclick="login()">Entrar</button>
 </div>
 
 <div class="painel" id="painel" style="display:none">
-    <footer>Criado e Desenvolvido por Cleider Filho</footer>
+  <footer>Criado e Desenvolvido por Cleider Filho</footer>
+
   <div class="logo">
-  <img src="suzano-logo.png">
-    </div>
+    <img src="suzano-logo.png">
+  </div>
 
- <div class="header-admin">
-  <a href="admin.html" class="btn-home" title="Voltar">↩️</a>  
-  <h2>🦺 EPI & Uniforme</h2>
-</div>
-
+  <div class="header-admin">
+    <a href="admin.html" class="btn-home" title="Voltar">↩️</a>
+    <h2>🦺 EPI & Uniforme</h2>
+  </div>
 
   <div class="top-actions">
-  <div style="display:flex; gap:10px;">
-    <button class="btn-sair" onclick="logout()">🚪 Sair</button>
-    <button class="btn-refresh" onclick="toggleRelatorio()">📊 Relatórios</button>
-    <button class="btn-notificacao" onclick="toggleNotificacaoBox()">🔔 Notificações</button>
-    <button class="btn-atualizar" onclick="location.reload()">🔄 Atualizar</button>
-</div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-sair" onclick="logout()">🚪 Sair</button>
+      <button class="btn-refresh" onclick="toggleRelatorio()">📊 Relatórios</button>
+      <button class="btn-notificacao" onclick="toggleNotificacaoBox()">🔔 Notificações</button>
+      <button class="btn-atualizar" onclick="location.reload()">🔄 Atualizar</button>
+    </div>
+  </div>
 
-<div class="relatorio-box" id="relatorioBox" style="display:none;">
-  <button onclick="gerarRelatorioDia()">📄 Relatório do dia</button>
+  <div class="relatorio-box" id="relatorioBox" style="display:none;">
+    <button onclick="gerarRelatorioDia()">📄 Relatório do dia</button>
+    <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período</button>
+    <br><input type="date" id="inicio">
+    <input type="date" id="fim"></br>
+  </div>
 
-  <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período</button>
+  <div class="notificacao-box" id="notificacaoBox" style="display:none;">
+    <button id="btnNovo" onclick="toggleNotificacao('novo', this)"></button>
+    <button id="btnStatus" onclick="toggleNotificacao('status', this)"></button>
+  </div>
 
-  <br><input type="date" id="inicio">
-  <input type="date" id="fim"></br>
-</div>
-
- <div class="notificacao-box" id="notificacaoBox" style="display:none;">
-  <button id="btnNovo" onclick="toggleNotificacao('novo', this)"></button>
-  <button id="btnStatus" onclick="toggleNotificacao('status', this)"></button>
-</div>
-
-<br>
+  <br>
   <div class="cards" id="lista"></div>
 </div>
 
@@ -404,7 +400,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import {
   getFirestore, collection, getDocs, addDoc,
   doc, updateDoc, getDoc, query, orderBy,
-  deleteDoc, limit, where, setDoc
+  deleteDoc, limit, where, setDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
@@ -435,7 +431,6 @@ let swRegistration = null;
       { scope: "/PedidosCMCApp/" }
     );
 
-    // sincroniza botões
     ajustarBotaoNotificacao("novo", document.getElementById("btnNovo"));
     ajustarBotaoNotificacao("status", document.getElementById("btnStatus"));
   }
@@ -462,7 +457,8 @@ async function ajustarBotaoNotificacao(tipo, botao) {
     vapidKey: "BFjRfkUJ8hXuoy7gWDDfUzSN28VQxTFrR2UrYgxLe_1oZehIdFVfNHdZba21LN9afSHWiKUppajQ2fQGeWR3-n0",
     serviceWorkerRegistration: swRegistration
   });
-console.log("TOKEN FCM:", token);
+
+  console.log("TOKEN FCM:", token);
   if (!token) return;
 
   const ref = doc(db, "admin_push_tokens", `${token}_${tipo}`);
@@ -555,8 +551,9 @@ const USUARIOS = {
   "reginaldo2026": "Reginaldo Bocafoli",
   "brito2026": "Thaís Brito",
   "andrade2026": "Quemili Andrade"
-
 };
+
+let unsubscribePedidos = null;
 
 window.login = () => {
   const senha = document.getElementById("senha").value;
@@ -567,10 +564,12 @@ window.login = () => {
 
   loginBox.style.display="none";
   painel.style.display="block";
-  carregarPedidos();
+
+  iniciarListenerPedidosEPI(); // ✅ realtime
 };
 
 window.logout = ()=>{
+  if (unsubscribePedidos) unsubscribePedidos(); // ✅ desliga listener
   localStorage.clear();
   location.reload();
 };
@@ -581,24 +580,14 @@ window.logout = ()=>{
 const norm = t =>
   t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 
-
 /* =========================================================
-   PEDIDOS
+   PEDIDOS (REALTIME - EPI)
 ========================================================= */
-async function carregarPedidos(){
+const cacheUltimaEPI = new Map(); // key: `${nome}|${ni}` -> Date|null
+function limparCacheUltimaEPI(){ cacheUltimaEPI.clear(); }
+
+async function renderizarPedidos(pedidos){
   lista.innerHTML = "";
-
-  const q = query(
-    collection(db,"pedidos"),
-    where("categoria", "==", "EPI"),
-    orderBy("criadoEm", "desc"),
-    limit(25)
-  );
-
-  const snap = await getDocs(q);
-  const pedidos = [];
-
-  snap.forEach(d => pedidos.push({ id: d.id, ...d.data() }));
 
   // Pendentes primeiro
   pedidos.sort((a,b)=>{
@@ -608,30 +597,29 @@ async function carregarPedidos(){
   });
 
   for (const p of pedidos) {
-
     const finalizado = p.status !== "Pendente";
-    const faltaNI = p.pecas.some(x => !x.ni);
+    const faltaNI = (p.pecas || []).some(x => !x.ni);
 
-    /* ============================
-       MONTA PEÇAS + HISTÓRICO
-    ============================ */
     let pecasHTML = "";
 
-    for (let i = 0; i < p.pecas.length; i++) {
+    for (let i = 0; i < (p.pecas || []).length; i++) {
       const x = p.pecas[i];
-
       let ultimaTxt = "Primeira solicitação";
 
       if (x.ni) {
-        const ultima = await buscarUltimaSolicitacaoEPI({
-          nome: p.nome,
-          ni: x.ni,
-          pedidoAtualId: p.id
-        });
+        const key = `${p.nome}|${x.ni}`;
 
-        if (ultima) {
-          ultimaTxt = ultima.toLocaleDateString("pt-BR");
+        if (!cacheUltimaEPI.has(key)) {
+          const ultima = await buscarUltimaSolicitacaoEPI({
+            nome: p.nome,
+            ni: x.ni,
+            pedidoAtualId: p.id
+          });
+          cacheUltimaEPI.set(key, ultima || null);
         }
+
+        const ultima = cacheUltimaEPI.get(key);
+        if (ultima) ultimaTxt = ultima.toLocaleDateString("pt-BR");
       }
 
       pecasHTML += `
@@ -651,16 +639,13 @@ async function carregarPedidos(){
       `;
     }
 
-    /* ============================
-       CARD
-    ============================ */
     lista.innerHTML += `
-      <div class="card card-${p.status.toLowerCase()} card-epi ${p.tipo==="DEVOLUCAO"?"card-devolucao":""}">
+      <div class="card card-${(p.status||"").toLowerCase()} card-epi ${p.tipo==="DEVOLUCAO"?"card-devolucao":""}">
         ${!finalizado ? `
           <button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>
         ` : ""}
 
-        <div class="status status-${p.status.toLowerCase()}">${p.status}</div>
+        <div class="status status-${(p.status||"").toLowerCase()}">${p.status}</div>
 
         ${p.tipo==="DEVOLUCAO" ? `
           <div class="selo-devolucao">🔁 PEDIDO DE DEVOLUÇÃO</div>
@@ -674,36 +659,61 @@ async function carregarPedidos(){
 
         ${pecasHTML}
 
-       <div class="acoes">
-${p.status === "Pendente" ? `
-  <button class="aprovar" ${faltaNI?"disabled":""}
-    onclick="mudarStatus('${p.id}','Aprovado')">✅ Aprovar</button>
+        <div class="acoes">
+          ${p.status === "Pendente" ? `
+            <button class="aprovar" ${faltaNI?"disabled":""}
+              onclick="mudarStatus('${p.id}','Aprovado')">✅ Aprovar</button>
 
-  <button class="reprovar"
-    onclick="mudarStatus('${p.id}','Reprovado')">❌ Reprovar</button>
-` : p.status === "Aprovado" ? `
-  <button class="btn-reservar"
-    onclick="reservarPedido('${p.id}')">
-    📦 Reservar
-  </button>
+            <button class="reprovar"
+              onclick="mudarStatus('${p.id}','Reprovado')">❌ Reprovar</button>
+          ` : p.status === "Aprovado" ? `
+            <button class="btn-reservar"
+              onclick="reservarPedido('${p.id}')">
+              📦 Reservar
+            </button>
 
-  <div class="selo">
-    ✔ Pedido Aprovado<br>
-    👷‍♂️ ${p.aprovadoPor||"-"}
-  </div>
-` : `
-  <div class="selo">
-✔ Pedido ${p.status}<br>
-👷‍♂️ Aprovado: ${p.aprovadoPor||"-"}<br>
-📦 Reservado: ${p.reservadoPor||"-"}
-</div>
-`}
-</div>
-
-</div>`;
+            <div class="selo">
+              ✔ Pedido Aprovado<br>
+              👷‍♂️ ${p.aprovadoPor||"-"}
+            </div>
+          ` : `
+            <div class="selo">
+              ✔ Pedido ${p.status}<br>
+              👷‍♂️ Aprovado: ${p.aprovadoPor||"-"}<br>
+              📦 Reservado: ${p.reservadoPor||"-"}
+            </div>
+          `}
+        </div>
+      </div>
+    `;
   }
 }
-window.carregarPedidos = carregarPedidos;
+
+function iniciarListenerPedidosEPI(){
+  if (unsubscribePedidos) unsubscribePedidos();
+  limparCacheUltimaEPI();
+
+  const q = query(
+    collection(db,"pedidos"),
+    where("categoria", "==", "EPI"),
+    orderBy("criadoEm", "desc"),
+    limit(25)
+  );
+
+  unsubscribePedidos = onSnapshot(
+    q,
+    async (snap) => {
+      const pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      await renderizarPedidos(pedidos);
+    },
+    (err) => {
+      console.error("Erro onSnapshot(pedidos EPI):", err);
+    }
+  );
+}
+
+// compatibilidade
+window.carregarPedidos = iniciarListenerPedidosEPI;
 
 /* =========================================================
    NI
@@ -717,14 +727,14 @@ window.atualizarNI=async(id,i,ni)=>{
   p.pecas[i].ni=ni.trim();
 
   await updateDoc(ref,{pecas:p.pecas});
-  carregarPedidos();
+  // ✅ realtime: NÃO chama carregarPedidos()
 };
 
 /* =========================================================
    APRENDIZADO
 ========================================================= */
 async function aprender(p){
-  for(const x of p.pecas){
+  for(const x of (p.pecas || [])){
     if(!x.ni)continue;
 
     const q=query(
@@ -749,7 +759,10 @@ async function aprender(p){
 ========================================================= */
 window.mudarStatus=async(id,status)=>{
   const ref=doc(db,"pedidos",id);
-  const p=(await getDoc(ref)).data();
+  const snapDoc = await getDoc(ref);
+  if(!snapDoc.exists()) return;
+
+  const p = snapDoc.data();
   if(p.status!=="Pendente")return;
 
   await updateDoc(ref,{
@@ -765,7 +778,7 @@ window.mudarStatus=async(id,status)=>{
   const tituloTelegram=
     p.tipo==="DEVOLUCAO"
     ?"🔁 *PEDIDO DE DEVOLUÇÃO APROVADO*"
-    :"🧰 *PEDIDO DE PEÇAS APROVADO*";
+    :"🦺 *EPI/UNIFORME APROVADO*";
 
   await enviarTelegram(
 `${tituloTelegram}
@@ -774,14 +787,14 @@ window.mudarStatus=async(id,status)=>{
 🛠 *Manutenção:* ${p.manutencao}
 🚚 *GO:* ${p.go||"-"}
 
-📦 *Peças:*
-${p.pecas.map(x=>`• ${x.descricao} (${x.quantidade}) | NI: ${x.ni||"-"}`).join("\n")}
+📦 *Itens:*
+${(p.pecas || []).map(x=>`• ${x.descricao} (${x.quantidade}) | NI: ${x.ni||"-"}`).join("\n")}
 
 👷‍♂️ *Aprovado por:* ${localStorage.getItem("usuario_nome")}
 ⏰ *Data:* ${agora}`
   );
 
-  carregarPedidos();
+  // ✅ realtime: NÃO chama carregarPedidos()
 };
 
 /* =========================================================
@@ -790,10 +803,13 @@ ${p.pecas.map(x=>`• ${x.descricao} (${x.quantidade}) | NI: ${x.ni||"-"}`).join
 window.excluir=async(id)=>{
   if(confirm("Excluir pedido pendente?")){
     await deleteDoc(doc(db,"pedidos",id));
-    carregarPedidos();
+    // ✅ realtime: NÃO chama carregarPedidos()
   }
 };
 
+/* =========================================================
+   ÚLTIMA SOLICITAÇÃO EPI
+========================================================= */
 async function buscarUltimaSolicitacaoEPI({ nome, ni, pedidoAtualId }) {
   const q = query(
     collection(db,"pedidos"),
@@ -814,9 +830,7 @@ async function buscarUltimaSolicitacaoEPI({ nome, ni, pedidoAtualId }) {
     for (const pc of p.pecas) {
       if (pc.ni === ni) {
         const data = p.criadoEm.toDate();
-        if (!ultimaData || data > ultimaData) {
-          ultimaData = data;
-        }
+        if (!ultimaData || data > ultimaData) ultimaData = data;
       }
     }
   });
@@ -825,7 +839,7 @@ async function buscarUltimaSolicitacaoEPI({ nome, ni, pedidoAtualId }) {
 }
 
 /* =========================================================
-   RELATÓRIOS
+   RELATÓRIOS (corrigido)
 ========================================================= */
 window.toggleRelatorio=()=>{
   const box=document.getElementById("relatorioBox");
@@ -845,42 +859,68 @@ window.gerarRelatorioPeriodo=async()=>{
   const { jsPDF } = window.jspdf;
   const pdf=new jsPDF("landscape");
 
+  const rows = [];
+
   const snap = await getDocs(
-  query(collection(db,"pedidos"), where("categoria","==","EPI"))
-);
+    query(collection(db,"pedidos"), where("categoria","==","EPI"))
+  );
 
   snap.forEach(d=>{
     const p=d.data();
-    if(!p.criadoEm)return;
+    if(!p.criadoEm) return;
+
     const criado=p.criadoEm.toDate();
+
     if(criado>=dataInicio && criado<=dataFim){
-      rows.push([
-        p.nome,p.manutencao,p.go||"-",
-        p.pecas.map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
-        p.status,criado.toLocaleString("pt-BR")
-      ]);
+      rows.push({
+        criado,
+        dados: [
+          p.nome,
+          p.manutencao,
+          p.go||"-",
+          (p.pecas || []).map(x=>`${x.descricao} (${x.quantidade})`).join("\n"),
+          p.status,
+          criado.toLocaleString("pt-BR")
+        ]
+      });
     }
   });
 
+  // mais recente primeiro
+  rows.sort((a,b)=> b.criado - a.criado);
+
+  const body = rows.map(r => r.dados);
+
+  if (body.length === 0) {
+    alert("Nenhum pedido encontrado no período selecionado.");
+    return;
+  }
+
   pdf.autoTable({
-    head:[["Solicitante","Manutenção","GO","Peças","Status","Criado em"]],
-    body:rows
+    head:[["Solicitante","Manutenção","GO","Itens","Status","Criado em"]],
+    body
   });
 
-  pdf.save("relatorio-pedidos.pdf");
+  pdf.save("relatorio-epi.pdf");
 };
+
 window.toggleNotificacaoBox = () => {
   const box = document.getElementById("notificacaoBox");
   box.style.display = box.style.display === "none" ? "flex" : "none";
 };
+
 /* =========================================================
    AUTOLOGIN
 ========================================================= */
 if(localStorage.getItem("admin")==="true"){
   loginBox.style.display="none";
   painel.style.display="block";
-  carregarPedidos();
+  iniciarListenerPedidosEPI(); // ✅ realtime
 }
+
+/* =========================================================
+   MENU
+========================================================= */
 window.abrirMenu = () => {
   document.querySelector(".sidebar").classList.add("active");
   document.querySelector(".menu-overlay").classList.add("active");
@@ -914,7 +954,6 @@ window.reservarPedido = async (id) => {
 
   const p = snap.data();
 
-  // só pode reservar se estiver aprovado
   if (p.status !== "Aprovado") {
     alert("Somente pedidos aprovados podem ser reservados");
     return;
@@ -926,24 +965,24 @@ window.reservarPedido = async (id) => {
     reservadoPor: localStorage.getItem("usuario_nome") || "Não identificado"
   });
 
-  // aviso no Telegram (opcional, mas recomendo)
+  // Telegram (opcional)
   const agora = new Date().toLocaleString("pt-BR");
 
   await enviarTelegram(
-`📦 *PEDIDO RESERVADO*
+`📦 *PEDIDO RESERVADO (EPI/UNIFORME)*
 
 👤 *Solicitante:* ${p.nome}
 🛠 *Manutenção:* ${p.manutencao}
 🚚 *GO:* ${p.go || "-"}
 
-📦 *Peças:*
-${p.pecas.map(x => `• ${x.descricao} (${x.quantidade}) | NI: ${x.ni || "-"}`).join("\n")}
+📦 *Itens:*
+${(p.pecas || []).map(x => `• ${x.descricao} (${x.quantidade}) | NI: ${x.ni || "-"}`).join("\n")}
 
 👷‍♂️ *Reservado por:* ${localStorage.getItem("usuario_nome")}
 ⏰ *Data:* ${agora}`
   );
 
-  carregarPedidos();
+  // ✅ realtime: NÃO chama carregarPedidos()
 };
 </script>
 
