@@ -2,316 +2,468 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Área de Técnicos CMC</title>
+<title>📦 Acompanhamento de Pedidos</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest-admin.json">
-<meta name="theme-color" content="#111827">
+<meta name="theme-color" content="#0b1220">
 
 <style>
+/* =========================================================
+   THEME (MESMO DO admin.html)
+========================================================= */
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --text:#0f172a;
+  --border:#e5e7eb;
+
+  --navy-1:#0b1220;
+  --navy-2:#0f1b33;
+
+  --primary:#16a34a;
+  --primary-hover:#15803d;
+
+  --secondary:#2563eb;
+  --secondary-hover:#1d4ed8;
+
+  --danger:#dc2626;
+  --danger-hover:#b91c1c;
+
+  --warn:#f59e0b;
+
+  --shadow: 0 6px 16px rgba(15, 23, 42, .06);
+  --shadow-soft: 0 2px 8px rgba(15, 23, 42, .05);
+
+  --radius:18px;
+  --max:1200px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
 body{
-  font-family:Arial,Helvetica,sans-serif;
-  background:#f3f4f6;
-  padding:12px;
-
-}
-.logo{text-align:center;margin-bottom:10px}
-.logo img{max-width:150px;width:100%}
-
-footer{
-  text-align:center;
-  margin-top:20px;
-  font-size:11px;
-  color:#6b7280;
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, Helvetica, sans-serif;
+  color:var(--text);
+  background: var(--bg);
+  font-size:16px;
 }
 
-.login,.painel{
-  max-width:1200px;
-  margin:auto;
-  background:#fff;
-  padding:15px;
-  border-radius:14px;
-  box-shadow:0 4px 10px rgba(0,0,0,.1);
-}
-
-h2{text-align:center;margin-bottom:10px}
-
-.top-actions{
-  display:center;
-  justify-content:flex-start;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-bottom:15px;
-}
-
-.btn-atualizar{
-  margin-left:auto;
-}
-
-.btn-reservar{
-  background:#2563eb;
+/* =========================================================
+   TOPBAR (MINIMAL)
+========================================================= */
+.topbar{
+  position: sticky;
+  top:0;
+  z-index: 900;
+  padding: 8px 10px 10px;
   color:#fff;
+  background:
+    radial-gradient(1200px 320px at 10% -10%, rgba(37,99,235,.30), transparent 55%),
+    radial-gradient(900px 280px at 90% 0%, rgba(22,163,74,.18), transparent 60%),
+    linear-gradient(180deg, var(--navy-2), var(--navy-1));
+  box-shadow: none;
+}
+.topbar-inner{
+  max-width: var(--max);
+  margin: 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.topbar-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
-button{
+/* BOTÕES PADRONIZADOS (menores) */
+.icon-ctl{
+  position:relative;
+  appearance:none;
   border:none;
-  padding:10px;
-  border-radius:10px;
   cursor:pointer;
-  font-size:14px;
+  color:#fff;
+  width:36px;
+  height:36px;
+  border-radius: 12px;
+  font-size:18px;
+  display:grid;
+  place-items:center;
+  background: rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow: none;
 }
+.icon-ctl:active{ transform: scale(.98); }
 
-.btn-sair{background:#111827;color:#fff}
-.btn-refresh{background:#2abf3b;color:#fff}
-.btn-notificacao{background:#dfbe1b;color:#fff}
-.btn-atualizar{background:#2563eb;color:#fff}
-
-.relatorio-box{
-  background:#f9fafb;
-  padding:12px;
-  border-radius:12px;
+/* chip status compacto */
+.status-chip{
   display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-bottom:15px;
+  align-items:center;
+  gap:7px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  white-space:nowrap;
+}
+.status-chip .sep{ opacity:.75; }
+.status-chip b{ min-width: 14px; text-align:center; }
+.status-chip .dot{
+  width:7px;
+  height:7px;
+  border-radius:999px;
+  display:inline-block;
+}
+.status-chip .dot.pend{ background: rgba(245,158,11,.95); }
+.status-chip .dot.apr{  background: rgba(34,197,94,.95); }
+.status-chip .dot.res{  background: rgba(59,130,246,.95); }
+
+/* logo compacto */
+.logo-suzano.compact{
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+}
+.logo-suzano.compact img{
+  width: 72px;
+  height:auto;
+  display:block;
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,.20));
 }
 
-.relatorio-box button{background:#16a34a;color:#fff}
+@media (max-width: 380px){
+  .status-chip{ padding: 6px 8px; font-size: 11px; gap:6px; }
+  .icon-ctl{ width:34px; height:34px; border-radius: 11px; font-size:17px; }
+  .logo-suzano.compact img{ width: 64px; }
+}
 
-.notificacao-box{
-  background:#f9fafb;
-  padding:12px;
-  border-radius:12px;
+/* =========================================================
+   PAGE / PANEL
+========================================================= */
+.page{
+  max-width: var(--max);
+  margin: -10px auto 104px;
+  padding: 0 14px 22px;
+}
+.panel{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: none;
+  overflow: visible;
+  margin-top: 12px;
+}
+.panel-header{
   display:flex;
-  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
   gap:10px;
-  margin-bottom:15px;
+  padding: 14px 14px 10px;
+  border-bottom:1px solid rgba(229,231,235,.7);
+  background: #fff;
 }
+.panel-header .h{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight: 900;
+  font-size: 16px;
+}
+.panel-header small{
+  color: var(--muted);
+  font-size: 12px;
+}
+.panel-body{ padding: 14px; }
 
-.notificacao-box button{background:#767674;color:#fff}
-
+/* =========================================================
+   CARDS (MESMO VISUAL DO admin atual + seu “modelo antigo”)
+========================================================= */
 .cards{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));
   gap:14px;
+  margin-top: 14px;
 }
 
-.card{
-  background:#ffffff;
-  border-left:6px solid transparent;
-  border-radius:16px;
-  padding:14px;
-  box-shadow:0 4px 10px rgba(0,0,0,.08);
-  position:relative;
+/* card base */
+.order-card{
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden; /* 🔑 faixa respeita a curva */
+  border: 1px solid rgba(229,231,235,.95);
 }
 
-.card-pendente{
-  background:#fffbeb;
-  border-left-color:#f59e0b;
+/* faixa lateral estreita */
+.order-card::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:4px;
+  background:#e5e7eb;
 }
 
-.card-aprovado{
-  background:#ffffff;
-  border-left-color:#16a34a;
+/* fundo do card por status */
+.order-card.pendente{
+  background: rgba(245,158,11,.14);
+  border-color: rgba(245,158,11,.22);
+}
+.order-card.pendente::before{ background: rgba(245,158,11,.95); }
+
+.order-card.aprovado{
+  background: rgba(34,197,94,.12);
+  border-color: rgba(34,197,94,.20);
+}
+.order-card.aprovado::before{ background: rgba(22,163,74,.95); }
+
+.order-card.reprovado{
+  background: rgba(239,68,68,.12);
+  border-color: rgba(239,68,68,.20);
+}
+.order-card.reprovado::before{ background: rgba(220,38,38,.95); }
+
+.order-card.reservado{
+  background: rgba(59,130,246,.12);
+  border-color: rgba(59,130,246,.20);
+}
+.order-card.reservado::before{ background: rgba(37,99,235,.95); }
+
+/* topo */
+.card-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding: 12px 12px 8px;
+  background: transparent;
+  border-bottom: 1px solid rgba(15,23,42,.08);
 }
 
-.card-reprovado{
-  background:#ffffff;
-  border-left-color:#dc2626;
+/* status só texto */
+.status-pill{
+  display:inline-flex;
+  align-items:center;
+  font-weight: 950;
+  font-size: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.status-pill.pendente{ color: rgba(124,74,3,.95); }
+.status-pill.aprovado{ color: rgba(6,95,70,.95); }
+.status-pill.reprovado{ color: rgba(153,27,27,.95); }
+.status-pill.reservado{ color: rgba(30,64,175,.95); }
+
+.btn-excluir{
+  border:none;
+  background: rgba(15,23,42,.06);
+  border: 1px solid rgba(15,23,42,.08);
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  cursor:pointer;
+  font-size:18px;
+  line-height: 1;
+  color:#dc2626;
+}
+.btn-excluir:hover{ background: rgba(220,38,38,.10); border-color: rgba(220,38,38,.18); }
+
+.card-body-inner{ padding: 12px; }
+
+.info{ margin-bottom:8px; font-size: 15px; }
+.info b{
+  display:block;
+  color:#374151;
+  font-size: 12px;
+  margin-bottom: 2px;
 }
 
-.card-reservado{
-  background:#eff6ff;           /* azul claro */
-  border-left-color:#2563eb;     /* azul forte */
+.selo{
+  background:#f3f4f6;
+  border: 1px solid rgba(229,231,235,.9);
+  padding:10px;
+  border-radius: 14px;
+  text-align:center;
+  font-weight: 900;
+  color:#0f172a;
+  margin-top: 12px;
 }
 
-.status-reservado{
-  color:#2563eb;
+.selo-devolucao{
+  background:#dbeafe;
+  color:#1e40af;
+  font-weight:900;
+  text-align:center;
+  padding:8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(37,99,235,.22);
+  margin: 10px 0 8px;
 }
-
-.info{margin-bottom:8px;font-size:14px}
-.info b{display:block;color:#374151}
-
-.status{font-weight:bold;margin-bottom:8px}
-.status-pendente{color:#ca8a04}
-.status-aprovado{color:#16a34a}
-.status-reprovado{color:#dc2626}
 
 .peca{
   margin-top:10px;
   padding-top:8px;
   border-top:1px dashed #d1d5db;
 }
-
+.peca b{ display:block; font-weight: 900; }
 .peca input{
   width:100%;
-  padding:8px;
-  margin-top:6px;
-  border-radius:8px;
-  border:1px solid #ccc;
+  padding: 11px 12px;
+  margin-top: 8px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  font-size: 16px;
+  background:#fff;
 }
 
-.acoes{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  margin-top:12px;
-}
-
-.aprovar{background:#16a34a;color:#fff}
-.reprovar{background:#dc2626;color:#fff}
-.aprovar:disabled{background:#9ca3af;cursor:not-allowed}
-
-.btn-excluir{
-  position:absolute;
-  top:10px;
-  right:10px;
-  background:none;
-  color:#dc2626;
-  font-size:18px;
-}
-
-.selo{
-  background:#e5e7eb;
-  padding:10px;
-  border-radius:12px;
-  text-align:center;
-  font-weight:bold;
-}
-.header-admin{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-bottom:15px;
-}
-
-.header-admin h2{
-  flex:1;
-  text-align:center;
-  margin:0;
-}
-
-.btn-home{
-  text-decoration:none;
-  font-size:20px;
-  background:#e5e7eb;
-  border-radius:10px;
-  padding:8px 10px;
-  box-shadow:0 2px 4px rgba(0,0,0,.1);
-}
-
-.btn-home:hover{
-  background:#d1d5db;
-}
-
-.card-devolucao{
-  border-left-color:#2563eb;
-}
-
-.selo-devolucao{
-  background:#dbeafe;
-  color:#1e40af;
-  font-weight:bold;
-  text-align:center;
-  padding:6px;
-  border-radius:8px;
-  margin-bottom:8px;
-}
-/* BOTÃO HAMBURGER */
-.menu-btn{
+/* =========================================================
+   SIDEBAR / OVERLAY (igual admin)
+========================================================= */
+.menu-overlay{
   position:fixed;
-  top:12px;
-  left:12px;
-  z-index:1001;
-  background:#111827;
-  color:#fff;
-  border:none;
-  border-radius:10px;
-  font-size:22px;
-  width:auto;
-  height:auto;
-  padding:8px 12px;
-  margin:0;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:1000;
+  display:none;
 }
+.menu-overlay.active{ display:block; }
 
-/* SIDEBAR */
 .sidebar{
   position:fixed;
   top:0;
   left:0;
   height:100%;
-  width:260px;
-  background:#111827;
+  width:270px;
+  background: linear-gradient(180deg, #0b1220, #0f1b33);
   color:#fff;
   transform:translateX(-100%);
-  transition:.3s;
-  z-index:1002;
+  transition:.25s;
+  z-index:1001;
   display:flex;
   flex-direction:column;
+  box-shadow: none;
 }
+.sidebar.active{ transform:translateX(0); }
 
-.sidebar.active{
-  transform:translateX(0);
-}
-
-/* HEADER */
 .sidebar-header{
   display:flex;
   justify-content:space-between;
   align-items:center;
   padding:16px;
-  border-bottom:1px solid #1f2937;
+  border-bottom:1px solid rgba(255,255,255,.10);
 }
-
 .sidebar-header button{
-  background:none;
-  border:none;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.16);
   color:#fff;
-  font-size:18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  cursor:pointer;
 }
-
-/* LINKS */
 .sidebar nav{
   display:flex;
   flex-direction:column;
   padding:10px;
+  gap:8px;
 }
-
 .sidebar nav a{
-  padding:14px;
-  border-radius:10px;
+  padding:12px;
+  border-radius:14px;
   color:#fff;
   text-decoration:none;
-  margin-bottom:6px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.sidebar nav a:hover{ background: rgba(255,255,255,.10); }
+.sidebar nav a.ativo{ background: rgba(37,99,235,.35); border-color: rgba(37,99,235,.40); }
+
+/* =========================================================
+   BOTTOM NAV (igual admin)
+========================================================= */
+.bottom-nav{
+  position: fixed;
+  left: 0; right: 0;
+  bottom: 0;
+  z-index: 800;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(11,18,32,.92);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.bottom-nav .inner{
+  max-width: 520px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:10px;
+}
+.nav-btn{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  color:#e5e7eb;
+  font-size: 11px;
+  padding: 10px 8px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.06);
+  transition: .15s;
+}
+.nav-btn:hover{ background: rgba(255,255,255,.10); }
+.nav-btn span.icon{ font-size: 18px; line-height: 1; }
+.nav-btn.active{
+  color:#fff;
+  background: rgba(37,99,235,.28);
+  border-color: rgba(37,99,235,.45);
+  box-shadow: 0 10px 18px rgba(37,99,235,.15);
+}
+.nav-btn.active .icon{
+  filter: drop-shadow(0 6px 12px rgba(37,99,235,.35));
 }
 
-.sidebar nav a:hover{
-  background:#1f2937;
+footer{
+  text-align:center;
+  margin: 16px 0 110px;
+  font-size:11px;
+  color: var(--muted);
 }
-
-.sidebar nav a.ativo{
-  background:#2563eb;
-}
-
-/* OVERLAY */
-.menu-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.4);
-  z-index:1000;
-  display:none;
-}
-
-.menu-overlay.active{
-  display:block;
-}
-
-
 </style>
 </head>
 
 <body>
-<!-- BOTÃO HAMBURGER -->
-<button class="menu-btn" onclick="abrirMenu()">☰</button>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <button class="icon-ctl" onclick="abrirMenu()" aria-label="Abrir menu">☰</button>
+
+    <div class="status-chip" id="statusChip" title="Pendentes • Aprovados • Reservados">
+      <span class="dot pend"></span><b id="chipPend">0</b>
+      <span class="sep">•</span>
+      <span class="dot apr"></span><b id="chipApr">0</b>
+      <span class="sep">•</span>
+      <span class="dot res"></span><b id="chipRes">0</b>
+    </div>
+
+    <div class="topbar-right">
+      <div class="logo-suzano compact">
+        <img src="suzano-logo.png" alt="Suzano">
+      </div>
+    </div>
+  </div>
+</header>
 
 <!-- OVERLAY -->
 <div class="menu-overlay" onclick="fecharMenu()"></div>
@@ -319,12 +471,11 @@ button{
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-header">
-        <strong>📦 Pedido de Peças</strong>
-    <button onclick="fecharMenu()">✖</button>
+    <strong>📦 Pedido de Peças</strong>
+    <button onclick="fecharMenu()" aria-label="Fechar menu">✖</button>
   </div>
-
   <nav>
-    <a href="index.html">📝 Pedido de Peças</a>    
+    <a href="index.html">📝 Pedido de Peças</a>
     <a href="acompanhamento.html">📦 Acompanhamento de Pedidos 🔩</a>
     <a href="admin.html">🔐 Área de Técnicos 🛠️</a>
     <a href="admin-epi.html">🦺 EPI's e Uniformes</a>
@@ -332,26 +483,42 @@ button{
   </nav>
 </aside>
 
+<main class="page">
+  <section class="panel">
+    <div class="panel-header">
+      <div class="h">📦 Acompanhamento de pedidos</div>
+      <small>Últimos 25 pedidos</small>
+    </div>
 
-<div class="painel" id="painel">
-    <div class="logo">
-  <img src="suzano-logo.png">
-</div>
-<footer>Criado e Desenvolvido por Cleider Filho</footer>
- <div class="header-admin">
-  <a href="index.html" class="btn-home" title="Voltar ao início">🏠</a>
-  <h2>📦 Acompanhamento de pedidos</h2>
-</div>
+    <div class="panel-body">
+      <div class="cards" id="lista"></div>
+    </div>
+  </section>
 
-    <br>
+  <footer>Criado e Desenvolvido por Cleider Filho</footer>
+</main>
 
-  <div class="cards" id="lista"></div>
-</div>
-
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" aria-label="Acessos">
+  <div class="inner">
+    <a class="nav-btn" data-nav="pedido" href="index.html">
+      <span class="icon">📝</span>
+      <span>Pedido</span>
+    </a>
+    <a class="nav-btn" data-nav="tecnicos" href="admin.html">
+      <span class="icon">🔐</span>
+      <span>Técnicos</span>
+    </a>
+    <a class="nav-btn" data-nav="acomp" href="acompanhamento.html">
+      <span class="icon">📦</span>
+      <span>Acomp.</span>
+    </a>
+    <a class="nav-btn" data-nav="painel" href="painel-almoxarife.html">
+      <span class="icon">🖥️</span>
+      <span>Painel</span>
+    </a>
+  </div>
+</nav>
 
 <script type="module">
 /* =========================================================
@@ -359,11 +526,10 @@ button{
 ========================================================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, addDoc,
+  getFirestore, collection, getDocs,
   doc, updateDoc, getDoc, query, orderBy,
-  deleteDoc, limit, where, setDoc, writeBatch, onSnapshot, increment
+  deleteDoc, limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
 /* =========================================================
    FIREBASE
@@ -376,408 +542,139 @@ const app = initializeApp({
   messagingSenderId: "443882865992",
   appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
 });
-localStorage.setItem("Cleider Filho", "Painel de Acompanhamento");
+
 const db = getFirestore(app);
-const messaging = getMessaging(app);
-
 
 /* =========================================================
-   SERVICE WORKER
+   ELEMENTOS UI
 ========================================================= */
-let swRegistration = null;
+const lista = document.getElementById("lista");
 
-(async () => {
-  if ("serviceWorker" in navigator) {
-    swRegistration = await navigator.serviceWorker.register(
-      "/PedidosCMCApp/firebase-messaging-sw.js",
-      { scope: "/PedidosCMCApp/" }
-    );
-
-    // sincroniza botões
-    ajustarBotaoNotificacao("novo", document.getElementById("btnNovo"));
-    ajustarBotaoNotificacao("status", document.getElementById("btnStatus"));
-  }
-})();
+/* chip */
+const chipPend = document.getElementById("chipPend");
+const chipApr  = document.getElementById("chipApr");
+const chipRes  = document.getElementById("chipRes");
 
 /* =========================================================
-   PUSH NOTIFICATIONS
+   CONTADORES (chip topo)
 ========================================================= */
-const textos = {
-  novo: {
-    on: "🔕 Desativar notificações – Novos pedidos",
-    off: "🔔 Ativar notificações – Novos pedidos"
-  },
-  status: {
-    on: "🔕 Desativar notificações – Pedidos aprovados",
-    off: "🔔 Ativar notificações – Pedidos aprovados"
-  }
-};
+function atualizarChip(pedidos){
+  const pend = pedidos.filter(p => p.status === "Pendente").length;
+  const apr  = pedidos.filter(p => p.status === "Aprovado").length;
+  const res  = pedidos.filter(p => p.status === "Reservado").length;
 
-async function ajustarBotaoNotificacao(tipo, botao) {
-  if (!botao || !swRegistration) return;
-
-  const token = await getToken(messaging, {
-    vapidKey: "BFjRfkUJ8hXuoy7gWDDfUzSN28VQxTFrR2UrYgxLe_1oZehIdFVfNHdZba21LN9afSHWiKUppajQ2fQGeWR3-n0",
-    serviceWorkerRegistration: swRegistration
-  });
-console.log("TOKEN FCM:", token);
-  if (!token) return;
-
-  const ref = doc(db, "admin_push_tokens", `${token}_${tipo}`);
-  const snap = await getDoc(ref);
-
-  botao.innerText =
-    snap.exists() && snap.data().ativo
-      ? textos[tipo].on
-      : textos[tipo].off;
-}
-
-async function toggleNotificacao(tipo, botao) {
-  if (!swRegistration) return alert("Service Worker não pronto");
-
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") return alert("Permissão negada");
-
-  const token = await getToken(messaging, {
-    vapidKey: "BFjRfkUJ8hXuoy7gWDDfUzSN28VQxTFrR2UrYgxLe_1oZehIdFVfNHdZba21LN9afSHWiKUppajQ2fQGeWR3-n0",
-    serviceWorkerRegistration: swRegistration
-  });
-
-  if (!token) return alert("Token não gerado");
-
-  const ref = doc(db, "admin_push_tokens", `${token}_${tipo}`);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
-    await setDoc(ref,{
-      usuario: localStorage.getItem("usuario_nome"),
-      token,
-      tipo,
-      ativo:true,
-      perfil:"admin",
-      criadoEm:new Date()
-    });
-
-    botao.innerText = textos[tipo].on;
-    return alert("🔔 Notificações ativadas");
-  }
-
-  const novoEstado = !snap.data().ativo;
-
-  await updateDoc(ref,{
-    ativo:novoEstado,
-    atualizadoEm:new Date()
-  });
-
-  botao.innerText = novoEstado ? textos[tipo].on : textos[tipo].off;
-  alert(novoEstado ? "🔔 Notificações ativadas" : "🔕 Notificações desativadas");
-}
-
-window.toggleNotificacao = toggleNotificacao;
-
-/* =========================================================
-   TELEGRAM
-========================================================= */
-const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
-const TELEGRAM_CHAT_ID = "-1003646317990";
-
-async function enviarTelegram(msg){
-  await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: msg,
-      parse_mode: "Markdown"
-    })
-  });
+  chipPend.textContent = pend;
+  chipApr.textContent  = apr;
+  chipRes.textContent  = res;
 }
 
 /* =========================================================
-   USUÁRIOS / LOGIN
-========================================================= */
-
-/* =========================================================
-   NORMALIZAÇÃO
-========================================================= */
-const norm = t =>
-  t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
-
-/* =========================================================
-   PEDIDOS
+   CARREGAR PEDIDOS (mantém input + exclusão)
 ========================================================= */
 async function carregarPedidos(){
-  lista.innerHTML="";
+  lista.innerHTML = "";
 
-  const q=query(
+  const q = query(
     collection(db,"pedidos"),
     orderBy("criadoEm","desc"),
     limit(25)
   );
 
-  const snap=await getDocs(q);
-  const pedidos=[];
+  const snap = await getDocs(q);
+  const pedidos = [];
+  snap.forEach(d => pedidos.push({ id:d.id, ...d.data() }));
 
-  snap.forEach(d=>pedidos.push({id:d.id,...d.data()}));
-
+  // pendentes primeiro
   pedidos.sort((a,b)=>{
     if(a.status==="Pendente" && b.status!=="Pendente") return -1;
     if(a.status!=="Pendente" && b.status==="Pendente") return 1;
     return 0;
   });
 
+  atualizarChip(pedidos);
+
   pedidos.forEach(p=>{
-const finalizado = p.status === "Reprovado" || p.status === "Reservado";
-    const faltaNI=p.pecas.some(x=>!x.ni);
+    const statusLower = (p.status || "").toLowerCase();
+    const finalizado = (p.status === "Reprovado" || p.status === "Reservado");
 
-    lista.innerHTML+=`
-<div class="card card-${p.status.toLowerCase()} ${p.tipo==="DEVOLUCAO"?"card-devolucao":""}">
-${!finalizado?`<button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>`:""}
+    lista.innerHTML += `
+      <div class="order-card ${statusLower}" id="card-${p.id}">
+        <div class="card-top">
+          <div class="status-pill ${statusLower}">${p.status || "-"}</div>
 
-<div class="status status-${p.status.toLowerCase()}">${p.status}</div>
+          ${!finalizado ? `
+            <button class="btn-excluir" onclick="excluir('${p.id}')" title="Excluir">✕</button>
+          ` : `<div></div>`}
+        </div>
 
-${p.tipo==="DEVOLUCAO"?`<div class="selo-devolucao">🔁 PEDIDO DE DEVOLUÇÃO</div>`:""}
+        <div class="card-body-inner">
+          ${p.tipo==="DEVOLUCAO" ? `<div class="selo-devolucao">🔁 PEDIDO DE DEVOLUÇÃO</div>` : ""}
 
-<div class="info"><b>Solicitante</b>${p.nome}</div>
-<div class="info"><b>Manutenção</b>${p.manutencao}</div>
-<div class="info"><b>GO</b>${p.go||"-"}</div>
+          <div class="info"><b>Solicitante</b>${p.nome || "-"}</div>
+          <div class="info"><b>Manutenção</b>${p.manutencao || "-"}</div>
+          <div class="info"><b>GO</b>${p.go || "-"}</div>
 
-<div class="info"><b>Peças</b></div>
+          <div class="info"><b>Peças</b></div>
 
-${p.pecas.map((x,i)=>`
-<div class="peca">
-<b>${x.descricao} (${x.quantidade})</b>
-<input value="${x.ni||""}" ${finalizado?"disabled":""}
-onchange="atualizarNI('${p.id}',${i},this.value)">
-</div>`).join("")}
+          ${(p.pecas || []).map((x,i)=>`
+            <div class="peca">
+              <b>${x.descricao || "-"} (${x.quantidade || "-"})</b>
+              <input
+                value="${x.ni || ""}"
+                ${finalizado ? "disabled" : ""}
+                onchange="atualizarNI('${p.id}',${i},this.value)"
+              >
+            </div>
+          `).join("")}
 
-
-
-
-</div>`;
+          <div class="selo">
+            ${
+              p.status === "Pendente" ? "🟠 Pedido Pendente" :
+              p.status === "Aprovado" ? `✔ Pedido Aprovado<br>👷‍♂️ ${p.aprovadoPor||"-"}` :
+              p.status === "Reservado" ? `✔ Pedido Reservado<br>👷‍♂️ Aprovado: ${p.aprovadoPor||"-"}<br>📦 Reservado: ${p.reservadoPor||"-"}` :
+              "❌ Pedido Reprovado"
+            }
+          </div>
+        </div>
+      </div>
+    `;
   });
 }
-window.carregarPedidos=carregarPedidos;
+window.carregarPedidos = carregarPedidos;
 
 /* =========================================================
-   NI
+   NI (mantido)
 ========================================================= */
-window.atualizarNI=async(id,i,ni)=>{
-  const ref=doc(db,"pedidos",id);
-  const snap=await getDoc(ref);
-  if(!snap.exists())return;
+window.atualizarNI = async (id, i, ni) => {
+  const ref = doc(db,"pedidos",id);
+  const snap = await getDoc(ref);
+  if(!snap.exists()) return;
 
-  const p=snap.data();
-  p.pecas[i].ni=ni.trim();
+  const p = snap.data();
+  if (!p.pecas || !p.pecas[i]) return;
 
-  await updateDoc(ref,{pecas:p.pecas});
+  p.pecas[i].ni = (ni || "").trim();
+  await updateDoc(ref, { pecas: p.pecas });
+
+  carregarPedidos(); // mantém seu comportamento atual
+};
+
+/* =========================================================
+   EXCLUIR (mantido)
+========================================================= */
+window.excluir = async (id) => {
+  if(!confirm("Excluir pedido pendente?")) return;
+  await deleteDoc(doc(db,"pedidos",id));
   carregarPedidos();
 };
 
 /* =========================================================
-   APRENDIZADO
+   MENU + ACTIVE STATES
 ========================================================= */
-async function aprender(p){
-  for(const x of p.pecas){
-    if(!x.ni)continue;
-
-    const q=query(
-      collection(db,"aprendizado_ni"),
-      where("descricao","==",norm(x.descricao)),
-      where("ni","==",x.ni.trim())
-    );
-
-    const snap=await getDocs(q);
-    if(!snap.empty)continue;
-
-    await addDoc(collection(db,"aprendizado_ni"),{
-      descricao:norm(x.descricao),
-      ni:x.ni.trim(),
-      validadoEm:new Date()
-    });
-  }
-}
-
-  /* =========================================================
-   EXCLUIR
-========================================================= */
-window.excluir=async(id)=>{
-  if(confirm("Excluir pedido pendente?")){
-    await deleteDoc(doc(db,"pedidos",id));
-    carregarPedidos();
-  }
-};
-
-/* =========================================================
-   STATUS + TELEGRAM
-========================================================= */
-
-/* =========================================================
-   window.excluir = async (id) => {
-  if (!confirm("Excluir pedido pendente?")) return;
-
-  const pedidoRef = doc(db, "pedidos", id);
-  const statsRef  = doc(db, "stats", "pedidos");
-
-  const snap = await getDoc(pedidoRef);
-  if (!snap.exists()) return;
-
-  const pedido = snap.data();
-
-  // 🔽 Se for pendente, subtrai 1
-  if (pedido.status === "Pendente") {
-    await updateDoc(statsRef, {
-      Pendente: increment(-1)
-    });
-  }
-
-  // ❌ Exclui o pedido
-  await deleteDoc(pedidoRef);
-
-  carregarPedidos();
-};
-
-/* =========================================================
-   RELATÓRIOS
-========================================================= */
-window.toggleRelatorio=()=>{
-  const box=document.getElementById("relatorioBox");
-  box.style.display=box.style.display==="none"?"flex":"none";
-};
-
-window.gerarRelatorioDia=()=>{
-  const hoje=new Date().toISOString().split("T")[0];
-  inicio.value=hoje; fim.value=hoje;
-  gerarRelatorioPeriodo();
-};
-
-window.gerarRelatorioPeriodo = async () => {
-  const dataInicio = new Date(inicio.value + "T00:00:00");
-  const dataFim    = new Date(fim.value + "T23:59:59");
-
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("landscape");
-
-  const snap = await getDocs(collection(db, "pedidos"));
-
-  const rows = [];
-
-  snap.forEach(d => {
-    const p = d.data();
-    if (!p.criadoEm) return;
-
-    const criado = p.criadoEm.toDate();
-
-    if (criado >= dataInicio && criado <= dataFim) {
-      rows.push({
-        criado,
-        dados: [
-          p.nome,
-          p.manutencao,
-          p.go || "-",
-          p.pecas.map(x => `${x.descricao} (${x.quantidade})`).join("\n"),
-          p.status,
-          criado.toLocaleString("pt-BR")
-        ]
-      });
-    }
-  });
-
-  /* 🔽 ORDENA DO MAIS RECENTE PARA O MAIS ANTIGO */
-  rows.sort((a, b) => b.criado - a.criado);
-
-  /* 🔽 EXTRAI APENAS OS DADOS */
-  const body = rows.map(r => r.dados);
-
-  if (body.length === 0) {
-    alert("Nenhum pedido encontrado no período selecionado.");
-    return;
-  }
-
-  pdf.autoTable({
-    head: [["Solicitante", "Manutenção", "GO", "Peças", "Status", "Criado em"]],
-    body
-  });
-
-  pdf.save("relatorio-pedidos.pdf");
-};
-
-
-window.toggleNotificacaoBox = () => {
-  const box = document.getElementById("notificacaoBox");
-  box.style.display = box.style.display === "none" ? "flex" : "none";
-};
-/* =========================================================
-   AUTOLOGIN
-========================================================= */
-
-async function aprovarTodosPendentes() {
-  if (!confirm("Tem certeza que deseja aprovar TODOS os pedidos pendentes?")) return;
-
-  try {
-    const batch = writeBatch(db);
-    const colRef = collection(db, "pedidos"); // Confirme se o nome da coleção é 'pedidos'
-    
-    // Busca apenas os que estão com status pendente
-    const q = query(colRef, where("status", "==", "pendente"));
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-      alert("Não há pedidos pendentes para aprovar.");
-      return;
-    }
-
-    querySnapshot.forEach((documento) => {
-      const docRef = doc(db, "pedidos", documento.id);
-      batch.update(docRef, { "status": "Aprovado" });
-    });
-
-    await batch.commit();
-    alert("Sucesso! Todos os pedidos foram aprovados.");
-    location.reload(); // Recarrega a página para atualizar a lista
-    
-  } catch (error) {
-    console.error("Erro ao atualizar em lote:", error);
-    alert("Erro ao aprovar pedidos. Verifique o console.");
-  }
-}
-
-// IMPORTANTE: Como é type="module", precisamos exportar para o HTML
-window.aprovarTodosPendentes = aprovarTodosPendentes;
-
-/* =========================================================
-   BADGE NO TÍTULO DA GUIA (CHROME / DESKTOP)
-========================================================= */
-const baseTitle = "Área de Técnicos CMC";
-const statsRef  = doc(db, "stats/pedidos");
-
-onSnapshot(statsRef, (snap) => {
-  if (!snap.exists()) {
-    document.title = baseTitle;
-    return;
-  }
-
-  const {
-    Pendente = 0,
-    aprovados = 0
-  } = snap.data();
-
-  let prefix = [];
-
-  if (aprovados > 3) prefix.push(`Aguardando reserva`);
-
-  document.title = prefix.length
-    ? `(${prefix.join(" | ")}) ${baseTitle}`
-    : baseTitle;
-});
-
-carregarPedidos();
-
 window.abrirMenu = () => {
   document.querySelector(".sidebar").classList.add("active");
   document.querySelector(".menu-overlay").classList.add("active");
 };
-
 window.fecharMenu = () => {
   document.querySelector(".sidebar").classList.remove("active");
   document.querySelector(".menu-overlay").classList.remove("active");
@@ -789,6 +686,24 @@ document.querySelectorAll(".sidebar nav a").forEach(a=>{
     a.classList.add("ativo");
   }
 });
+
+/* Bottom nav ativo (acompanhamento) */
+(function marcarNavAtiva(){
+  const path = (location.pathname.split("/").pop() || "acompanhamento.html").toLowerCase();
+  const map = {
+    "index.html": "pedido",
+    "admin.html": "tecnicos",
+    "acompanhamento.html": "acomp",
+    "painel-almoxarife.html": "painel"
+  };
+  const key = map[path] || "acomp";
+  document.querySelectorAll(".nav-btn").forEach(a=>{
+    if (a.dataset.nav === key) a.classList.add("active");
+  });
+})();
+
+/* init */
+carregarPedidos();
 </script>
 
 </body>
