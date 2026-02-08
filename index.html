@@ -53,7 +53,7 @@ body{
   position: sticky;
   top:0;
   z-index: 900;
-  padding: 14px 14px 18px;
+  padding: 8px 10px 10px;
   color:#fff;
   background:
     radial-gradient(1200px 320px at 10% -10%, rgba(37,99,235,.35), transparent 55%),
@@ -111,7 +111,7 @@ body{
 }
 
 .brand-center strong{
-  font-size:16px;
+  font-size:15px;
   line-height:1.2;
   white-space:nowrap;
   overflow:hidden;
@@ -119,7 +119,7 @@ body{
 }
 
 .brand-center span{
-  font-size:12px;
+  font-size:11px;
   opacity:.85;
   white-space:nowrap;
   overflow:hidden;
@@ -143,9 +143,10 @@ body{
   color:#fff;
   background: rgba(255,255,255,.10);
   border:1px solid rgba(255,255,255,.16);
-  width:42px;
-  height:42px;
-  border-radius: 14px;
+  width:36px;
+  height:36px;
+  font-size:18px;
+  border-radius:12px;
   font-size:20px;
   display:grid;
   place-items:center;
@@ -352,7 +353,7 @@ input:disabled{
   background:#fff;
   border-radius: 50%;
   transition:.25s;
-  box-shadow: 0 6px 14px rgba(0,0,0,.18);
+  box-shadow: none;
 }
 .switch input:checked + .slider{
   background: #22c55e;
@@ -436,7 +437,7 @@ input:disabled{
   z-index: 1001;
   display:flex;
   flex-direction:column;
-  box-shadow: 30px 0 80px rgba(0,0,0,.35);
+  box-shadow: none;
 }
 .sidebar.active{ transform: translateX(0); }
 
@@ -536,6 +537,20 @@ footer{
   text-align:center;
   font-size: 11px;
   color: var(--muted);
+}
+
+@media (max-width: 420px){
+  .topbar{
+    padding: 8px 10px 10px;
+  }
+
+  .brand-center strong{
+    font-size:14px;
+  }
+
+  .brand-center span{
+    font-size:10.5px;
+  }
 }
 </style>
 </head>
