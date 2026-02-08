@@ -305,6 +305,52 @@ button{
 .menu-overlay.active{
   display:block;
 }
+
+/* =========================================================
+   ANIMAÇÕES (NOVO / APROVADO / RESERVADO)
+========================================================= */
+@keyframes slideIn {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes glowYellow {
+  0%   { box-shadow: 0 0 0 rgba(245,158,11,0); }
+  30%  { box-shadow: 0 0 0 6px rgba(245,158,11,.25); }
+  100% { box-shadow: 0 0 0 rgba(245,158,11,0); }
+}
+
+@keyframes glowGreen {
+  0%   { box-shadow: 0 0 0 rgba(22,163,74,0); }
+  30%  { box-shadow: 0 0 0 6px rgba(22,163,74,.22); }
+  100% { box-shadow: 0 0 0 rgba(22,163,74,0); }
+}
+
+@keyframes glowBlue {
+  0%   { box-shadow: 0 0 0 rgba(37,99,235,0); }
+  30%  { box-shadow: 0 0 0 6px rgba(37,99,235,.22); }
+  100% { box-shadow: 0 0 0 rgba(37,99,235,0); }
+}
+
+@keyframes bounceSmall {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+.anim-new {
+  animation: slideIn .25s ease-out, glowYellow 1.1s ease-out;
+}
+.anim-approved {
+  animation: glowGreen 1.2s ease-out, bounceSmall .35s ease-out;
+}
+.anim-reserved {
+  animation: glowBlue 1.2s ease-out, bounceSmall .35s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-new, .anim-approved, .anim-reserved { animation: none !important; }
+}
 </style>
 </head>
 
@@ -323,7 +369,7 @@ button{
   </div>
 
   <nav>
-    <a href="index.html">📝 Pedido de Peças</a>    
+    <a href="index.html">📝 Pedido de Peças</a>
     <a href="acompanhamento.html">📦 Acompanhamento de Pedidos 🔩</a>
     <a href="admin.html">🔐 Área de Técnicos 🛠️</a>
     <a href="admin-epi.html">🦺 EPI's e Uniformes</a>
@@ -565,6 +611,63 @@ const norm = t =>
   t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 
 /* =========================================================
+   ANIMAÇÕES POR MUDANÇA (docChanges)
+========================================================= */
+const prevStatusById = new Map(); // id -> status anterior
+let primeiraCarga = true;
+
+function aplicarAnimacao(id, tipo){
+  const el = document.getElementById(`card-${id}`);
+  if(!el) return;
+
+  el.classList.remove("anim-new","anim-approved","anim-reserved");
+  void el.offsetWidth; // re-trigger
+
+  if (tipo === "new") el.classList.add("anim-new");
+  if (tipo === "approved") el.classList.add("anim-approved");
+  if (tipo === "reserved") el.classList.add("anim-reserved");
+
+  setTimeout(() => {
+    el.classList.remove("anim-new","anim-approved","anim-reserved");
+  }, 1600);
+}
+
+function processarMudancas(snapshot){
+  if (primeiraCarga) {
+    snapshot.docs.forEach(d => prevStatusById.set(d.id, (d.data()||{}).status));
+    primeiraCarga = false;
+    return;
+  }
+
+  snapshot.docChanges().forEach(change => {
+    const id = change.doc.id;
+    const data = change.doc.data() || {};
+    const novoStatus = data.status;
+
+    if (change.type === "added") {
+      aplicarAnimacao(id, "new");
+      prevStatusById.set(id, novoStatus);
+      return;
+    }
+
+    if (change.type === "modified") {
+      const antigo = prevStatusById.get(id);
+
+      if (antigo !== novoStatus) {
+        if (novoStatus === "Aprovado") aplicarAnimacao(id, "approved");
+        if (novoStatus === "Reservado") aplicarAnimacao(id, "reserved");
+      }
+
+      prevStatusById.set(id, novoStatus);
+    }
+
+    if (change.type === "removed") {
+      prevStatusById.delete(id);
+    }
+  });
+}
+
+/* =========================================================
    PEDIDOS (REALTIME)
 ========================================================= */
 let unsubscribePedidos = null;
@@ -587,9 +690,6 @@ async function renderizarPedidos(pedidos){
     const finalizado = p.status !== "Pendente";
     const faltaNI = (p.pecas || []).some(x => !x.ni);
 
-    /* ============================
-       MONTA PEÇAS + HISTÓRICO
-    ============================ */
     let pecasHTML = "";
 
     for (let i = 0; i < (p.pecas || []).length; i++) {
@@ -597,7 +697,6 @@ async function renderizarPedidos(pedidos){
 
       let ultimaTxt = "Primeira solicitação";
 
-      // 🔒 SÓ BUSCA HISTÓRICO SE FOR EPI
       if (p.categoria === "EPI" && x.ni) {
         const key = `${p.nome}|${x.ni}`;
 
@@ -633,11 +732,11 @@ async function renderizarPedidos(pedidos){
       `;
     }
 
-    /* ============================
-       CARD
-    ============================ */
     lista.innerHTML += `
-      <div class="card card-${(p.status||"").toLowerCase()} card-epi ${p.tipo==="DEVOLUCAO"?"card-devolucao":""}">
+      <div
+        class="card card-${(p.status||"").toLowerCase()} card-epi ${p.tipo==="DEVOLUCAO"?"card-devolucao":""}"
+        id="card-${p.id}"
+      >
         ${!finalizado ? `
           <button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>
         ` : ""}
@@ -681,7 +780,6 @@ async function renderizarPedidos(pedidos){
             </div>
           `}
         </div>
-
       </div>
     `;
   }
@@ -690,6 +788,10 @@ async function renderizarPedidos(pedidos){
 function iniciarListenerPedidos(){
   if (unsubscribePedidos) unsubscribePedidos();
   limparCacheUltimaEPI();
+
+  // reset de animação (troca de usuário, reload etc.)
+  prevStatusById.clear();
+  primeiraCarga = true;
 
   const q = query(
     collection(db,"pedidos"),
@@ -702,6 +804,9 @@ function iniciarListenerPedidos(){
     async (snap) => {
       const pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       await renderizarPedidos(pedidos);
+
+      // ✅ depois do render, anima o que mudou
+      processarMudancas(snap);
     },
     (err) => {
       console.error("Erro onSnapshot(pedidos):", err);
@@ -709,7 +814,6 @@ function iniciarListenerPedidos(){
   );
 }
 
-// mantém compatível com seu código antigo
 window.carregarPedidos = iniciarListenerPedidos;
 
 /* =========================================================
@@ -724,14 +828,13 @@ window.atualizarNI=async(id,i,ni)=>{
   p.pecas[i].ni=ni.trim();
 
   await updateDoc(ref,{pecas:p.pecas});
-  // ✅ realtime: NÃO chama carregarPedidos()
 };
 
 /* =========================================================
    APRENDIZADO
 ========================================================= */
 async function aprender(p){
-  for(const x of p.pecas){
+  for(const x of (p.pecas || [])){
     if(!x.ni)continue;
 
     const q=query(
@@ -767,7 +870,6 @@ async function buscarUltimaSolicitacaoEPI({ nome, ni, pedidoAtualId }) {
   snap.forEach(docSnap => {
     const p = docSnap.data();
 
-    // ignora o pedido atual
     if (docSnap.id === pedidoAtualId) return;
     if (!p.criadoEm) return;
     if (p.nome !== nome) return;
@@ -817,13 +919,11 @@ window.mudarStatus=async(id,status)=>{
 🚚 *GO:* ${p.go||"-"}
 
 📦 *Peças:*
-${p.pecas.map(x=>`• ${x.descricao} (${x.quantidade}) | NI: ${x.ni||"-"}`).join("\n")}
+${(p.pecas || []).map(x=>`• ${x.descricao} (${x.quantidade}) | NI: ${x.ni||"-"}`).join("\n")}
 
 👷‍♂️ *Aprovado por:* ${localStorage.getItem("usuario_nome")}
 ⏰ *Data:* ${agora}`
   );
-
-  // ✅ realtime: NÃO chama carregarPedidos()
 };
 
 window.reservarPedido = async (id) => {
@@ -836,8 +936,6 @@ window.reservarPedido = async (id) => {
     reservadoPor: localStorage.getItem("usuario_nome") || "Não identificado",
     reservadoEm: new Date()
   });
-
-  // ✅ realtime: NÃO chama carregarPedidos()
 };
 
 /* =========================================================
@@ -846,7 +944,6 @@ window.reservarPedido = async (id) => {
 window.excluir=async(id)=>{
   if(confirm("Excluir pedido pendente?")){
     await deleteDoc(doc(db,"pedidos",id));
-    // ✅ realtime: NÃO chama carregarPedidos()
   }
 };
 
@@ -888,7 +985,7 @@ window.gerarRelatorioPeriodo = async () => {
           p.nome,
           p.manutencao,
           p.go || "-",
-          p.pecas.map(x => `${x.descricao} (${x.quantidade})`).join("\n"),
+          (p.pecas || []).map(x => `${x.descricao} (${x.quantidade})`).join("\n"),
           p.status,
           criado.toLocaleString("pt-BR")
         ]
@@ -924,7 +1021,7 @@ window.toggleNotificacaoBox = () => {
 if(localStorage.getItem("admin")==="true"){
   loginBox.style.display="none";
   painel.style.display="block";
-  iniciarListenerPedidos(); // ✅ realtime
+  iniciarListenerPedidos();
 }
 
 /* =========================================================
@@ -937,8 +1034,6 @@ async function aprovarTodosPendentes() {
     const batch = writeBatch(db);
     const colRef = collection(db, "pedidos");
 
-    // ⚠️ Seu status no sistema é "Pendente" (com P maiúsculo).
-    // O seu código estava buscando "pendente" (minúsculo), isso não vai encontrar nada.
     const q = query(colRef, where("status", "==", "Pendente"));
     const querySnapshot = await getDocs(q);
 
@@ -958,14 +1053,12 @@ async function aprovarTodosPendentes() {
 
     await batch.commit();
     alert("Sucesso! Todos os pedidos foram aprovados.");
-    // ✅ realtime: NÃO precisa reload
 
   } catch (error) {
     console.error("Erro ao atualizar em lote:", error);
     alert("Erro ao aprovar pedidos. Verifique o console.");
   }
 }
-
 window.aprovarTodosPendentes = aprovarTodosPendentes;
 
 /* =========================================================
@@ -980,13 +1073,9 @@ onSnapshot(statsRef, (snap) => {
     return;
   }
 
-  const {
-    Pendente = 0,
-    aprovados = 0
-  } = snap.data();
+  const { Pendente = 0, aprovados = 0 } = snap.data();
 
   let prefix = [];
-
   if (aprovados > 3) prefix.push(`Aguardando reserva`);
 
   document.title = prefix.length
