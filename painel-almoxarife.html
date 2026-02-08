@@ -4,126 +4,571 @@
 <meta charset="UTF-8">
 <title>Painel do Almoxarife – Gestão de NI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest-admin.json">
+<meta name="theme-color" content="#0b1220">
 
 <style>
-  body{font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;padding:16px;}
-  .container{max-width:980px;margin:auto;}
-  .card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 4px 10px rgba(0,0,0,.08);margin-bottom:16px;}
-  h1{font-size:20px;text-align:center;margin:0;}
+/* =========================================================
+   THEME (igual ao admin.html atual)
+========================================================= */
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --text:#0f172a;
+  --border:#e5e7eb;
 
-  .topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px;}
-  .topbar-left{display:flex;flex-direction:column;gap:4px;}
-  .sub{font-size:12px;color:#6b7280;}
+  --navy-1:#0b1220;
+  --navy-2:#0f1b33;
 
-  .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;}
+  --primary:#16a34a;
+  --primary-hover:#15803d;
 
-  .btn{padding:10px 14px;border:none;border-radius:10px;background:#111827;color:#fff;font-size:14px;cursor:pointer;white-space:nowrap;}
-  .btn:hover{opacity:.92}
-  .btn-green{background:#059669;}
-  .btn-red{background:#dc2626;}
-  .btn-gray{background:#6b7280;}
-  .btn-ghost{background:#e5e7eb;color:#111827;}
+  --secondary:#2563eb;
+  --secondary-hover:#1d4ed8;
 
-  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;}
-  .chip{padding:8px 12px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;color:#111827;font-size:13px;cursor:pointer;}
-  .chip:hover{background:#f9fafb;}
-  .chip.active{background:#111827;color:#fff;border-color:#111827;}
+  --danger:#dc2626;
+  --danger-hover:#b91c1c;
 
-  input{padding:12px;border-radius:10px;border:1px solid #d1d5db;font-size:16px;width:100%;box-sizing:border-box;}
-  .search-wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0 0;}
-  .search-wrap input{flex:1;min-width:240px;}
+  --warn:#f59e0b;
 
-  .stats{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;margin-left:auto;font-size:12px;color:#6b7280;}
-  .stats b{color:#111827;}
+  --shadow: 0 6px 16px rgba(15, 23, 42, .06);
+  --shadow-soft: 0 2px 8px rgba(15, 23, 42, .05);
 
-  .table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:12px;margin-top:12px;}
-  table{width:100%;border-collapse:collapse;min-width:760px;}
-  thead th{text-align:left;font-size:12px;color:#6b7280;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:12px;position:sticky;top:0;z-index:1;}
-  tbody td{padding:12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+  --radius:18px;
+  --max:1200px;
+}
 
-  .ni{font-weight:bold;color:#111827;white-space:nowrap;}
-  .badge{display:inline-block;font-size:11px;padding:4px 8px;border-radius:999px;margin-left:8px;white-space:nowrap;}
-  .badge.block{background:#fee2e2;color:#991b1b;}
-  .badge.ok{background:#dcfce7;color:#166534;}
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, Helvetica, sans-serif;
+  color:var(--text);
+  background: var(--bg);
+  font-size:16px;
+}
 
-  .desc{color:#111827;}
-  .muted{font-size:12px;color:#6b7280;}
+/* =========================================================
+   TOPBAR (MINIMAL)
+========================================================= */
+.topbar{
+  position: sticky;
+  top:0;
+  z-index: 900;
+  padding: 8px 10px 10px;
+  color:#fff;
+  background:
+    radial-gradient(1200px 320px at 10% -10%, rgba(37,99,235,.30), transparent 55%),
+    radial-gradient(900px 280px at 90% 0%, rgba(22,163,74,.18), transparent 60%),
+    linear-gradient(180deg, var(--navy-2), var(--navy-1));
+  box-shadow: none;
+}
+.topbar-inner{
+  max-width: var(--max);
+  margin: 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.topbar-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
 
-  .cell-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
-  .btn-sm{padding:8px 10px;font-size:12px;border-radius:10px;}
+/* BOTÕES PADRONIZADOS (menores) */
+.icon-ctl{
+  position:relative;
+  appearance:none;
+  border:none;
+  cursor:pointer;
+  color:#fff;
+  width:36px;
+  height:36px;
+  border-radius: 12px;
+  font-size:18px;
+  display:grid;
+  place-items:center;
+  background: rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow: none;
+}
+.icon-ctl:active{ transform: scale(.98); }
 
-  .empty{text-align:center;color:#6b7280;font-size:14px;padding:18px;}
+/* chip status compacto */
+.status-chip{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  white-space:nowrap;
+}
+.status-chip .sep{ opacity:.75; }
+.status-chip b{ min-width: 14px; text-align:center; }
+.status-chip .dot{
+  width:7px;
+  height:7px;
+  border-radius:999px;
+  display:inline-block;
+}
+.status-chip .dot.pend{ background: rgba(245,158,11,.95); }
+.status-chip .dot.apr{  background: rgba(34,197,94,.95); }
+.status-chip .dot.res{  background: rgba(59,130,246,.95); }
 
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:2000;}
-  .toast.show{opacity:1}
-  .toast.success{background:#16a34a}
-  .toast.warn{background:#f59e0b}
-  .toast.danger{background:#dc2626}
+/* logo compacto */
+.logo-suzano.compact{
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+}
+.logo-suzano.compact img{
+  width: 72px;
+  height:auto;
+  display:block;
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,.20));
+}
 
-  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;z-index:2100;}
-  .modal.show{display:flex;}
-  .modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);}
-  .modal-box{position:relative;width:100%;max-width:620px;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;}
-  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e5e7eb;}
-  .modal-head strong{font-size:15px;}
-  .modal-body{padding:16px;}
-  .grid{display:grid;grid-template-columns:1fr 220px;gap:12px;}
-  @media (max-width:720px){.grid{grid-template-columns:1fr;}}
-  label{display:block;font-size:13px;color:#374151;margin:0 0 6px;}
-  .hint{margin-top:6px;font-size:12px;color:#6b7280;line-height:1.3;}
-  .modal-actions{display:flex;gap:10px;justify-content:flex-end;padding:14px 16px;border-top:1px solid #e5e7eb;flex-wrap:wrap;}
+@media (max-width: 380px){
+  .status-chip{ padding: 6px 8px; font-size: 11px; gap:6px; }
+  .icon-ctl{ width:34px; height:34px; border-radius: 11px; font-size:17px; }
+  .logo-suzano.compact img{ width: 64px; }
+}
 
-  .menu-btn{position:fixed;top:12px;left:12px;z-index:1001;background:#111827;color:#fff;border:none;border-radius:10px;font-size:22px;width:auto;height:auto;padding:8px 12px;margin:0;cursor:pointer;}
-  .sidebar{position:fixed;top:0;left:0;height:100%;width:260px;background:#111827;color:#fff;transform:translateX(-100%);transition:.3s;z-index:1002;display:flex;flex-direction:column;}
-  .sidebar.active{transform:translateX(0);}
-  .sidebar-header{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid #1f2937;}
-  .sidebar-header button{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;}
-  .sidebar nav{display:flex;flex-direction:column;padding:10px;}
-  .sidebar nav a{padding:14px;border-radius:10px;color:#fff;text-decoration:none;margin-bottom:6px;}
-  .sidebar nav a:hover{background:#1f2937;}
-  .sidebar nav a.ativo{background:#2563eb;}
-  .menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:none;}
-  .menu-overlay.active{display:block;}
+/* =========================================================
+   PAGE / PANELS
+========================================================= */
+.page{
+  max-width: var(--max);
+  margin: -10px auto 104px;
+  padding: 0 14px 22px;
+}
+.panel{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: none;
+  overflow: visible;
+  margin-top: 12px;
+}
+.panel-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding: 14px 14px 10px;
+  border-bottom:1px solid rgba(229,231,235,.7);
+  background: #fff;
+}
+.panel-header .h{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight: 900;
+  font-size: 16px;
+}
+.panel-header small{
+  color: var(--muted);
+  font-size: 12px;
+}
+.panel-body{ padding: 14px; }
 
-  /* Mobile cards */
-  .mobile-cards{display:none;}
-  @media (max-width:720px){
-    body{padding:12px;}
-    .container{max-width:100%;}
-    .card{padding:12px;}
-    .topbar{gap:8px;}
-    .actions{width:100%;justify-content:space-between;}
-    .actions .btn{flex:1;padding:10px 10px;font-size:13px;}
-    .search-wrap{gap:8px;}
-    .search-wrap input{min-width:0;}
-    .btn-gray{padding:10px 10px;font-size:13px;}
-    .filters{gap:6px;}
-    .chip{padding:7px 10px;font-size:12px;}
-    .stats{width:100%;justify-content:flex-start;gap:8px;font-size:11px;}
-    .table-wrap{display:none;}
-    .mobile-cards{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
-    .mcard{background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:12px;}
-    .mcard-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
-    .mni{font-weight:bold;color:#111827;font-size:15px;}
-    .mbadges{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
-    .mbadge{font-size:11px;padding:4px 8px;border-radius:999px;white-space:nowrap;}
-    .mbadge.block{background:#fee2e2;color:#991b1b;}
-    .mbadge.ok{background:#dcfce7;color:#166534;}
-    .mdesc{color:#111827;font-size:13px;line-height:1.25;}
-    .m-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
-    .m-actions .btn{padding:10px 8px;font-size:12px;border-radius:12px;}
-  }
+/* =========================================================
+   BUTTONS / PILLS (no mesmo estilo do tema)
+========================================================= */
+.btn{
+  border:none;
+  cursor:pointer;
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:auto;
+  box-shadow: 0 10px 18px rgba(2, 6, 23, .08);
+  white-space:nowrap;
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn-green{
+  background: linear-gradient(180deg, #22c55e, var(--primary));
+  color:#fff;
+}
+.btn-red{
+  background: linear-gradient(180deg, #ef4444, var(--danger));
+  color:#fff;
+}
+.btn-gray{
+  background:#6b7280;
+  color:#fff;
+}
+.btn-ghost{
+  background:#e5e7eb;
+  color:#111827;
+  box-shadow:none;
+}
+.btn-ghost:hover{ background:#d1d5db; }
+
+.btn-sm{
+  padding: 10px 12px;
+  font-size: 12px;
+  border-radius: 14px;
+}
+
+.actionbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+}
+.actionbar-left, .actionbar-right{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+}
+
+.pill{
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(229,231,235,.95);
+  background:#fff;
+  color:#111827;
+  font-size: 13px;
+  cursor:pointer;
+  font-weight: 900;
+  user-select:none;
+}
+.pill:hover{ background:#f9fafb; }
+.pill.active{
+  background:#111827;
+  color:#fff;
+  border-color:#111827;
+}
+
+/* Inputs */
+input{
+  width:100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  font-size: 16px;
+  background:#fff;
+  outline:none;
+}
+.search-wrap{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-top: 10px;
+}
+.search-wrap input{ flex:1; min-width: 240px; }
+
+/* stats */
+.stats{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-end;
+  margin-left:auto;
+  font-size:12px;
+  color: var(--muted);
+}
+.stats b{ color:#111827; }
+
+/* =========================================================
+   TABLE + MOBILE CARDS (mantidos, só visual atualizado)
+========================================================= */
+.table-wrap{
+  overflow:auto;
+  border:1px solid var(--border);
+  border-radius:16px;
+  margin-top: 12px;
+  background:#fff;
+}
+table{ width:100%; border-collapse:collapse; min-width:760px; }
+thead th{
+  text-align:left;
+  font-size:12px;
+  color: var(--muted);
+  background:#f9fafb;
+  border-bottom:1px solid var(--border);
+  padding:12px;
+  position:sticky; top:0; z-index:1;
+}
+tbody td{
+  padding:12px;
+  border-bottom:1px solid #f1f5f9;
+  vertical-align:middle;
+}
+
+.ni{ font-weight: 950; color:#111827; white-space:nowrap; }
+.badge{
+  display:inline-block;
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+  margin-left:8px;
+  white-space:nowrap;
+}
+.badge.block{ background:#fee2e2; color:#991b1b; }
+.badge.ok{ background:#dcfce7; color:#166534; }
+
+.desc{ color:#111827; }
+.muted{ font-size:12px; color: var(--muted); }
+
+.cell-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.empty{
+  text-align:center;
+  color: var(--muted);
+  font-size:14px;
+  padding:18px;
+}
+
+/* toast */
+.toast{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111827;
+  color:#fff;
+  padding:12px 18px;
+  border-radius:12px;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  transition:.3s;
+  z-index:2000;
+}
+.toast.show{ opacity:1; }
+.toast.success{ background:#16a34a; }
+.toast.warn{ background:#f59e0b; }
+.toast.danger{ background:#dc2626; }
+
+/* modal */
+.modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:16px; z-index:2100; }
+.modal.show{ display:flex; }
+.modal-overlay{ position:absolute; inset:0; background:rgba(0,0,0,.55); }
+.modal-box{
+  position:relative;
+  width:100%;
+  max-width:620px;
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  overflow:hidden;
+}
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 16px;
+  border-bottom:1px solid var(--border);
+}
+.modal-head strong{ font-size:15px; }
+.modal-body{ padding:16px; }
+.grid{ display:grid; grid-template-columns:1fr 220px; gap:12px; }
+@media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+label{ display:block; font-size:13px; color:#374151; margin:0 0 6px; }
+.hint{ margin-top:6px; font-size:12px; color: var(--muted); line-height:1.3; }
+.modal-actions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  padding:14px 16px;
+  border-top:1px solid var(--border);
+  flex-wrap:wrap;
+}
+
+/* =========================================================
+   SIDEBAR / OVERLAY (igual admin)
+========================================================= */
+.menu-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:1000;
+  display:none;
+}
+.menu-overlay.active{ display:block; }
+
+.sidebar{
+  position:fixed;
+  top:0;
+  left:0;
+  height:100%;
+  width:270px;
+  background: linear-gradient(180deg, #0b1220, #0f1b33);
+  color:#fff;
+  transform:translateX(-100%);
+  transition:.25s;
+  z-index:1001;
+  display:flex;
+  flex-direction:column;
+  box-shadow: none;
+}
+.sidebar.active{ transform:translateX(0); }
+
+.sidebar-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+.sidebar-header button{
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.16);
+  color:#fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  cursor:pointer;
+}
+.sidebar nav{
+  display:flex;
+  flex-direction:column;
+  padding:10px;
+  gap:8px;
+}
+.sidebar nav a{
+  padding:12px;
+  border-radius:14px;
+  color:#fff;
+  text-decoration:none;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.sidebar nav a:hover{ background: rgba(255,255,255,.10); }
+.sidebar nav a.ativo{ background: rgba(37,99,235,.35); border-color: rgba(37,99,235,.40); }
+
+/* =========================================================
+   BOTTOM NAV (igual admin)
+========================================================= */
+.bottom-nav{
+  position: fixed;
+  left: 0; right: 0;
+  bottom: 0;
+  z-index: 800;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(11,18,32,.92);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.bottom-nav .inner{
+  max-width: 520px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:10px;
+}
+.nav-btn{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  color:#e5e7eb;
+  font-size: 11px;
+  padding: 10px 8px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.06);
+  transition: .15s;
+}
+.nav-btn:hover{ background: rgba(255,255,255,.10); }
+.nav-btn span.icon{ font-size: 18px; line-height: 1; }
+.nav-btn.active{
+  color:#fff;
+  background: rgba(37,99,235,.28);
+  border-color: rgba(37,99,235,.45);
+  box-shadow: 0 10px 18px rgba(37,99,235,.15);
+}
+.nav-btn.active .icon{ filter: drop-shadow(0 6px 12px rgba(37,99,235,.35)); }
+
+footer{
+  text-align:center;
+  margin: 16px 0 110px;
+  font-size:11px;
+  color: var(--muted);
+}
+
+/* =========================================================
+   MOBILE (mantém cards e esconde tabela)
+========================================================= */
+.mobile-cards{ display:none; }
+@media (max-width:720px){
+  .table-wrap{ display:none; }
+  .mobile-cards{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+  .mcard{ background:#f9fafb; border:1px solid var(--border); border-radius:16px; padding:12px; }
+  .mcard-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .mni{ font-weight: 950; color:#111827; font-size:15px; }
+  .mbadges{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .mbadge{ font-size:11px; padding:4px 8px; border-radius:999px; white-space:nowrap; }
+  .mbadge.block{ background:#fee2e2; color:#991b1b; }
+  .mbadge.ok{ background:#dcfce7; color:#166534; }
+  .mdesc{ color:#111827; font-size:13px; line-height:1.25; }
+  .m-actions{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; }
+  .m-actions .btn{ padding:10px 8px; font-size:12px; border-radius:14px; }
+}
 </style>
 </head>
 
 <body>
-<button class="menu-btn" onclick="abrirMenu()">☰</button>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <button class="icon-ctl" onclick="abrirMenu()" aria-label="Abrir menu">☰</button>
+
+    <!-- chip do topo: Total • Ativos • Bloqueados -->
+    <div class="status-chip" title="Total • Ativos • Bloqueados">
+      <span class="dot pend"></span><b id="chipTotal">0</b>
+      <span class="sep">•</span>
+      <span class="dot apr"></span><b id="chipAtivos">0</b>
+      <span class="sep">•</span>
+      <span class="dot res"></span><b id="chipBloq">0</b>
+    </div>
+
+    <div class="topbar-right">
+      <div class="logo-suzano compact">
+        <img src="suzano-logo.png" alt="Suzano">
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- OVERLAY -->
 <div class="menu-overlay" onclick="fecharMenu()"></div>
 
+<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-header">
     <strong>📦 Pedido de Peças</strong>
-    <button onclick="fecharMenu()">✖</button>
+    <button onclick="fecharMenu()" aria-label="Fechar menu">✖</button>
   </div>
   <nav>
     <a href="index.html">📝 Pedido de Peças</a>
@@ -134,55 +579,91 @@
   </nav>
 </aside>
 
-<div class="container">
-  <div class="card">
-    <div class="topbar">
-      <div class="topbar-left">
-        <h1>🧩 Gestão de NI e Peças</h1>
+<main class="page">
+  <section class="panel">
+    <div class="panel-header">
+      <div class="h">🧩 Gestão de NI e Peças</div>
+      <small>aprendizado_ni + ni_bloqueados</small>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- AÇÕES -->
+      <div class="actionbar">
+        <div class="actionbar-left">
+          <button class="btn btn-green" onclick="abrirModalNovo()">➕ Nova peça</button>
+          <button class="btn btn-ghost" onclick="recarregarBases()">🔄 Recarregar</button>
+        </div>
+
+        <div class="stats">
+          Total: <b id="countTotal">0</b> •
+          Ativos: <b id="countAtivos">0</b> •
+          Bloqueados: <b id="countBloqueados">0</b> •
+          Exibindo: <b id="countView">0</b>
+        </div>
       </div>
 
-      <div class="actions">
-        <button class="btn btn-green" onclick="abrirModalNovo()">➕ Nova peça</button>
-        <button class="btn btn-ghost" onclick="recarregarBases()">🔄 Recarregar</button>
+      <!-- FILTROS -->
+      <div class="actionbar" style="margin-top:12px;">
+        <div class="actionbar-left" style="gap:8px;">
+          <button id="fTodos" class="pill active" onclick="setFiltro('todos')">Todos</button>
+          <button id="fAtivos" class="pill" onclick="setFiltro('ativos')">Ativos</button>
+          <button id="fBloqueados" class="pill" onclick="setFiltro('bloqueados')">Bloqueados</button>
+        </div>
       </div>
-    </div>
 
-    <div class="filters">
-      <button id="fTodos" class="chip active" onclick="setFiltro('todos')">Todos</button>
-      <button id="fAtivos" class="chip" onclick="setFiltro('ativos')">Ativos</button>
-      <button id="fBloqueados" class="chip" onclick="setFiltro('bloqueados')">Bloqueados</button>
-
-      <div class="stats">
-        Total: <b id="countTotal">0</b> •
-        Ativos: <b id="countAtivos">0</b> •
-        Bloqueados: <b id="countBloqueados">0</b> •
-        Exibindo: <b id="countView">0</b>
+      <!-- BUSCA -->
+      <div class="search-wrap">
+        <input id="busca" placeholder="Buscar por NI ou descrição..." />
+        <button class="btn btn-gray" onclick="limparBusca()">Limpar</button>
       </div>
-    </div>
 
-    <div class="search-wrap">
-      <input id="busca" placeholder="Buscar por NI ou descrição..." />
-      <button class="btn btn-gray" onclick="limparBusca()">Limpar</button>
-    </div>
+      <!-- TABELA (desktop) -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:190px;">NI</th>
+              <th>Descrição</th>
+              <th style="width:330px; text-align:right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div id="empty" class="empty" style="display:none;">Nenhum item encontrado.</div>
+      </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:170px;">NI</th>
-            <th>Descrição</th>
-            <th style="width:310px; text-align:right;">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-      <div id="empty" class="empty" style="display:none;">Nenhum item encontrado.</div>
+      <!-- CARDS (mobile) -->
+      <div id="cards" class="mobile-cards"></div>
     </div>
+  </section>
 
-    <div id="cards" class="mobile-cards"></div>
+  <footer>Criado e Desenvolvido por Cleider Filho</footer>
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" aria-label="Acessos">
+  <div class="inner">
+    <a class="nav-btn" data-nav="pedido" href="index.html">
+      <span class="icon">📝</span>
+      <span>Pedido</span>
+    </a>
+    <a class="nav-btn" data-nav="tecnicos" href="admin.html">
+      <span class="icon">🔐</span>
+      <span>Técnicos</span>
+    </a>
+    <a class="nav-btn" data-nav="acomp" href="acompanhamento.html">
+      <span class="icon">📦</span>
+      <span>Acomp.</span>
+    </a>
+    <a class="nav-btn" data-nav="painel" href="painel-almoxarife.html">
+      <span class="icon">🖥️</span>
+      <span>Painel</span>
+    </a>
   </div>
-</div>
+</nav>
 
+<!-- MODAL -->
 <div id="modal" class="modal" role="dialog" aria-modal="true">
   <div class="modal-overlay" onclick="fecharModal()"></div>
   <div class="modal-box">
@@ -211,11 +692,11 @@
         </label>
       </div>
 
-      <p id="modalErro" class="hint" style="display:none; color:#b91c1c; font-weight:bold;"></p>
+      <p id="modalErro" class="hint" style="display:none; color:#b91c1c; font-weight:900;"></p>
     </div>
 
     <div class="modal-actions">
-      <button class="btn btn-gray" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
       <button class="btn btn-green" onclick="salvarModal()">Salvar</button>
     </div>
   </div>
@@ -237,7 +718,9 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-/* MENU */
+/* =========================================================
+   MENU + ACTIVE STATES
+========================================================= */
 window.abrirMenu = () => {
   document.querySelector(".sidebar").classList.add("active");
   document.querySelector(".menu-overlay").classList.add("active");
@@ -250,7 +733,24 @@ document.querySelectorAll(".sidebar nav a").forEach(a=>{
   if(a.href === window.location.href) a.classList.add("ativo");
 });
 
-/* UTIL */
+/* Bottom nav ativo (painel) */
+(function marcarNavAtiva(){
+  const path = (location.pathname.split("/").pop() || "painel-almoxarife.html").toLowerCase();
+  const map = {
+    "index.html": "pedido",
+    "admin.html": "tecnicos",
+    "acompanhamento.html": "acomp",
+    "painel-almoxarife.html": "painel"
+  };
+  const key = map[path] || "painel";
+  document.querySelectorAll(".nav-btn").forEach(a=>{
+    if (a.dataset.nav === key) a.classList.add("active");
+  });
+})();
+
+/* =========================================================
+   UTIL
+========================================================= */
 const toast = document.getElementById("toast");
 function showToast(msg, type="success"){
   toast.textContent = msg;
@@ -273,7 +773,9 @@ function escapeHtml(str=""){
     .replaceAll("'","&#039;");
 }
 
-/* ESTADO */
+/* =========================================================
+   ESTADO
+========================================================= */
 const tbody = document.getElementById("tbody");
 const empty = document.getElementById("empty");
 const cards = document.getElementById("cards");
@@ -284,14 +786,21 @@ const countAtivos = document.getElementById("countAtivos");
 const countBloqueados = document.getElementById("countBloqueados");
 const countView  = document.getElementById("countView");
 
-let cacheApr = []; // [{idDoc, ni, descricao}]
-let bloqueadosSet = new Set(); // docId = NI em ni_bloqueados
+/* chip topo */
+const chipTotal = document.getElementById("chipTotal");
+const chipAtivos = document.getElementById("chipAtivos");
+const chipBloq = document.getElementById("chipBloq");
+
+let cacheApr = [];              // [{idDoc, ni, descricao}]
+let bloqueadosSet = new Set();  // docId = NI em ni_bloqueados
 let filtroStatus = "todos";
 
 let unsubApr = null;
 let unsubBlock = null;
 
-/* MODAL */
+/* =========================================================
+   MODAL
+========================================================= */
 const modal = document.getElementById("modal");
 const modalTitulo = document.getElementById("modalTitulo");
 const modalErro = document.getElementById("modalErro");
@@ -299,9 +808,9 @@ const mDesc = document.getElementById("mDesc");
 const mNi = document.getElementById("mNi");
 const mBloqueado = document.getElementById("mBloqueado");
 
-let modalModo = "novo";   // "novo" | "editar"
-let editDocId = "";       // docId real do aprendizado_ni
-let niOriginal = "";      // NI original (p/ migrar bloqueio se mudar)
+let modalModo = "novo"; // "novo" | "editar"
+let editDocId = "";
+let niOriginal = "";
 
 function abrirModalNovo(){
   modalModo = "novo";
@@ -336,7 +845,7 @@ function abrirModalEditar(docId){
 
   mDesc.value = item.descricao || "";
   mNi.value = String(item.ni || "");
-  mNi.disabled = false; // ✅ agora pode editar
+  mNi.disabled = false;
   mNi.style.background = "";
 
   mBloqueado.checked = bloqueadosSet.has(String(item.ni || ""));
@@ -372,7 +881,6 @@ async function migrarBloqueioSePreciso(niAntigo, niNovo, descricaoNova){
   const estavaBloqueado = bloqueadosSet.has(antigo);
   if(!estavaBloqueado) return;
 
-  // cria novo bloqueio e remove antigo
   await db.collection("ni_bloqueados").doc(novo).set({
     descricao: descricaoNova || "",
     bloqueadoEm: firebase.firestore.FieldValue.serverTimestamp()
@@ -392,11 +900,10 @@ async function salvarModal(){
     if(/^0+$/.test(ni)) return erroModal("NI não pode ser 0000...");
 
     if(modalModo === "novo"){
-      // impede duplicar NI na coleção
       const existe = await niJaExisteEmOutroDoc(ni, "");
       if(existe) return erroModal("Já existe outro documento com esse NI. Use outro ou edite o existente.");
 
-      const ref = await db.collection("aprendizado_ni").add({
+      await db.collection("aprendizado_ni").add({
         descricao: desc,
         ni: String(ni),
         validadoEm: firebase.firestore.FieldValue.serverTimestamp()
@@ -418,21 +925,17 @@ async function salvarModal(){
     const docId = editDocId;
     if(!docId) return erroModal("docId inválido (edição).");
 
-    // evita NI duplicado em outro doc
     const existeOutro = await niJaExisteEmOutroDoc(ni, docId);
     if(existeOutro) return erroModal("Esse NI já está em outro item. Não posso salvar duplicado.");
 
-    // atualiza doc
     await db.collection("aprendizado_ni").doc(docId).set({
       descricao: desc,
       ni: String(ni),
       validadoEm: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
 
-    // se mudou NI e estava bloqueado, migra
     await migrarBloqueioSePreciso(niOriginal, ni, desc);
 
-    // checkbox define estado final do bloqueio
     if(mBloqueado.checked){
       await db.collection("ni_bloqueados").doc(String(ni)).set({
         descricao: desc,
@@ -452,7 +955,9 @@ async function salvarModal(){
   }
 }
 
-/* ações linha */
+/* =========================================================
+   AÇÕES
+========================================================= */
 async function toggleBloqueio(ni, descricao){
   const niStr = String(ni);
   const isBlocked = bloqueadosSet.has(niStr);
@@ -490,7 +995,9 @@ async function removerItem(docId, ni, descricao){
   }
 }
 
-/* FILTRO (status) */
+/* =========================================================
+   FILTRO
+========================================================= */
 function setFiltro(tipo){
   filtroStatus = tipo;
   document.getElementById("fTodos").classList.toggle("active", tipo==="todos");
@@ -499,7 +1006,9 @@ function setFiltro(tipo){
   aplicarFiltro();
 }
 
-/* CONTADORES */
+/* =========================================================
+   CONTADORES
+========================================================= */
 function atualizarContadores(){
   const total = cacheApr.length;
   const bloqueados = cacheApr.reduce((acc, it)=> acc + (bloqueadosSet.has(String(it.ni)) ? 1 : 0), 0);
@@ -508,9 +1017,16 @@ function atualizarContadores(){
   countTotal.textContent = String(total);
   countBloqueados.textContent = String(bloqueados);
   countAtivos.textContent = String(ativos);
+
+  // chip topo
+  chipTotal.textContent = String(total);
+  chipAtivos.textContent = String(ativos);
+  chipBloq.textContent = String(bloqueados);
 }
 
-/* RENDER */
+/* =========================================================
+   RENDER
+========================================================= */
 function aplicarFiltro(){
   atualizarContadores();
 
@@ -563,7 +1079,7 @@ function aplicarFiltro(){
         <div class="cell-actions">
           <button class="btn btn-sm btn-ghost" onclick="abrirModalEditar('${escapeHtml(docId)}')">✏️ Editar</button>
           <button class="btn btn-sm ${blocked ? 'btn-ghost' : ''}"
-            style="${blocked ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca' : ''}"
+            style="${blocked ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca;box-shadow:none' : ''}"
             onclick="toggleBloqueio('${escapeHtml(ni)}','${escapeHtml(desc)}')">
             ${blocked ? "✅ Com saldo" : "🚫 Sem saldo"}
           </button>
@@ -589,7 +1105,7 @@ function aplicarFiltro(){
       <div class="m-actions">
         <button class="btn btn-ghost" onclick="abrirModalEditar('${escapeHtml(docId)}')">✏️ Editar</button>
         <button class="btn ${blocked ? 'btn-ghost' : ''}"
-          style="${blocked ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca' : ''}"
+          style="${blocked ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca;box-shadow:none' : ''}"
           onclick="toggleBloqueio('${escapeHtml(ni)}','${escapeHtml(desc)}')">
           ${blocked ? "✅ Com saldo" : "🚫 Sem saldo"}
         </button>
@@ -603,23 +1119,25 @@ function aplicarFiltro(){
 function limparBusca(){ busca.value = ""; aplicarFiltro(); }
 busca.addEventListener("input", aplicarFiltro);
 
-/* LISTENERS */
+/* =========================================================
+   LISTENERS
+========================================================= */
 function iniciarListeners(){
   if(unsubApr) unsubApr();
   unsubApr = db.collection("aprendizado_ni")
-  .orderBy("ni","asc")
-  .onSnapshot(snap=>{
-    cacheApr = [];
-    snap.forEach(doc=>{
-      const d = doc.data() || {};
-      cacheApr.push({
-        idDoc: doc.id,
-        ni: String(d.ni || ""),
-        descricao: String(d.descricao || "")
+    .orderBy("ni","asc")
+    .onSnapshot(snap=>{
+      cacheApr = [];
+      snap.forEach(doc=>{
+        const d = doc.data() || {};
+        cacheApr.push({
+          idDoc: doc.id,
+          ni: String(d.ni || ""),
+          descricao: String(d.descricao || "")
+        });
       });
+      aplicarFiltro();
     });
-    aplicarFiltro();
-  });
 
   if(unsubBlock) unsubBlock();
   unsubBlock = db.collection("ni_bloqueados")
