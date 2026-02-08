@@ -607,22 +607,19 @@ busca.addEventListener("input", aplicarFiltro);
 function iniciarListeners(){
   if(unsubApr) unsubApr();
   unsubApr = db.collection("aprendizado_ni")
-    .orderBy("validadoEm","desc")
-    .onSnapshot(snap=>{
-      cacheApr = [];
-      snap.forEach(doc=>{
-        const d = doc.data() || {};
-        cacheApr.push({
-          idDoc: doc.id,
-          ni: String(d.ni || ""),
-          descricao: String(d.descricao || "")
-        });
+  .orderBy("ni","asc")
+  .onSnapshot(snap=>{
+    cacheApr = [];
+    snap.forEach(doc=>{
+      const d = doc.data() || {};
+      cacheApr.push({
+        idDoc: doc.id,
+        ni: String(d.ni || ""),
+        descricao: String(d.descricao || "")
       });
-      aplicarFiltro();
-    }, err=>{
-      console.error(err);
-      showToast("Erro aprendizado_ni: " + (err.message||err), "danger");
     });
+    aplicarFiltro();
+  });
 
   if(unsubBlock) unsubBlock();
   unsubBlock = db.collection("ni_bloqueados")
