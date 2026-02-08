@@ -202,5 +202,8 @@ window.LISTA_NI = [
 { produto: "MASCARA DE SOLDA", ni: 27117407 },
 { produto: "OCULOS DE SEGURANÇA INCOLOR", ni: 27092849 },
 { produto: "OCULOS DE SEGURANÇA ESCURO", ni: 27093915 },
-{ produto: "PROTETOR AURICULAR", ni: 564259 }
+{ produto: "PROTETOR AURICULAR", ni: 564259 },
+{ produto: "AVENTAL DE RASPA", ni: 8003033 },
+{ produto: "MANGA DE RASPA", ni: 371476 },
+{ produto: "COLETE REFLETIVO", ni: 25258457 }
 ];
