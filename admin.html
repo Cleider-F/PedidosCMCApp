@@ -305,7 +305,6 @@ button{
 .menu-overlay.active{
   display:block;
 }
-
 </style>
 </head>
 
@@ -332,7 +331,6 @@ button{
   </nav>
 </aside>
 
-
 <div class="login" id="loginBox">
   <h2>🔐 Área de Técnicos</h2>
   <input type="password" id="senha" placeholder="Senha">
@@ -340,45 +338,43 @@ button{
 </div>
 
 <div class="painel" id="painel" style="display:none">
-    <div class="logo">
-  <img src="suzano-logo.png">
-</div>
-<footer>Criado e Desenvolvido por Cleider Filho</footer>
- <div class="header-admin">
-  <a href="index.html" class="btn-home" title="Voltar ao início">🏠</a>
-  <h2>📦 Pedidos Recebidos</h2>
-  <a href="admin-epi.html" class="btn-home" title="EPI's e Uniformes">🦺</a>
-</div>
+  <div class="logo">
+    <img src="suzano-logo.png">
+  </div>
 
+  <footer>Criado e Desenvolvido por Cleider Filho</footer>
+
+  <div class="header-admin">
+    <a href="index.html" class="btn-home" title="Voltar ao início">🏠</a>
+    <h2>📦 Pedidos Recebidos</h2>
+    <a href="admin-epi.html" class="btn-home" title="EPI's e Uniformes">🦺</a>
+  </div>
 
   <div class="top-actions">
-  <div style="display:flex; gap:10px;">
-    <button class="btn-sair" onclick="logout()">🚪 Sair</button>
-    <button class="btn-refresh" onclick="toggleRelatorio()">📊 Relatórios</button>
-    <button class="btn-notificacao" onclick="toggleNotificacaoBox()">🔔 Notificações</button>
-    <button class="btn-atualizar" onclick="location.reload()">🔄 Atualizar</button>
-</div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-sair" onclick="logout()">🚪 Sair</button>
+      <button class="btn-refresh" onclick="toggleRelatorio()">📊 Relatórios</button>
+      <button class="btn-notificacao" onclick="toggleNotificacaoBox()">🔔 Notificações</button>
+      <button class="btn-atualizar" onclick="location.reload()">🔄 Atualizar</button>
+    </div>
+  </div>
 
-<div class="relatorio-box" id="relatorioBox" style="display:none;">
-  <button onclick="gerarRelatorioDia()">📄 Relatório do dia</button>
+  <div class="relatorio-box" id="relatorioBox" style="display:none;">
+    <button onclick="gerarRelatorioDia()">📄 Relatório do dia</button>
+    <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período</button>
+    <br><input type="date" id="inicio">
+    <input type="date" id="fim"></br>
+  </div>
 
-  <button onclick="gerarRelatorioPeriodo()">📄 Relatório por período</button>
+  <div class="notificacao-box" id="notificacaoBox" style="display:none;">
+    <button id="btnNovo" onclick="toggleNotificacao('novo', this)"></button>
+    <button id="btnStatus" onclick="toggleNotificacao('status', this)"></button>
+  </div>
 
-  <br><input type="date" id="inicio">
-  <input type="date" id="fim"></br>
-</div>
-
- <div class="notificacao-box" id="notificacaoBox" style="display:none;">
-  <button id="btnNovo" onclick="toggleNotificacao('novo', this)"></button>
-  <button id="btnStatus" onclick="toggleNotificacao('status', this)"></button>
-</div>
-
-    <br>
+  <br>
 
   <div class="cards" id="lista"></div>
 </div>
-
-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
@@ -449,7 +445,8 @@ async function ajustarBotaoNotificacao(tipo, botao) {
     vapidKey: "BFjRfkUJ8hXuoy7gWDDfUzSN28VQxTFrR2UrYgxLe_1oZehIdFVfNHdZba21LN9afSHWiKUppajQ2fQGeWR3-n0",
     serviceWorkerRegistration: swRegistration
   });
-console.log("TOKEN FCM:", token);
+
+  console.log("TOKEN FCM:", token);
   if (!token) return;
 
   const ref = doc(db, "admin_push_tokens", `${token}_${tipo}`);
@@ -551,10 +548,12 @@ window.login = () => {
 
   loginBox.style.display="none";
   painel.style.display="block";
-  carregarPedidos();
+
+  iniciarListenerPedidos(); // ✅ realtime
 };
 
 window.logout = ()=>{
+  if (unsubscribePedidos) unsubscribePedidos(); // ✅ desliga listener
   localStorage.clear();
   location.reload();
 };
@@ -566,21 +565,16 @@ const norm = t =>
   t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 
 /* =========================================================
-   PEDIDOS
+   PEDIDOS (REALTIME)
 ========================================================= */
-async function carregarPedidos(){
+let unsubscribePedidos = null;
+
+// cache simples para EPI (evita consulta repetida)
+const cacheUltimaEPI = new Map(); // key: `${nome}|${ni}` -> Date|null
+function limparCacheUltimaEPI(){ cacheUltimaEPI.clear(); }
+
+async function renderizarPedidos(pedidos){
   lista.innerHTML = "";
-
-  const q = query(
-    collection(db,"pedidos"),
-    orderBy("criadoEm", "desc"), // mais recente → mais antigo
-    limit(25)
-  );
-
-  const snap = await getDocs(q);
-  const pedidos = [];
-
-  snap.forEach(d => pedidos.push({ id: d.id, ...d.data() }));
 
   // Pendentes primeiro
   pedidos.sort((a,b)=>{
@@ -590,34 +584,35 @@ async function carregarPedidos(){
   });
 
   for (const p of pedidos) {
-
     const finalizado = p.status !== "Pendente";
-    const faltaNI = p.pecas.some(x => !x.ni);
+    const faltaNI = (p.pecas || []).some(x => !x.ni);
 
     /* ============================
        MONTA PEÇAS + HISTÓRICO
     ============================ */
     let pecasHTML = "";
 
-    for (let i = 0; i < p.pecas.length; i++) {
+    for (let i = 0; i < (p.pecas || []).length; i++) {
       const x = p.pecas[i];
 
       let ultimaTxt = "Primeira solicitação";
 
-// 🔒 SÓ BUSCA HISTÓRICO SE FOR EPI
-if (p.categoria === "EPI" && x.ni) {
+      // 🔒 SÓ BUSCA HISTÓRICO SE FOR EPI
+      if (p.categoria === "EPI" && x.ni) {
+        const key = `${p.nome}|${x.ni}`;
 
-  const ultima = await buscarUltimaSolicitacaoEPI({
-    nome: p.nome,
-    ni: x.ni,
-    pedidoAtualId: p.id
-  });
+        if (!cacheUltimaEPI.has(key)) {
+          const ultima = await buscarUltimaSolicitacaoEPI({
+            nome: p.nome,
+            ni: x.ni,
+            pedidoAtualId: p.id
+          });
+          cacheUltimaEPI.set(key, ultima || null);
+        }
 
-  if (ultima) {
-    ultimaTxt = ultima.toLocaleDateString("pt-BR");
-  }
-}
-
+        const ultima = cacheUltimaEPI.get(key);
+        if (ultima) ultimaTxt = ultima.toLocaleDateString("pt-BR");
+      }
 
       pecasHTML += `
         <div class="peca">
@@ -630,10 +625,10 @@ if (p.categoria === "EPI" && x.ni) {
           >
 
           ${p.categoria === "EPI" ? `
-          <div style="font-size:12px;color:#065f46;margin-top:4px">
-          📅 Última solicitação: <b>${ultimaTxt}</b>
-          </div>
-`         : ""}
+            <div style="font-size:12px;color:#065f46;margin-top:4px">
+              📅 Última solicitação: <b>${ultimaTxt}</b>
+            </div>
+          ` : ""}
         </div>
       `;
     }
@@ -642,12 +637,12 @@ if (p.categoria === "EPI" && x.ni) {
        CARD
     ============================ */
     lista.innerHTML += `
-      <div class="card card-${p.status.toLowerCase()} card-epi ${p.tipo==="DEVOLUCAO"?"card-devolucao":""}">
+      <div class="card card-${(p.status||"").toLowerCase()} card-epi ${p.tipo==="DEVOLUCAO"?"card-devolucao":""}">
         ${!finalizado ? `
           <button class="btn-excluir" onclick="excluir('${p.id}')">❌</button>
         ` : ""}
 
-        <div class="status status-${p.status.toLowerCase()}">${p.status}</div>
+        <div class="status status-${(p.status||"").toLowerCase()}">${p.status}</div>
 
         ${p.tipo==="DEVOLUCAO" ? `
           <div class="selo-devolucao">🔁 PEDIDO DE DEVOLUÇÃO</div>
@@ -661,39 +656,61 @@ if (p.categoria === "EPI" && x.ni) {
 
         ${pecasHTML}
 
-       <div class="acoes">
-${p.status === "Pendente" ? `
-  <button class="aprovar" ${faltaNI?"disabled":""}
-    onclick="mudarStatus('${p.id}','Aprovado')">✅ Aprovar</button>
+        <div class="acoes">
+          ${p.status === "Pendente" ? `
+            <button class="aprovar" ${faltaNI?"disabled":""}
+              onclick="mudarStatus('${p.id}','Aprovado')">✅ Aprovar</button>
 
-  <button class="reprovar"
-    onclick="mudarStatus('${p.id}','Reprovado')">❌ Reprovar</button>
-` : p.status === "Aprovado" ? `
-  <button class="btn-reservar"
-    onclick="reservarPedido('${p.id}')">
-    📦 Reservar
-  </button>
+            <button class="reprovar"
+              onclick="mudarStatus('${p.id}','Reprovado')">❌ Reprovar</button>
+          ` : p.status === "Aprovado" ? `
+            <button class="btn-reservar"
+              onclick="reservarPedido('${p.id}')">
+              📦 Reservar
+            </button>
 
-  <div class="selo">
-    ✔ Pedido Aprovado<br>
-    👷‍♂️ ${p.aprovadoPor||"-"}
-  </div>
-` : `
-  <div class="selo">
-✔ Pedido ${p.status}<br>
-👷‍♂️ Aprovado: ${p.aprovadoPor||"-"}<br>
-📦 Reservado: ${p.reservadoPor||"-"}
-</div>
-`}
-</div>
+            <div class="selo">
+              ✔ Pedido Aprovado<br>
+              👷‍♂️ ${p.aprovadoPor||"-"}
+            </div>
+          ` : `
+            <div class="selo">
+              ✔ Pedido ${p.status}<br>
+              👷‍♂️ Aprovado: ${p.aprovadoPor||"-"}<br>
+              📦 Reservado: ${p.reservadoPor||"-"}
+            </div>
+          `}
+        </div>
 
-</div>`;
+      </div>
+    `;
   }
 }
 
-window.carregarPedidos = carregarPedidos;
+function iniciarListenerPedidos(){
+  if (unsubscribePedidos) unsubscribePedidos();
+  limparCacheUltimaEPI();
 
+  const q = query(
+    collection(db,"pedidos"),
+    orderBy("criadoEm", "desc"),
+    limit(25)
+  );
 
+  unsubscribePedidos = onSnapshot(
+    q,
+    async (snap) => {
+      const pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      await renderizarPedidos(pedidos);
+    },
+    (err) => {
+      console.error("Erro onSnapshot(pedidos):", err);
+    }
+  );
+}
+
+// mantém compatível com seu código antigo
+window.carregarPedidos = iniciarListenerPedidos;
 
 /* =========================================================
    NI
@@ -707,7 +724,7 @@ window.atualizarNI=async(id,i,ni)=>{
   p.pecas[i].ni=ni.trim();
 
   await updateDoc(ref,{pecas:p.pecas});
-  carregarPedidos();
+  // ✅ realtime: NÃO chama carregarPedidos()
 };
 
 /* =========================================================
@@ -734,11 +751,10 @@ async function aprender(p){
   }
 }
 
-  /* =========================================================
+/* =========================================================
    BUSCAR ÚLTIMA SOLICITAÇÃO EPI
 ========================================================= */
 async function buscarUltimaSolicitacaoEPI({ nome, ni, pedidoAtualId }) {
-
   const q = query(
     collection(db, "pedidos"),
     where("categoria", "==", "EPI")
@@ -758,25 +774,25 @@ async function buscarUltimaSolicitacaoEPI({ nome, ni, pedidoAtualId }) {
 
     for (const peca of p.pecas || []) {
       if (peca.ni && peca.ni === ni) {
-
         const data = p.criadoEm.toDate();
-
-        if (!ultimaData || data > ultimaData) {
-          ultimaData = data;
-        }
+        if (!ultimaData || data > ultimaData) ultimaData = data;
       }
     }
   });
 
   return ultimaData;
 }
+
 /* =========================================================
    STATUS + TELEGRAM
 ========================================================= */
 window.mudarStatus=async(id,status)=>{
   const ref=doc(db,"pedidos",id);
-  const p=(await getDoc(ref)).data();
-  if(p.status!=="Pendente")return;
+  const snapDoc = await getDoc(ref);
+  if (!snapDoc.exists()) return;
+
+  const p = snapDoc.data();
+  if(p.status!=="Pendente") return;
 
   await updateDoc(ref,{
     status,
@@ -807,7 +823,7 @@ ${p.pecas.map(x=>`• ${x.descricao} (${x.quantidade}) | NI: ${x.ni||"-"}`).join
 ⏰ *Data:* ${agora}`
   );
 
-  carregarPedidos();
+  // ✅ realtime: NÃO chama carregarPedidos()
 };
 
 window.reservarPedido = async (id) => {
@@ -821,10 +837,8 @@ window.reservarPedido = async (id) => {
     reservadoEm: new Date()
   });
 
-  carregarPedidos();
+  // ✅ realtime: NÃO chama carregarPedidos()
 };
-
-
 
 /* =========================================================
    EXCLUIR
@@ -832,7 +846,7 @@ window.reservarPedido = async (id) => {
 window.excluir=async(id)=>{
   if(confirm("Excluir pedido pendente?")){
     await deleteDoc(doc(db,"pedidos",id));
-    carregarPedidos();
+    // ✅ realtime: NÃO chama carregarPedidos()
   }
 };
 
@@ -882,10 +896,8 @@ window.gerarRelatorioPeriodo = async () => {
     }
   });
 
-  /* 🔽 ORDENA DO MAIS RECENTE PARA O MAIS ANTIGO */
   rows.sort((a, b) => b.criado - a.criado);
 
-  /* 🔽 EXTRAI APENAS OS DADOS */
   const body = rows.map(r => r.dados);
 
   if (body.length === 0) {
@@ -901,29 +913,33 @@ window.gerarRelatorioPeriodo = async () => {
   pdf.save("relatorio-pedidos.pdf");
 };
 
-
 window.toggleNotificacaoBox = () => {
   const box = document.getElementById("notificacaoBox");
   box.style.display = box.style.display === "none" ? "flex" : "none";
 };
+
 /* =========================================================
    AUTOLOGIN
 ========================================================= */
 if(localStorage.getItem("admin")==="true"){
   loginBox.style.display="none";
   painel.style.display="block";
-  carregarPedidos();
-} 
+  iniciarListenerPedidos(); // ✅ realtime
+}
 
+/* =========================================================
+   APROVAR TODOS (mantido, mas sem reload)
+========================================================= */
 async function aprovarTodosPendentes() {
   if (!confirm("Tem certeza que deseja aprovar TODOS os pedidos pendentes?")) return;
 
   try {
     const batch = writeBatch(db);
-    const colRef = collection(db, "pedidos"); // Confirme se o nome da coleção é 'pedidos'
+    const colRef = collection(db, "pedidos");
 
-    // Busca apenas os que estão com status pendente
-    const q = query(colRef, where("status", "==", "pendente"));
+    // ⚠️ Seu status no sistema é "Pendente" (com P maiúsculo).
+    // O seu código estava buscando "pendente" (minúsculo), isso não vai encontrar nada.
+    const q = query(colRef, where("status", "==", "Pendente"));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
@@ -933,12 +949,16 @@ async function aprovarTodosPendentes() {
 
     querySnapshot.forEach((documento) => {
       const docRef = doc(db, "pedidos", documento.id);
-      batch.update(docRef, { "status": "Aprovado" });
+      batch.update(docRef, {
+        status: "Aprovado",
+        finalizadoEm: new Date(),
+        aprovadoPor: localStorage.getItem("usuario_nome") || "Não identificado"
+      });
     });
 
     await batch.commit();
     alert("Sucesso! Todos os pedidos foram aprovados.");
-    location.reload(); // Recarrega a página para atualizar a lista
+    // ✅ realtime: NÃO precisa reload
 
   } catch (error) {
     console.error("Erro ao atualizar em lote:", error);
@@ -946,7 +966,6 @@ async function aprovarTodosPendentes() {
   }
 }
 
-// IMPORTANTE: Como é type="module", precisamos exportar para o HTML
 window.aprovarTodosPendentes = aprovarTodosPendentes;
 
 /* =========================================================
@@ -974,6 +993,10 @@ onSnapshot(statsRef, (snap) => {
     ? `(${prefix.join(" | ")}) ${baseTitle}`
     : baseTitle;
 });
+
+/* =========================================================
+   MENU
+========================================================= */
 window.abrirMenu = () => {
   document.querySelector(".sidebar").classList.add("active");
   document.querySelector(".menu-overlay").classList.add("active");
@@ -990,7 +1013,6 @@ document.querySelectorAll(".sidebar nav a").forEach(a=>{
     a.classList.add("ativo");
   }
 });
-
 </script>
 
 </body>
