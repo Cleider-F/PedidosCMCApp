@@ -5,306 +5,505 @@
 <title>Pedido de Peças – Almoxarifado CMC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1f2937">
+<meta name="theme-color" content="#0b1220">
 
 <style>
-/* BOTÃO HAMBURGER */
-.menu-btn{
-  position:fixed;
-  top:12px;
-  left:12px;
-  z-index:1001;
-  background:#111827;
-  color:#fff;
-  border:none;
-  border-radius:10px;
-  font-size:22px;
+/* =========================================================
+   THEME (Template 2 style)
+========================================================= */
+:root{
+  --bg:#eef2f7;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --text:#0f172a;
+  --border:#e5e7eb;
 
-  /* 🔑 correção */
-  width:auto;
-  height:auto;
-  padding:8px 12px;
+  --navy-1:#0b1220;
+  --navy-2:#0f1b33;
+
+  --primary:#16a34a;
+  --primary-hover:#15803d;
+
+  --secondary:#2563eb;
+  --secondary-hover:#1d4ed8;
+
+  --danger:#dc2626;
+  --danger-hover:#b91c1c;
+
+  --shadow:0 10px 25px rgba(15, 23, 42, .10);
+  --shadow-soft:0 4px 14px rgba(15, 23, 42, .08);
+
+  --radius:18px;
+  --max:520px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
   margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, Helvetica, sans-serif;
+  color:var(--text);
+  background: var(--bg);
 }
 
-
-/* SIDEBAR */
-.sidebar{
-  position:fixed;
+/* =========================================================
+   TOPBAR
+========================================================= */
+.topbar{
+  position: sticky;
   top:0;
-  left:0;
-  height:100%;
-  width:260px;
-  background:#111827;
+  z-index: 900;
+  padding: 14px 14px 18px;
   color:#fff;
-  transform:translateX(-100%);
-  transition:.3s;
-  z-index:1002;
-  display:flex;
-  flex-direction:column;
+  background:
+    radial-gradient(1200px 320px at 10% -10%, rgba(37,99,235,.35), transparent 55%),
+    radial-gradient(900px 280px at 90% 0%, rgba(22,163,74,.22), transparent 60%),
+    linear-gradient(180deg, var(--navy-2), var(--navy-1));
+  box-shadow: 0 10px 22px rgba(2, 6, 23, .28);
 }
-
-/* SIDEBAR ATIVA */
-.sidebar.active{
-  transform:translateX(0);
-}
-
-/* HEADER */
-.sidebar-header{
+.topbar-inner{
+  max-width: var(--max);
+  margin: 0 auto;
   display:flex;
+  align-items:center;
   justify-content:space-between;
-  align-items:center;
-  padding:16px;
-  border-bottom:1px solid #1f2937;
+  gap:12px;
 }
-
-.sidebar-header button{
-  background:none;
-  border:none;
-  color:#fff;
-  font-size:18px;
-}
-
-/* LINKS */
-.sidebar nav{
+.brand{
   display:flex;
-  flex-direction:column;
-  padding:10px;
+  align-items:center;
+  gap:10px;
+  min-width:0;
 }
-
-.sidebar nav a{
-  padding:14px;
+.brand img{
+  width:38px;
+  height:38px;
+  object-fit:contain;
   border-radius:10px;
-  color:#fff;
-  text-decoration:none;
-  margin-bottom:6px;
+  background: rgba(255,255,255,.06);
+  padding:6px;
 }
-
-.sidebar nav a:hover{
-  background:#1f2937;
-}
-
-/* OVERLAY */
-.menu-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.4);
-  z-index:1000;
-  display:none;
-}
-
-.menu-overlay.active{
-  display:block;
-}
-
-
-.logo { text-align:center; margin-bottom:15px; }
-.logo img { max-width:180px; width:100%; }
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  background:#f2f2f2;
+.brand .title{
   display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
   flex-direction:column;
+  min-width:0;
 }
-
-.container {
-  background:#fff;
-  max-width:480px;
-  width:100%;
-  padding:20px;
-  border-radius:12px;
-  box-shadow:0 4px 10px rgba(0,0,0,.1);
+.brand .title strong{
+  font-size:16px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
-
-h1 { text-align:center; font-size:20px; }
-label { font-weight:bold; margin-top:10px; display:block; }
-
-input, textarea, select {
-  width:97%;
-  padding:8px;
-  margin-top:5px;
-  border-radius:6px;
-  border:1px solid #ccc;
-}
-
-textarea { min-height:50px; }
-
-.peca {
-  border:1px solid #e5e7eb;
-  padding:14px;
-  border-radius:12px;
-  margin-top:12px;
-  background:#fafafa;
-  position:relative;
-}
-
-.peca::before {
-  content:"Peças";
-  position:absolute;
-  top:-10px;
-  left:12px;
-  background:#fff;
-  padding:0 6px;
+.brand .title span{
   font-size:12px;
-  color:#6b7280;
+  opacity:.85;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
-
-.ni-info { font-size:12px; color:#6b7280; }
-
-button {
-  width:100%;
-  padding:12px;
-  margin-top:12px;
+.menu-btn{
+  appearance:none;
   border:none;
-  border-radius:8px;
-  background:#16a34a;
+  cursor:pointer;
   color:#fff;
-  font-size:15px;
+  background: rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.16);
+  width:42px;
+  height:42px;
+  border-radius: 14px;
+  font-size:20px;
+  display:grid;
+  place-items:center;
+  box-shadow: 0 8px 18px rgba(0,0,0,.16);
+}
+.menu-btn:active{ transform: scale(.98); }
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+.page{
+  max-width: var(--max);
+  margin: -10px auto 104px;
+  padding: 0 14px 20px;
 }
 
-button:hover { background:#15803d; }
-.secundario { background:#2563eb; }
-.remover { background:#dc2626; }
-.admin-btn { background:#111827; }
-
-.mensagem { text-align:center; font-weight:bold; margin-top:10px; }
-.sucesso { color:green; }
-.erro { color:red; }
-
-footer {
-  text-align:center;
-  font-size:11px;
-  color:#6b7280;
-  margin-top:15px;
+.card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  overflow: visible; /* ✅ IMPORTANTE: permite dropdown aparecer */
+  margin-top: 12px;
+}
+.card-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding: 14px 14px 10px;
+  border-bottom:1px solid rgba(229,231,235,.7);
+  background: linear-gradient(180deg, rgba(249,250,251,.9), rgba(255,255,255,1));
+}
+.card-header .h{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight: 750;
+  color:#0f172a;
+}
+.card-header small{
+  color: var(--muted);
+  font-size:12px;
+}
+.card-body{
+  padding: 14px;
+  overflow: visible; /* ✅ */
 }
 
-input:disabled {
-  background:#e5e7eb;
+label{
+  display:block;
+  font-size: 13px;
+  font-weight: 650;
+  color:#111827;
+  margin: 10px 0 6px;
+}
+
+input, textarea, select{
+  width:100%;
+  padding: 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  outline:none;
+  font-size: 15px;
+  background:#fff;
+}
+textarea{ min-height: 64px; resize: vertical; }
+input:disabled{
+  background:#f3f4f6;
   cursor:not-allowed;
 }
 
-.autocomplete-box { position: relative; }
+.field-row{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+@media(max-width:420px){
+  .field-row{ grid-template-columns: 1fr; }
+}
 
-.sugestoes {
+.helper{
+  font-size:12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* =========================================================
+   PEÇAS
+========================================================= */
+.peca{
+  border: 1px solid rgba(229,231,235,.9);
+  background: #fbfdff;
+  border-radius: 18px;
+  padding: 12px;
+  margin-top: 10px;
+  position:relative;
+  overflow: visible; /* ✅ */
+}
+.peca + .peca{ margin-top: 12px; }
+
+.peca-tag{
   position:absolute;
+  top:-10px;
+  left:12px;
+  font-size: 11px;
+  color: var(--muted);
   background:#fff;
-  border:1px solid #d1d5db;
-  border-radius:8px;
-  width:100%;
-  max-height:160px;
-  overflow-y:auto;
-  z-index:1000;
-}
-
-.sugestoes div {
-  padding:8px;
-  cursor:pointer;
-  font-size:14px;
-}
-
-.sugestoes div:hover {
-  background:#e5e7eb;
-}
-
-.bloqueio {
-  color:#b91c1c;
-  background:#fee2e2;
-  padding:10px;
-  border-radius:8px;
-  margin-top:10px;
-  font-size:14px;
-}
-@media(max-width:480px){
-  .secundario {
-    position:sticky;
-    bottom:10px;
-    z-index:10;
-  }
-}
-
-.secao {
-  margin-top:16px;
-  padding-top:10px;
-  border-top:1px dashed #e5e7eb;
-}
-
-.secao h3 {
-  font-size:14px;
-  color:#374151;
-}
-
-.sidebar nav a.ativo{
-  background:#2563eb;
-}
-
-/* TOGGLE DEVOLUÇÃO */
-.toggle-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 16px 0;
-  padding: 10px 12px;
-  background: #f9fafb;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-}
-
-.toggle-label {
-  font-size: 14px;
-  color: #374151;
-  font-weight: 500;
-}
-
-/* SWITCH */
-.switch {
-  position: relative;
-  width: 46px;
-  height: 26px;
-}
-
-.switch input {
-  display: none;
-}
-
-.slider {
-  position: absolute;
-  inset: 0;
-  background-color: #d1d5db;
+  padding: 0 8px;
   border-radius: 999px;
-  transition: 0.3s;
-  cursor: pointer;
+  border: 1px solid rgba(229,231,235,.9);
 }
 
-.slider::before {
-  content: "";
-  position: absolute;
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  top: 3px;
-  background-color: #fff;
+.actions-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top: 12px;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+.btn{
+  border:none;
+  cursor:pointer;
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 750;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  box-shadow: 0 10px 18px rgba(2, 6, 23, .10);
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn-primary{
+  background: linear-gradient(180deg, #22c55e, var(--primary));
+  color:#fff;
+}
+.btn-primary:hover{ background: linear-gradient(180deg, #1fb457, var(--primary-hover)); }
+
+.btn-secondary{
+  background: linear-gradient(180deg, #3b82f6, var(--secondary));
+  color:#fff;
+}
+.btn-secondary:hover{ background: linear-gradient(180deg, #2f75f2, var(--secondary-hover)); }
+
+.btn-danger{
+  background: linear-gradient(180deg, #ef4444, var(--danger));
+  color:#fff;
+}
+.btn-danger:hover{ background: linear-gradient(180deg, #e73c3c, var(--danger-hover)); }
+
+.remover{
+  width:100%;
+  margin-top: 12px;
+}
+
+/* =========================================================
+   TOGGLE DEVOLUÇÃO
+========================================================= */
+.toggle-container{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top: 10px;
+  padding: 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #f8fafc;
+}
+.toggle-label{
+  font-size: 14px;
+  color: #0f172a;
+  font-weight: 650;
+}
+.switch{
+  position:relative;
+  width: 50px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+.switch input{ display:none; }
+.slider{
+  position:absolute;
+  inset:0;
+  background:#d1d5db;
+  border-radius: 999px;
+  transition:.25s;
+  cursor:pointer;
+}
+.slider::before{
+  content:"";
+  position:absolute;
+  height: 22px;
+  width: 22px;
+  left:3px;
+  top:3px;
+  background:#fff;
   border-radius: 50%;
-  transition: 0.3s;
-  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  transition:.25s;
+  box-shadow: 0 6px 14px rgba(0,0,0,.18);
 }
-.toggle-container {
-  gap: 10px;
-  justify-content: flex-start;
+.switch input:checked + .slider{
+  background: #22c55e;
 }
-/* LIGADO */
-.switch input:checked + .slider {
-  background-color: #22c55e;
+.switch input:checked + .slider::before{
+  transform: translateX(22px);
 }
 
-.switch input:checked + .slider::before {
-  transform: translateX(20px);
+/* =========================================================
+   AUTOCOMPLETE (✅ volta a aparecer)
+========================================================= */
+.autocomplete-box{
+  position:relative;
+  overflow: visible; /* ✅ */
+}
+.sugestoes{
+  position:absolute;
+  left:0;
+  right:0;
+  top: calc(100% + 6px);
+  background:#fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  max-height: 220px;
+  overflow:auto;
+  z-index: 3000; /* ✅ acima de tudo */
+  padding: 6px;
+}
+.sugestoes div{
+  padding: 10px 10px;
+  border-radius: 12px;
+  cursor:pointer;
+  font-size: 14px;
+  line-height:1.2;
+}
+.sugestoes div:hover{
+  background:#f3f4f6;
 }
 
+/* =========================================================
+   MESSAGE
+========================================================= */
+.mensagem{
+  text-align:center;
+  font-weight: 750;
+  margin-top: 10px;
+  font-size: 14px;
+}
+.sucesso{ color: #166534; }
+.erro{ color: #991b1b; }
+.bloqueio{
+  color:#991b1b;
+  background:#fee2e2;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(220,38,38,.25);
+}
+
+/* =========================================================
+   SIDEBAR / OVERLAY
+========================================================= */
+.menu-overlay{
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,.45);
+  z-index: 1000;
+  display:none;
+}
+.menu-overlay.active{ display:block; }
+
+.sidebar{
+  position:fixed;
+  top:0; left:0;
+  width: 270px;
+  height: 100%;
+  background: linear-gradient(180deg, #0b1220, #0f1b33);
+  color:#fff;
+  transform: translateX(-100%);
+  transition:.25s;
+  z-index: 1001;
+  display:flex;
+  flex-direction:column;
+  box-shadow: 30px 0 80px rgba(0,0,0,.35);
+}
+.sidebar.active{ transform: translateX(0); }
+
+.sidebar-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.sidebar-header strong{ font-size:14px; letter-spacing:.2px; }
+.sidebar-header button{
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.16);
+  color:#fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  cursor:pointer;
+}
+
+.sidebar nav{
+  padding: 10px;
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+}
+.sidebar nav a{
+  color:#fff;
+  text-decoration:none;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.06);
+}
+.sidebar nav a:hover{ background: rgba(255,255,255,.10); }
+.sidebar nav a.ativo{
+  background: rgba(37,99,235,.35);
+  border-color: rgba(37,99,235,.40);
+}
+
+/* =========================================================
+   BOTTOM NAV (4 items + active highlight)
+========================================================= */
+.bottom-nav{
+  position: fixed;
+  left: 0; right: 0;
+  bottom: 0;
+  z-index: 800;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(11,18,32,.92);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.bottom-nav .inner{
+  max-width: var(--max);
+  margin:0 auto;
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:10px;
+}
+.nav-btn{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  color:#e5e7eb;
+  font-size: 11px;
+  padding: 10px 8px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.06);
+  transition: .15s;
+}
+.nav-btn:hover{ background: rgba(255,255,255,.10); }
+.nav-btn span.icon{ font-size: 18px; line-height: 1; }
+
+.nav-btn.active{
+  color:#fff;
+  background: rgba(37,99,235,.28);
+  border-color: rgba(37,99,235,.45);
+  box-shadow: 0 10px 18px rgba(37,99,235,.15);
+}
+.nav-btn.active .icon{
+  filter: drop-shadow(0 6px 12px rgba(37,99,235,.35));
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+footer{
+  max-width: var(--max);
+  margin: 10px auto 120px;
+  padding: 0 14px;
+  text-align:center;
+  font-size: 11px;
+  color: var(--muted);
+}
 </style>
 </head>
 
@@ -313,10 +512,20 @@ input:disabled {
 <script src="lista_NI.js"></script>
 <script src="lista_solicitantes.js"></script>
 
-<div class="container">
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img src="suzano-logo.png" alt="Suzano">
+      <div class="title">
+        <strong>Pedido de Peças</strong>
+        <span>Almoxarifado CMC • preencha e envie o pedido</span>
+      </div>
+    </div>
 
- <!-- BOTÃO HAMBURGER -->
-<button class="menu-btn" onclick="abrirMenu()">☰</button>
+    <button class="menu-btn" onclick="abrirMenu()" aria-label="Abrir menu">☰</button>
+  </div>
+</header>
 
 <!-- OVERLAY -->
 <div class="menu-overlay" onclick="fecharMenu()"></div>
@@ -325,11 +534,10 @@ input:disabled {
 <aside class="sidebar">
   <div class="sidebar-header">
     <strong>📦 Pedido de Peças</strong>
-    <button onclick="fecharMenu()">✖</button>
+    <button onclick="fecharMenu()" aria-label="Fechar menu">✖</button>
   </div>
-
   <nav>
-    <a href="index.html">📝 Pedido de Peças</a>    
+    <a href="index.html">📝 Pedido de Peças</a>
     <a href="acompanhamento.html">📦 Acompanhamento de Pedidos 🔩</a>
     <a href="admin.html">🔐 Área de Técnicos 🛠️</a>
     <a href="admin-epi.html">🦺 EPI's e Uniformes</a>
@@ -337,89 +545,125 @@ input:disabled {
   </nav>
 </aside>
 
-  <div class="logo">
-    <img src="suzano-logo.png">
-  </div>
-
-  <h1>Pedido de Peças – Almoxarifado CMC</h1>
+<main class="page">
 
   <form id="formPedido">
 
-    <div id="listaPecas">
-      <div class="peca">
-        <label>Descrição da Peça</label>
+    <!-- CARD: PEÇAS -->
+    <section class="card">
+      <div class="card-header">
+        <div class="h">🔧 Peças</div>
+        <small>Adicione uma ou mais peças</small>
+      </div>
+
+      <div class="card-body" id="listaPecas">
+        <div class="peca">
+          <div class="peca-tag">Item</div>
+
+          <label>Descrição da Peça</label>
+          <div class="autocomplete-box">
+            <textarea class="descricao" required oninput="sugerirPecas(this)"></textarea>
+            <div class="sugestoes" style="display:none"></div>
+          </div>
+
+          <div class="field-row">
+            <div>
+              <label>NI</label>
+              <input type="text" class="ni-manual">
+              <div class="helper">Materiais sem NI automático devem ser consultados no almoxarifado!</div>
+            </div>
+            <div>
+              <label>Quantidade</label>
+              <input type="number" class="quantidade" min="1" required>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-danger remover" onclick="removerPeca(this)">❌ Remover</button>
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="btn btn-secondary" onclick="adicionarPeca()">➕ Adicionar peça</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARD: DETALHES -->
+    <section class="card">
+      <div class="card-header">
+        <div class="h">🧾 Detalhes do Pedido</div>
+        <small>tipo, GO e devolução</small>
+      </div>
+
+      <div class="card-body">
+
+        <div class="toggle-container">
+          <div class="toggle-label">Pedido de devolução de peças</div>
+          <label class="switch" aria-label="Pedido de devolução">
+            <input type="checkbox" id="isDevolucao">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <label>Tipo de Manutenção</label>
+        <select id="manutencao" required>
+          <option value="">Selecione</option>
+          <option>Revisão</option>
+          <option>Preventiva-ITR</option>
+          <option>CNP</option>
+          <option>SOS</option>
+          <option>Uso Geral</option>
+          <option>EPI/Uniforme</option>
+        </select>
+
+        <label>GO do Equipamento</label>
+        <input id="go" required>
+
+      </div>
+    </section>
+
+    <!-- CARD: SOLICITANTE -->
+    <section class="card">
+      <div class="card-header">
+        <div class="h">👤 Solicitante</div>
+        <small>quem está solicitando</small>
+      </div>
+
+      <div class="card-body">
+        <label>Nome do solicitante</label>
         <div class="autocomplete-box">
-          <textarea class="descricao" required oninput="sugerirPecas(this)"></textarea>
+          <input id="nome" required oninput="sugerirSolicitante(this)">
           <div class="sugestoes" style="display:none"></div>
         </div>
 
-        <label>NI</label>
-        <input type="text" class="ni-manual">
-        <div class="ni-info">Materiais sem NI automático devem ser consultados no almoxarifado!</div>
-
-        <label>Quantidade</label>
-        <input type="number" class="quantidade" min="1" required>
-
-        <button type="button" class="remover" onclick="removerPeca(this)">❌ Remover</button>
+        <button type="submit" class="btn btn-primary" style="margin-top:14px;">📦 Enviar Pedido</button>
+        <div id="mensagem" class="mensagem"></div>
       </div>
-    </div>
+    </section>
 
-<button 
-  type="button" 
-  class="secundario btn-adicionar" 
-  onclick="adicionarPeca()">
-  ➕ Adicionar peça
-</button>
-
-    
-<label class="toggle-container">
-  <span class="switch">
-    <input type="checkbox" id="isDevolucao">
-    <span class="slider"></span>
-  </span>
-
-  <span class="toggle-label">Pedido de devolução de peças</span>
-</label>
-  
-
-
-
-    <label>Tipo de Manutenção</label>
-    <select id="manutencao" required>
-      <option value="">Selecione</option>
-      <option>Revisão</option>
-      <option>Preventiva-ITR</option>
-      <option>CNP</option>
-      <option>SOS</option>
-      <option>Uso Geral</option>
-      <option>EPI/Uniforme</option>
-    </select>
-
-    <label>GO do Equipamento</label>
-    <input id="go" required>
-
-    <label>Nome do solicitante</label>
-<div class="autocomplete-box">
-  <input id="nome" required oninput="sugerirSolicitante(this)">
-  <div class="sugestoes" style="display:none"></div>
-</div>
-
-    <button type="submit">📦 Enviar Pedido</button>
-    <div id="mensagem" class="mensagem"></div>
   </form>
+</main>
 
-  <a href="admin.html">
-    <button class="admin-btn">🔐 Área de Técnicos 🛠️</button>
-  </a>
-<a href="acompanhamento.html">
-    <button class="admin-btn">📦 Acompanhamento de Pedidos 🔩 </button>
-  </a>
-  <a href="painel-almoxarife.html">
-    <button class="admin-btn">🖥️ Painel do Almoxarife ⚙️</button>
-  </a>
-</div>
-
-</div>
+<!-- BOTTOM NAV (4 items) -->
+<nav class="bottom-nav" aria-label="Acessos">
+  <div class="inner">
+    <a class="nav-btn" data-nav="pedido" href="index.html">
+      <span class="icon">📝</span>
+      <span>Pedido</span>
+    </a>
+    <a class="nav-btn" data-nav="tecnicos" href="admin.html">
+      <span class="icon">🔐</span>
+      <span>Técnicos</span>
+    </a>
+    <a class="nav-btn" data-nav="acomp" href="acompanhamento.html">
+      <span class="icon">📦</span>
+      <span>Acomp.</span>
+    </a>
+    <a class="nav-btn" data-nav="painel" href="painel-almoxarife.html">
+      <span class="icon">🖥️</span>
+      <span>Painel</span>
+    </a>
+  </div>
+</nav>
 
 <footer>
   Criado e Desenvolvido por Cleider Filho
@@ -430,16 +674,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, addDoc, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-   apiKey: "AIzaSyCAJPyQ7-a4Efxxh5yTXQ_326hn22OYAuc",
-
+  apiKey: "AIzaSyCAJPyQ7-a4Efxxh5yTXQ_326hn22OYAuc",
   authDomain: "pedidos-almoxarifado.firebaseapp.com",
-
   projectId: "pedidos-almoxarifado",
-
   storageBucket: "pedidos-almoxarifado.firebasestorage.app",
-
   messagingSenderId: "443882865992",
-
   appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
 });
 const db = getFirestore(app);
@@ -457,16 +696,13 @@ async function carregarNisBloqueados(){
   snap.forEach(doc=>{
     nisBloqueadosCache.add(doc.id);
   });
-
   console.log("🚫 NIs bloqueados carregados:", nisBloqueadosCache.size);
 }
 
 manutencaoSelect.addEventListener("change", () => {
   const semGO = ["Uso Geral", "EPI/Uniforme"].includes(manutencaoSelect.value);
-
   goInput.required = !semGO;
   goInput.disabled = semGO;
-
   if (semGO) goInput.value = "";
 });
 
@@ -474,19 +710,27 @@ window.adicionarPeca = () => {
   const div = document.createElement("div");
   div.className = "peca";
   div.innerHTML = `
+    <div class="peca-tag">Item</div>
+
     <label>Descrição da Peça</label>
     <div class="autocomplete-box">
       <textarea class="descricao" required oninput="sugerirPecas(this)"></textarea>
       <div class="sugestoes" style="display:none"></div>
     </div>
 
-    <label>NI</label>
-    <input type="text" class="ni-manual">
+    <div class="field-row">
+      <div>
+        <label>NI</label>
+        <input type="text" class="ni-manual">
+        <div class="helper">Materiais sem NI automático devem ser consultados no almoxarifado!</div>
+      </div>
+      <div>
+        <label>Quantidade</label>
+        <input type="number" class="quantidade" min="1" required>
+      </div>
+    </div>
 
-    <label>Quantidade</label>
-    <input type="number" class="quantidade" min="1" required>
-
-    <button type="button" class="remover" onclick="removerPeca(this)">❌ Remover</button>
+    <button type="button" class="btn btn-danger remover" onclick="removerPeca(this)">❌ Remover</button>
   `;
   lista.appendChild(div);
 };
@@ -512,7 +756,9 @@ async function carregarAprendizadoNI() {
 await carregarAprendizadoNI();
 await carregarNisBloqueados();
 
-
+/* =========================================================
+   AUTOCOMPLETE PEÇAS + INDICAÇÃO "SEM SALDO" (igual original)
+========================================================= */
 window.sugerirPecas = (textarea) => {
   const termo = normalizar(textarea.value);
   const box = textarea.parentElement.querySelector(".sugestoes");
@@ -524,13 +770,14 @@ window.sugerirPecas = (textarea) => {
 
   let resultados = [];
 
-
+  // firestore aprendizado_ni
   aprendizadoNI.forEach(i => {
     if (i.descricao.includes(termo)) {
       resultados.push({ produto: i.descricao, ni: i.ni });
     }
   });
 
+  // lista_NI.js
   if (window.LISTA_NI) {
     window.LISTA_NI.forEach(i => {
       const prodNorm = normalizar(i.produto);
@@ -544,31 +791,33 @@ window.sugerirPecas = (textarea) => {
   resultados = resultados.slice(0,6);
   if (!resultados.length) { box.style.display="none"; return; }
 
- box.innerHTML = resultados.map(r => {
-  const bloqueado = r.ni && nisBloqueadosCache.has(String(r.ni));
+  box.innerHTML = resultados.map(r => {
+    const bloqueado = r.ni && nisBloqueadosCache.has(String(r.ni));
 
-  return `
-    <div 
-      onclick="${bloqueado ? "" : `selecionarPeca(this,'${r.produto}','${r.ni}')`}"
-      style="${bloqueado ? "opacity:.6; cursor:not-allowed;" : ""}"
-    >
-      ${r.produto}
-      <span style="font-size:11px;color:#6b7280">
-        | NI ${r.ni}
-      </span>
-      ${
-        bloqueado
-          ? `<span style="color:#b91c1c;font-size:11px;font-weight:bold"> 🚫 Sem saldo</span>`
-          : ""
-      }
-    </div>
-  `;
-}).join("");
-
+    return `
+      <div
+        onclick="${bloqueado ? "" : `selecionarPeca(this,'${r.produto}','${r.ni}')`}"
+        style="${bloqueado ? "opacity:.6; cursor:not-allowed;" : ""}"
+      >
+        ${r.produto}
+        <span style="font-size:11px;color:#6b7280">
+          | NI ${r.ni}
+        </span>
+        ${
+          bloqueado
+            ? `<span style="color:#b91c1c;font-size:11px;font-weight:bold"> 🚫 Sem saldo</span>`
+            : ""
+        }
+      </div>
+    `;
+  }).join("");
 
   box.style.display="block";
 };
 
+/* =========================================================
+   AUTOCOMPLETE SOLICITANTE (igual original)
+========================================================= */
 window.sugerirSolicitante = (input) => {
   const termo = normalizar(input.value);
   const box = input.parentElement.querySelector(".sugestoes");
@@ -608,6 +857,9 @@ window.selecionarPeca = (el, produto, ni) => {
   el.parentElement.style.display="none";
 };
 
+/* =========================================================
+   TELEGRAM + BLOQUEIO (igual original)
+========================================================= */
 const TELEGRAM_TOKEN = "8229775934:AAEEIKF5ffP_rVvbosRilvPyb3wZ0fVBFLU";
 const TELEGRAM_CHAT_ID = "-1003671947511";
 
@@ -637,66 +889,60 @@ ${pedido.pecas.map(p => `- ${p.descricao} | NI: ${p.ni || "NÃO INFORMADO"} | Qt
 
 async function verificarBloqueios(nis) {
   const bloqueados = [];
-
   for (const ni of nis) {
     if (!ni) continue;
-
     const snap = await getDoc(doc(db, "ni_bloqueados", ni));
-    if (snap.exists()) {
-      bloqueados.push(ni);
-    }
+    if (snap.exists()) bloqueados.push(ni);
   }
-
   return bloqueados;
 }
 
 form.addEventListener("submit", async e => {
   e.preventDefault();
   try {
-  const pecas = [];
-  document.querySelectorAll(".peca").forEach(p => {
-    const desc = p.querySelector(".descricao").value;
-    const niManual = p.querySelector(".ni-manual").value.trim();
-    const niAuto =
-      aprendizadoNI.find(a => a.descricao === normalizar(desc))?.ni
-      || window.LISTA_NI?.find(i => normalizar(i.produto) === normalizar(desc))?.ni;
+    const pecas = [];
+    document.querySelectorAll(".peca").forEach(p => {
+      const desc = p.querySelector(".descricao").value;
+      const niManual = p.querySelector(".ni-manual").value.trim();
+      const niAuto =
+        aprendizadoNI.find(a => a.descricao === normalizar(desc))?.ni
+        || window.LISTA_NI?.find(i => normalizar(i.produto) === normalizar(desc))?.ni;
 
-    pecas.push({
-      descricao: desc,
-      quantidade: p.querySelector(".quantidade").value,
-      ni: niManual || niAuto || null
+      pecas.push({
+        descricao: desc,
+        quantidade: p.querySelector(".quantidade").value,
+        ni: niManual || niAuto || null
+      });
     });
-  });
 
-  // 🔒 VERIFICA BLOQUEIOS
-  const nisPedido = pecas.map(p => p.ni).filter(Boolean);
-  const nisBloqueados = await verificarBloqueios(nisPedido);
+    // 🔒 VERIFICA BLOQUEIOS
+    const nisPedido = pecas.map(p => p.ni).filter(Boolean);
+    const nisBloqueados = await verificarBloqueios(nisPedido);
 
-  if (nisBloqueados.length) {
-    mensagem.innerHTML = `
-      ❌ Pedido não permitido<br>
-      NI sem saldo: <strong>${nisBloqueados.join(", ")}</strong><br>
-    `;
-    mensagem.className = "mensagem bloqueio";
-    return;
-  }
+    if (nisBloqueados.length) {
+      mensagem.innerHTML = `
+        ❌ Pedido não permitido<br>
+        NI sem saldo: <strong>${nisBloqueados.join(", ")}</strong><br>
+      `;
+      mensagem.className = "mensagem bloqueio";
+      return;
+    }
 
     const tipoPedido = document.getElementById("isDevolucao").checked
       ? "DEVOLUCAO"
       : "PEDIDO";
 
     await addDoc(collection(db,"pedidos"),{
-  manutencao: manutencaoSelect.value,
-  go: goInput.value,
-  nome: document.getElementById("nome").value,
-  pecas,
-  nis: pecas.map(p => p.ni).filter(Boolean),
-  tipo: tipoPedido,
-  categoria: manutencaoSelect.value === "EPI/Uniforme" ? "EPI" : "CONVENCIONAL",
-  status:"Pendente",
-  criadoEm:new Date()
-});
-
+      manutencao: manutencaoSelect.value,
+      go: goInput.value,
+      nome: document.getElementById("nome").value,
+      pecas,
+      nis: pecas.map(p => p.ni).filter(Boolean),
+      tipo: tipoPedido,
+      categoria: manutencaoSelect.value === "EPI/Uniforme" ? "EPI" : "CONVENCIONAL",
+      status:"Pendente",
+      criadoEm:new Date()
+    });
 
     notificarTelegram({
       nome: document.getElementById("nome").value,
@@ -715,16 +961,17 @@ form.addEventListener("submit", async e => {
   }
 });
 
+/* =========================================================
+   MENU + ACTIVE STATES
+========================================================= */
 window.abrirMenu = () => {
   document.querySelector(".sidebar").classList.add("active");
   document.querySelector(".menu-overlay").classList.add("active");
 };
-
 window.fecharMenu = () => {
   document.querySelector(".sidebar").classList.remove("active");
   document.querySelector(".menu-overlay").classList.remove("active");
 };
-
 
 document.querySelectorAll(".sidebar nav a").forEach(a=>{
   if(a.href === window.location.href){
@@ -732,6 +979,20 @@ document.querySelectorAll(".sidebar nav a").forEach(a=>{
   }
 });
 
+// Bottom nav: marca ativo conforme página
+(function marcarNavAtiva(){
+  const path = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+  const map = {
+    "index.html": "pedido",
+    "admin.html": "tecnicos",
+    "acompanhamento.html": "acomp",
+    "painel-almoxarife.html": "painel"
+  };
+  const key = map[path] || "pedido";
+  document.querySelectorAll(".nav-btn").forEach(a=>{
+    if (a.dataset.nav === key) a.classList.add("active");
+  });
+})();
 </script>
 
 </body>
