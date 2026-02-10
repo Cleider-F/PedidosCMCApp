@@ -1059,24 +1059,53 @@ const USUARIOS = {
   "reginaldo2026": "Reginaldo Bocafoli"
 };
 
+const ADMIN_EXP_MS = 1 * 60 * 1000; // 7 dias
+
 window.login = () => {
-  const senha = document.getElementById("senha").value;
+  const senha = document.getElementById("senha").value.trim();
   if (!USUARIOS[senha]) return alert("Senha inválida");
 
   localStorage.setItem("admin","true");
   localStorage.setItem("usuario_nome",USUARIOS[senha]);
+  localStorage.setItem("admin_login_at", String(Date.now()));
+
+  document.getElementById("senha").value = "";
 
   loginBox.style.display="none";
   painel.style.display="block";
-
-  iniciarListenerPedidos(); // realtime
+  iniciarListenerPedidos();
 };
 
-window.logout = ()=>{
+window.logout = () => {
   if (unsubscribePedidos) unsubscribePedidos();
-  localStorage.clear();
+
+  localStorage.removeItem("admin");
+  localStorage.removeItem("usuario_nome");
+  localStorage.removeItem("admin_login_at");
+
   location.reload();
 };
+
+(function autoLoginComPrazo(){
+  const isAdmin = localStorage.getItem("admin") === "true";
+  const loginAt = Number(localStorage.getItem("admin_login_at") || 0);
+
+  const valido = isAdmin && loginAt > 0 && (Date.now() - loginAt) <= ADMIN_EXP_MS;
+
+  if (valido) {
+    loginBox.style.display="none";
+    painel.style.display="block";
+    iniciarListenerPedidos();
+    return;
+  }
+
+  if (isAdmin) {
+    if (unsubscribePedidos) unsubscribePedidos();
+    localStorage.removeItem("admin");
+    localStorage.removeItem("usuario_nome");
+    localStorage.removeItem("admin_login_at");
+  }
+})();
 
 /* =========================================================
    NORMALIZAÇÃO
@@ -1543,11 +1572,7 @@ window.gerarRelatorioPeriodo = async () => {
 /* =========================================================
    AUTOLOGIN (mantido)
 ========================================================= */
-if(localStorage.getItem("admin")==="true"){
-  loginBox.style.display="none";
-  painel.style.display="block";
-  iniciarListenerPedidos();
-}
+
 
 /* =========================================================
    APROVAR TODOS (mantido)
