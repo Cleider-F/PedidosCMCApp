@@ -1059,53 +1059,26 @@ const USUARIOS = {
   "reginaldo2026": "Reginaldo Bocafoli"
 };
 
-const ADMIN_EXP_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
-
 window.login = () => {
-  const senha = document.getElementById("senha").value.trim();
-  if (!USUARIOS[senha]) return alert("Senha inválida");
+const senha = document.getElementById("senha").value;
+if (!USUARIOS[senha]) return alert("Senha inválida");
 
-  localStorage.setItem("admin","true");
-  localStorage.setItem("usuario_nome",USUARIOS[senha]);
-  localStorage.setItem("admin_login_at", String(Date.now()));
+localStorage.setItem("admin","true");
+localStorage.setItem("usuario_nome",USUARIOS[senha]);
 
-  document.getElementById("senha").value = "";
+loginBox.style.display="none";
+painel.style.display="block";
 
-  loginBox.style.display="none";
-  painel.style.display="block";
-  iniciarListenerPedidos();
+iniciarListenerPedidos(); // realtime
 };
 
-window.logout = () => {
-  if (unsubscribePedidos) unsubscribePedidos();
-
-  localStorage.removeItem("admin");
-  localStorage.removeItem("usuario_nome");
-  localStorage.removeItem("admin_login_at");
-
-  location.reload();
+window.logout = ()=>{
+if (unsubscribePedidos) unsubscribePedidos();
+localStorage.clear();
+location.reload();
 };
 
-(function autoLoginComPrazo(){
-  const isAdmin = localStorage.getItem("admin") === "true";
-  const loginAt = Number(localStorage.getItem("admin_login_at") || 0);
 
-  const valido = isAdmin && loginAt > 0 && (Date.now() - loginAt) <= ADMIN_EXP_MS;
-
-  if (valido) {
-    loginBox.style.display="none";
-    painel.style.display="block";
-    iniciarListenerPedidos();
-    return;
-  }
-
-  if (isAdmin) {
-    if (unsubscribePedidos) unsubscribePedidos();
-    localStorage.removeItem("admin");
-    localStorage.removeItem("usuario_nome");
-    localStorage.removeItem("admin_login_at");
-  }
-})();
 
 /* =========================================================
    NORMALIZAÇÃO
@@ -1572,7 +1545,11 @@ window.gerarRelatorioPeriodo = async () => {
 /* =========================================================
    AUTOLOGIN (mantido)
 ========================================================= */
-
+if(localStorage.getItem("admin")==="true"){
+loginBox.style.display="none";
+painel.style.display="block";
+iniciarListenerPedidos();
+}
 
 /* =========================================================
    APROVAR TODOS (mantido)
