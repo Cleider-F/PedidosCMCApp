@@ -844,7 +844,7 @@ window.sugerirPecas = (textarea) => {
     });
   }
 
-  resultados = resultados.slice(0,6);
+  resultados = resultados.slice(0,30);
   if (!resultados.length) { box.style.display="none"; return; }
 
   box.innerHTML = resultados.map(r => {
