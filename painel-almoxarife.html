@@ -580,9 +580,31 @@ footer{
 </aside>
 
 <main class="page">
+
+  <!-- LOGIN (Almoxarifado) -->
+  <section class="panel" id="loginBox" style="max-width:520px;margin:14px auto 0;">
+    <div class="panel-header">
+      <div class="h">🔐 Login</div>
+      <small>Painel do Almoxarife</small>
+    </div>
+    <div class="panel-body">
+      <label>Senha</label>
+<input type="password" id="senhaAlmox" placeholder="Senha do painel" autocomplete="current-password">
+
+<div style="height:10px"></div>
+<button class="btn btn-green" style="width:100%" onclick="loginAlmox()">Entrar</button>
+
+<p id="loginErro" class="hint" style="display:none;color:#b91c1c;font-weight:900;margin-top:10px;"></p>
+  </section>
+
+  <!-- PAINEL (conteúdo real) -->
+  <section class="panel" id="painelBox" style="display:none">
   <section class="panel">
     <div class="panel-header">
       <div class="h">🧩 Gestão de NI e Peças</div>
+      <div class="status-chip" id="almoxUserChip" style="display:none;" title="Usuário logado">
+  👤 <b id="almoxUserLabel">-</b>
+</div>
     </div>
 
     <div class="panel-body">
@@ -590,9 +612,10 @@ footer{
       <!-- AÇÕES -->
       <div class="actionbar">
         <div class="actionbar-left">
-          <button class="btn btn-green" onclick="abrirModalNovo()">➕ Nova peça</button>
-          <button class="btn btn-ghost" onclick="recarregarBases()">🔄 Recarregar</button>
-        </div>
+  <button class="btn btn-ghost" onclick="logoutAlmox()">🚪 Sair</button>
+  <button class="btn btn-green" onclick="abrirModalNovo()">➕ Nova peça</button>
+  <button class="btn btn-ghost" onclick="recarregarBases()">🔄 Recarregar</button>
+</div>
 
         <div class="stats">
           Total: <b id="countTotal">0</b> •
@@ -716,6 +739,145 @@ firebase.initializeApp({
   appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
 });
 const db = firebase.firestore();
+  
+    
+/* =========================================================
+   LOGIN (ALMOX) — senha única por usuário (sem campo usuário)
+========================================================= */
+const ALMOX_LOGIN_KEY = "almoxLogado";
+const ALMOX_LOGIN_AT_KEY = "almoxLoginEm";
+const ALMOX_USER_KEY = "almoxUsuario";
+const ALMOX_EXP_MS = 15 * 60 * 1000; // 15 minutos
+
+// 🔐 Cada senha identifica um usuário
+// ⚠️ Em GitHub Pages isso fica visível no código.
+const ALMOX_CREDENCIAIS = [
+  { pass: "cleider", user: "Cleider Filho" },
+  { pass: "breno2026", user: "Breno" },
+  { pass: "oliveira2026", user: "Jonathan Oliveira" },
+  { pass: "camporezi2026", user: "Vicente Camporezi" },
+  { pass: "valdineia2026", user: "Valdineia" },
+  { pass: "mariana2026", user: "Mariana" },
+  { pass: "igor2026", user: "Igor" },
+  { pass: "hagata2026", user: "Hagata" },
+  { pass: "lucas2026", user: "Lucas" },
+  { pass: "eliane2026", user: "Eliane" },
+  { pass: "eduardo2026", user: "Eduardo" },
+  { pass: "salles2026", user: "Douglas Salles" },
+  { pass: "gleyson2026", user: "Gleyson Murça" },
+  { pass: "robson2026", user: "Robson Jesus" },
+  { pass: "otto2026", user: "Leonardo Otto" },
+  { pass: "junior2026", user: "Geraldo Junior" },
+  { pass: "castro2026", user: "Cleiton Castro" }
+];
+
+function setUserChip(nome){
+  const chip = document.getElementById("almoxUserChip");
+  const label = document.getElementById("almoxUserLabel");
+  if (!chip || !label) return;
+
+  if (!nome){
+    chip.style.display = "none";
+    label.textContent = "-";
+  } else {
+    chip.style.display = "flex";
+    label.textContent = nome;
+  }
+}
+
+function mostrarLoginAlmox(msg=""){
+  const loginBox = document.getElementById("loginBox");
+  const painelBox = document.getElementById("painelBox");
+  if (loginBox) loginBox.style.display = "block";
+  if (painelBox) painelBox.style.display = "none";
+
+  setUserChip(""); // esconde chip
+
+  const erro = document.getElementById("loginErro");
+  if (erro){
+    if (msg){
+      erro.textContent = msg;
+      erro.style.display = "block";
+    } else {
+      erro.style.display = "none";
+    }
+  }
+}
+
+function mostrarPainelAlmox(){
+  const loginBox = document.getElementById("loginBox");
+  const painelBox = document.getElementById("painelBox");
+  if (loginBox) loginBox.style.display = "none";
+  if (painelBox) painelBox.style.display = "block";
+
+  const u = localStorage.getItem(ALMOX_USER_KEY) || "";
+  setUserChip(u);
+}
+
+window.loginAlmox = () => {
+  const p = (document.getElementById("senhaAlmox")?.value || "").trim();
+
+  if (!p){
+    mostrarLoginAlmox("Informe a senha.");
+    return;
+  }
+
+  const cred = ALMOX_CREDENCIAIS.find(c => c.pass === p);
+
+  if (!cred){
+    mostrarLoginAlmox("Senha inválida.");
+    return;
+  }
+
+  localStorage.setItem(ALMOX_LOGIN_KEY, "true");
+  localStorage.setItem(ALMOX_LOGIN_AT_KEY, String(Date.now()));
+  localStorage.setItem(ALMOX_USER_KEY, cred.user);
+
+  document.getElementById("senhaAlmox").value = "";
+
+  mostrarPainelAlmox();
+  showToast(`✅ Logado como ${cred.user}`, "success");
+
+  try { recarregarBases(); } catch(e){}
+};
+
+window.logoutAlmox = (expirado=false) => {
+  localStorage.removeItem(ALMOX_LOGIN_KEY);
+  localStorage.removeItem(ALMOX_LOGIN_AT_KEY);
+  localStorage.removeItem(ALMOX_USER_KEY);
+
+  mostrarLoginAlmox(expirado ? "Sessão expirada. Digite a senha novamente." : "");
+  showToast(expirado ? "🔒 Sessão expirada" : "👋 Você saiu", expirado ? "warn" : "success");
+};
+
+function verificarSessaoAlmox(){
+  const logado = localStorage.getItem(ALMOX_LOGIN_KEY) === "true";
+  const loginEm = Number(localStorage.getItem(ALMOX_LOGIN_AT_KEY) || "0");
+  const usuario = localStorage.getItem(ALMOX_USER_KEY) || "";
+
+  if (!logado || !loginEm || !usuario){
+    mostrarLoginAlmox();
+    return;
+  }
+
+  const tempo = Date.now() - loginEm;
+  if (tempo > ALMOX_EXP_MS){
+    logoutAlmox(true);
+    return;
+  }
+
+  mostrarPainelAlmox();
+}
+
+// Enter para logar
+document.addEventListener("keydown", (e)=>{
+  if (e.key === "Enter" && document.getElementById("loginBox")?.style.display !== "none"){
+    e.preventDefault();
+    window.loginAlmox();
+  }
+});
+
+verificarSessaoAlmox();
 
 /* =========================================================
    MENU + ACTIVE STATES
