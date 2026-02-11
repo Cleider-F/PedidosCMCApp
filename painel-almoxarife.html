@@ -33,7 +33,7 @@
   --warn:#f59e0b;
 
   --shadow: 0 6px 16px rgba(15, 23, 42, .06);
-  --shadow-soft: 0 2px 8px rgba(15, 23, 42, .05);
+  --shadow-soft:0 2px 8px rgba(15, 23, 42, .05);
 
   --radius:18px;
   --max:1200px;
@@ -534,6 +534,13 @@ footer{
   .m-actions{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; }
   .m-actions .btn{ padding:10px 8px; font-size:12px; border-radius:14px; }
 }
+
+/* =========================================================
+   VISITANTE (somente visualização)
+========================================================= */
+.is-visitor .only-admin{ display:none !important; }
+.is-visitor th.col-acoes,
+.is-visitor td.col-acoes{ display:none !important; }
 </style>
 </head>
 
@@ -589,22 +596,27 @@ footer{
     </div>
     <div class="panel-body">
       <label>Senha</label>
-<input type="password" id="senhaAlmox" placeholder="Senha do painel" autocomplete="current-password">
+      <input type="password" id="senhaAlmox" placeholder="Senha do painel" autocomplete="current-password">
 
-<div style="height:10px"></div>
-<button class="btn btn-green" style="width:100%" onclick="loginAlmox()">Entrar</button>
+      <div style="height:10px"></div>
+      <button class="btn btn-green" style="width:100%" onclick="loginAlmox()">Entrar</button>
 
-<p id="loginErro" class="hint" style="display:none;color:#b91c1c;font-weight:900;margin-top:10px;"></p>
+      <div style="height:10px"></div>
+      <button class="btn btn-ghost" style="width:100%" onclick="entrarVisitante()">
+        👁️ Entrar como visitante (somente visualização)
+      </button>
+
+      <p id="loginErro" class="hint" style="display:none;color:#b91c1c;font-weight:900;margin-top:10px;"></p>
+    </div>
   </section>
 
   <!-- PAINEL (conteúdo real) -->
   <section class="panel" id="painelBox" style="display:none">
-  <section class="panel">
     <div class="panel-header">
       <div class="h">🧩 Gestão de NI e Peças</div>
       <div class="status-chip" id="almoxUserChip" style="display:none;" title="Usuário logado">
-  👤 <b id="almoxUserLabel">-</b>
-</div>
+        👤 <b id="almoxUserLabel">-</b>
+      </div>
     </div>
 
     <div class="panel-body">
@@ -612,10 +624,10 @@ footer{
       <!-- AÇÕES -->
       <div class="actionbar">
         <div class="actionbar-left">
-  <button class="btn btn-ghost" onclick="logoutAlmox()">🚪 Sair</button>
-  <button class="btn btn-green" onclick="abrirModalNovo()">➕ Nova peça</button>
-  <button class="btn btn-ghost" onclick="recarregarBases()">🔄 Recarregar</button>
-</div>
+          <button class="btn btn-ghost" onclick="logoutAlmox()">🚪 Sair</button>
+          <button class="btn btn-green only-admin" onclick="abrirModalNovo()">➕ Nova peça</button>
+          <button class="btn btn-ghost" onclick="recarregarBases()">🔄 Recarregar</button>
+        </div>
 
         <div class="stats">
           Total: <b id="countTotal">0</b> •
@@ -647,7 +659,7 @@ footer{
             <tr>
               <th style="width:190px;">NI</th>
               <th>Descrição</th>
-              <th style="width:330px; text-align:right;">Ações</th>
+              <th class="col-acoes" style="width:330px; text-align:right;">Ações</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -686,7 +698,7 @@ footer{
 </nav>
 
 <!-- MODAL -->
-<div id="modal" class="modal" role="dialog" aria-modal="true">
+<div id="modal" class="modal only-admin" role="dialog" aria-modal="true">
   <div class="modal-overlay" onclick="fecharModal()"></div>
   <div class="modal-box">
     <div class="modal-head">
@@ -739,14 +751,15 @@ firebase.initializeApp({
   appId: "1:443882865992:web:1afcc37c29bd8800eedf7d"
 });
 const db = firebase.firestore();
-  
-    
+
 /* =========================================================
    LOGIN (ALMOX) — senha única por usuário (sem campo usuário)
+   + MODO VISITANTE (somente visualização)
 ========================================================= */
 const ALMOX_LOGIN_KEY = "almoxLogado";
 const ALMOX_LOGIN_AT_KEY = "almoxLoginEm";
 const ALMOX_USER_KEY = "almoxUsuario";
+const ALMOX_ROLE_KEY = "almoxRole"; // "admin" | "visitante"
 const ALMOX_EXP_MS = 15 * 60 * 1000; // 15 minutos
 
 // 🔐 Cada senha identifica um usuário
@@ -785,13 +798,31 @@ function setUserChip(nome){
   }
 }
 
+function setRoleUI(role){
+  document.body.classList.toggle("is-visitor", role === "visitante");
+  if (role === "visitante") setUserChip("Visitante");
+  else setUserChip(localStorage.getItem(ALMOX_USER_KEY) || "");
+}
+
+function isVisitor(){
+  return localStorage.getItem(ALMOX_ROLE_KEY) === "visitante";
+}
+function guardAdmin(){
+  if (isVisitor()){
+    showToast("🔒 Modo visitante: ação bloqueada", "warn");
+    return false;
+  }
+  return true;
+}
+
 function mostrarLoginAlmox(msg=""){
   const loginBox = document.getElementById("loginBox");
   const painelBox = document.getElementById("painelBox");
   if (loginBox) loginBox.style.display = "block";
   if (painelBox) painelBox.style.display = "none";
 
-  setUserChip(""); // esconde chip
+  document.body.classList.remove("is-visitor");
+  setUserChip("");
 
   const erro = document.getElementById("loginErro");
   if (erro){
@@ -810,9 +841,23 @@ function mostrarPainelAlmox(){
   if (loginBox) loginBox.style.display = "none";
   if (painelBox) painelBox.style.display = "block";
 
-  const u = localStorage.getItem(ALMOX_USER_KEY) || "";
-  setUserChip(u);
+  const role = localStorage.getItem(ALMOX_ROLE_KEY) || "admin";
+  setRoleUI(role);
 }
+
+window.entrarVisitante = () => {
+  localStorage.setItem(ALMOX_LOGIN_KEY, "true");
+  localStorage.setItem(ALMOX_LOGIN_AT_KEY, String(Date.now()));
+  localStorage.setItem(ALMOX_ROLE_KEY, "visitante");
+  localStorage.removeItem(ALMOX_USER_KEY);
+
+  const senha = document.getElementById("senhaAlmox");
+  if (senha) senha.value = "";
+
+  mostrarPainelAlmox();
+  showToast("👁️ Modo visitante (somente visualização)", "success");
+  try { recarregarBases(); } catch(e){}
+};
 
 window.loginAlmox = () => {
   const p = (document.getElementById("senhaAlmox")?.value || "").trim();
@@ -832,10 +877,12 @@ window.loginAlmox = () => {
   localStorage.setItem(ALMOX_LOGIN_KEY, "true");
   localStorage.setItem(ALMOX_LOGIN_AT_KEY, String(Date.now()));
   localStorage.setItem(ALMOX_USER_KEY, cred.user);
+  localStorage.setItem(ALMOX_ROLE_KEY, "admin");
 
   document.getElementById("senhaAlmox").value = "";
 
   mostrarPainelAlmox();
+  setRoleUI("admin");
   showToast(`✅ Logado como ${cred.user}`, "success");
 
   try { recarregarBases(); } catch(e){}
@@ -845,6 +892,9 @@ window.logoutAlmox = (expirado=false) => {
   localStorage.removeItem(ALMOX_LOGIN_KEY);
   localStorage.removeItem(ALMOX_LOGIN_AT_KEY);
   localStorage.removeItem(ALMOX_USER_KEY);
+  localStorage.removeItem(ALMOX_ROLE_KEY);
+
+  document.body.classList.remove("is-visitor");
 
   mostrarLoginAlmox(expirado ? "Sessão expirada. Digite a senha novamente." : "");
   showToast(expirado ? "🔒 Sessão expirada" : "👋 Você saiu", expirado ? "warn" : "success");
@@ -853,9 +903,14 @@ window.logoutAlmox = (expirado=false) => {
 function verificarSessaoAlmox(){
   const logado = localStorage.getItem(ALMOX_LOGIN_KEY) === "true";
   const loginEm = Number(localStorage.getItem(ALMOX_LOGIN_AT_KEY) || "0");
+  const role = localStorage.getItem(ALMOX_ROLE_KEY) || "";
   const usuario = localStorage.getItem(ALMOX_USER_KEY) || "";
 
-  if (!logado || !loginEm || !usuario){
+  if (!logado || !loginEm || !role){
+    mostrarLoginAlmox();
+    return;
+  }
+  if (role === "admin" && !usuario){
     mostrarLoginAlmox();
     return;
   }
@@ -867,9 +922,10 @@ function verificarSessaoAlmox(){
   }
 
   mostrarPainelAlmox();
+  setRoleUI(role);
 }
 
-// Enter para logar
+// Enter para logar (apenas no modo senha)
 document.addEventListener("keydown", (e)=>{
   if (e.key === "Enter" && document.getElementById("loginBox")?.style.display !== "none"){
     e.preventDefault();
@@ -930,7 +986,7 @@ function escapeHtml(str=""){
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
+    .replaceAll('"',"quot;")
     .replaceAll("'","&#039;");
 }
 
@@ -974,6 +1030,8 @@ let editDocId = "";
 let niOriginal = "";
 
 function abrirModalNovo(){
+  if(!guardAdmin()) return;
+
   modalModo = "novo";
   editDocId = "";
   niOriginal = "";
@@ -993,6 +1051,8 @@ function abrirModalNovo(){
 }
 
 function abrirModalEditar(docId){
+  if(!guardAdmin()) return;
+
   const item = cacheApr.find(x => x.idDoc === docId);
   if(!item){ showToast("Item não encontrado.","warn"); return; }
 
@@ -1051,6 +1111,8 @@ async function migrarBloqueioSePreciso(niAntigo, niNovo, descricaoNova){
 }
 
 async function salvarModal(){
+  if(!guardAdmin()) return;
+
   try{
     const desc = (mDesc.value || "").trim();
     const niDigitado = (mNi.value || "").trim();
@@ -1120,6 +1182,8 @@ async function salvarModal(){
    AÇÕES
 ========================================================= */
 async function toggleBloqueio(ni, descricao){
+  if(!guardAdmin()) return;
+
   const niStr = String(ni);
   const isBlocked = bloqueadosSet.has(niStr);
 
@@ -1141,6 +1205,8 @@ async function toggleBloqueio(ni, descricao){
 }
 
 async function removerItem(docId, ni, descricao){
+  if(!guardAdmin()) return;
+
   const docIdStr = String(docId);
   const niStr = String(ni || "");
   const desc = descricao || "";
@@ -1236,8 +1302,8 @@ function aplicarFiltro(){
         <div class="muted">docId: ${escapeHtml(docId)}</div>
       </td>
       <td><div class="desc">${escapeHtml(desc)}</div></td>
-      <td>
-        <div class="cell-actions">
+      <td class="col-acoes">
+        <div class="cell-actions only-admin">
           <button class="btn btn-sm btn-ghost" onclick="abrirModalEditar('${escapeHtml(docId)}')">✏️ Editar</button>
           <button class="btn btn-sm ${blocked ? 'btn-ghost' : ''}"
             style="${blocked ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca;box-shadow:none' : ''}"
@@ -1263,7 +1329,7 @@ function aplicarFiltro(){
 
       <div class="mdesc">${escapeHtml(desc)}</div>
 
-      <div class="m-actions">
+      <div class="m-actions only-admin">
         <button class="btn btn-ghost" onclick="abrirModalEditar('${escapeHtml(docId)}')">✏️ Editar</button>
         <button class="btn ${blocked ? 'btn-ghost' : ''}"
           style="${blocked ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca;box-shadow:none' : ''}"
@@ -1275,6 +1341,9 @@ function aplicarFiltro(){
     `;
     cards.appendChild(card);
   }
+
+  // garante UI correta caso role mude
+  setRoleUI(localStorage.getItem(ALMOX_ROLE_KEY) || "admin");
 }
 
 function limparBusca(){ busca.value = ""; aplicarFiltro(); }
