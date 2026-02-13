@@ -763,8 +763,10 @@ manutencaoSelect.addEventListener("change", () => {
 });
 
 window.adicionarPeca = () => {
+
   const div = document.createElement("div");
   div.className = "peca";
+
   div.innerHTML = `
     <div class="peca-tag">Item</div>
 
@@ -788,9 +790,12 @@ window.adicionarPeca = () => {
 
     <button type="button" class="btn btn-danger remover" onclick="removerPeca(this)">❌ Remover</button>
   `;
-  lista.appendChild(div);
-};
 
+  const botaoContainer = lista.querySelector(".actions-row");
+
+  lista.insertBefore(div, botaoContainer);
+
+};
 window.removerPeca = (btn) => {
   if (document.querySelectorAll(".peca").length === 1) return;
   btn.parentElement.remove();
